@@ -1,0 +1,1 @@
+export const waitlistUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc8TXX2N9RHPDsMO9Bink34fsnEkXVFXTML5lM9xmQQBblMoQ/viewform?usp=header";
