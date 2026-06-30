@@ -9,6 +9,13 @@ id: string;
 email: string;
 };
 
+type BusinessProfile = {
+business_name: string;
+role: "founder" | "business_owner";
+plan: "essentials" | "growth" | "complete" | "teams";
+subscription_status: "beta" | "active" | "past_due" | "canceled";
+};
+
 const navItems = [
 { label: "Dashboard", href: "/dashboard" },
 { label: "Bookings", href: "/dashboard/bookings" },
@@ -30,6 +37,8 @@ subtitle: string;
 const pathname = usePathname();
 const [isLoading, setIsLoading] = useState(true);
 const [clientUser, setClientUser] = useState<ClientUser | null>(null);
+const [businessProfile, setBusinessProfile] =
+useState<BusinessProfile | null>(null);
 
 const todayLabel = useMemo(() => {
 return new Intl.DateTimeFormat("en-US", {
@@ -53,11 +62,23 @@ window.location.href = "/login";
 return;
 }
 
+const { data: profile, error } = await supabase
+.from("business_profiles")
+.select("business_name, role, plan, subscription_status")
+.eq("owner_id", user.id)
+.single();
+
+if (error || !profile) {
+window.location.href = "/coming-soon";
+return;
+}
+
 setClientUser({
 id: user.id,
 email: user.email ?? "Signed-in owner",
 });
 
+setBusinessProfile(profile as BusinessProfile);
 setIsLoading(false);
 }
 
@@ -85,7 +106,7 @@ SchedNest
 );
 }
 
-if (!clientUser) {
+if (!clientUser || !businessProfile) {
 return null;
 }
 
@@ -100,7 +121,11 @@ S
 
 <div>
 <p className="text-lg font-bold tracking-tight">SchedNest</p>
-<p className="text-xs text-gray-500">Client Dashboard</p>
+<p className="text-xs text-gray-500">
+{businessProfile.role === "founder"
+? "Founder Workspace"
+: "Client Dashboard"}
+</p>
 </div>
 </a>
 
@@ -133,6 +158,7 @@ Birdy Suggestions
 Soon
 </span>
 </div>
+
 <p className="mt-3 text-sm leading-6 text-gray-400">
 No urgent suggestions yet. Later, Birdy will help surface missed
 follow-ups, open time slots, no-shows, and customer messages that
@@ -156,9 +182,11 @@ Client Workspace
 
 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-gray-300">
-Signed in as{" "}
 <span className="font-semibold text-white">
-{clientUser.email}
+{businessProfile.business_name}
+</span>
+<span className="ml-2 text-gray-500">
+{businessProfile.plan}
 </span>
 </div>
 
