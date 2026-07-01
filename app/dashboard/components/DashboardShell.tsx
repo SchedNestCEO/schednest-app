@@ -19,10 +19,12 @@ subscription_status: "beta" | "active" | "past_due" | "canceled";
 const navItems = [
 { label: "Dashboard", href: "/dashboard" },
 { label: "Bookings", href: "/dashboard/bookings" },
+{ label: "Requests", href: "/dashboard/requests" },
 { label: "Customers", href: "/dashboard/customers" },
 { label: "Services", href: "/dashboard/services" },
 { label: "Booking Page", href: "/dashboard/booking-page" },
 { label: "Birdy", href: "/dashboard/birdy" },
+
 ];
 
 export default function DashboardShell({
