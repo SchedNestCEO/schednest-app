@@ -87,6 +87,7 @@ export default function PublicBookingPage() {
  }
 
  const typedData = data as PublicBookingPageData;
+
  setPageData(typedData);
 
  if (typedData.services.length > 0) {
@@ -125,7 +126,7 @@ export default function PublicBookingPage() {
 
  const startDateTime = new Date(`${bookingDate}T${bookingTime}`);
 
- const { error } = await supabase.rpc("create_public_booking", {
+ const { data, error } = await supabase.rpc("create_public_booking", {
  p_business_id: pageData.business.id,
  p_service_id: selectedServiceId,
  p_customer_name: customerName,
@@ -141,7 +142,24 @@ export default function PublicBookingPage() {
  return;
  }
 
- setSuccessMessage("Your booking request was sent. The business will confirm your appointment.");
+ const bookingResult = data as { id?: string } | null;
+
+ if (bookingResult?.id) {
+ await fetch("/api/booking-notifications", {
+ method: "POST",
+ headers: {
+ "Content-Type": "application/json",
+ },
+ body: JSON.stringify({
+ bookingId: bookingResult.id,
+ eventType: "booking.requested",
+ }),
+ });
+ }
+
+ setSuccessMessage(
+ "Your booking request was sent. The business will confirm your appointment."
+ );
  setCustomerName("");
  setCustomerPhone("");
  setCustomerEmail("");
@@ -184,22 +202,29 @@ export default function PublicBookingPage() {
  <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
  <div className="mx-auto max-w-4xl space-y-6">
  <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
- <p className="text-sm font-semibold text-emerald-300">SchedNest Booking</p>
+ <p className="text-sm font-semibold text-emerald-300">
+ SchedNest Booking
+ </p>
  <h1 className="mt-3 text-4xl font-black">
  Book with {pageData.business.business_name || "this business"}
  </h1>
  <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-400">
- Choose a service and request a time. Your appointment will be marked pending until confirmed.
+ Choose a service and request a time. Your appointment will be marked
+ pending until confirmed.
  </p>
  </section>
 
  <section className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
  <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
- <p className="text-sm font-semibold text-emerald-300">Business Hours</p>
+ <p className="text-sm font-semibold text-emerald-300">
+ Business Hours
+ </p>
 
  <div className="mt-4 space-y-3">
  {pageData.business_hours.length === 0 && (
- <p className="text-sm text-gray-400">Hours have not been added yet.</p>
+ <p className="text-sm text-gray-400">
+ Hours have not been added yet.
+ </p>
  )}
 
  {pageData.business_hours.map((hour) => (
@@ -207,10 +232,14 @@ export default function PublicBookingPage() {
  key={hour.day_of_week}
  className="flex items-center justify-between rounded-2xl bg-black/20 px-4 py-3 text-sm"
  >
- <span className="font-medium text-gray-200">{days[hour.day_of_week]}</span>
+ <span className="font-medium text-gray-200">
+ {days[hour.day_of_week]}
+ </span>
  <span className="text-gray-400">
  {hour.is_open
- ? `${toTimeLabel(hour.open_time)} - ${toTimeLabel(hour.close_time)}`
+ ? `${toTimeLabel(hour.open_time)} - ${toTimeLabel(
+ hour.close_time
+ )}`
  : "Closed"}
  </span>
  </div>
@@ -219,12 +248,18 @@ export default function PublicBookingPage() {
  </div>
 
  <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
- <p className="text-sm font-semibold text-emerald-300">Request Appointment</p>
- <h2 className="mt-3 text-2xl font-bold">Choose your booking details</h2>
+ <p className="text-sm font-semibold text-emerald-300">
+ Request Appointment
+ </p>
+ <h2 className="mt-3 text-2xl font-bold">
+ Choose your booking details
+ </h2>
 
  <form onSubmit={submitBooking} className="mt-6 grid gap-4">
  <div>
- <label className="text-sm font-medium text-gray-300">Service</label>
+ <label className="text-sm font-medium text-gray-300">
+ Service
+ </label>
  <select
  value={selectedServiceId}
  onChange={(event) => setSelectedServiceId(event.target.value)}
@@ -232,14 +267,17 @@ export default function PublicBookingPage() {
  >
  {pageData.services.map((service) => (
  <option key={service.id} value={service.id}>
- {service.name} — ${service.price ?? 0} — {service.duration_minutes ?? 60} min
+ {service.name} — ${service.price ?? 0} —{" "}
+ {service.duration_minutes ?? 60} min
  </option>
  ))}
  </select>
  </div>
 
  <div>
- <label className="text-sm font-medium text-gray-300">Your name</label>
+ <label className="text-sm font-medium text-gray-300">
+ Your name
+ </label>
  <input
  value={customerName}
  onChange={(event) => setCustomerName(event.target.value)}
@@ -250,7 +288,9 @@ export default function PublicBookingPage() {
 
  <div className="grid gap-4 md:grid-cols-2">
  <div>
- <label className="text-sm font-medium text-gray-300">Phone</label>
+ <label className="text-sm font-medium text-gray-300">
+ Phone
+ </label>
  <input
  value={customerPhone}
  onChange={(event) => setCustomerPhone(event.target.value)}
@@ -260,7 +300,9 @@ export default function PublicBookingPage() {
  </div>
 
  <div>
- <label className="text-sm font-medium text-gray-300">Email</label>
+ <label className="text-sm font-medium text-gray-300">
+ Email
+ </label>
  <input
  value={customerEmail}
  onChange={(event) => setCustomerEmail(event.target.value)}
@@ -273,7 +315,9 @@ export default function PublicBookingPage() {
 
  <div className="grid gap-4 md:grid-cols-2">
  <div>
- <label className="text-sm font-medium text-gray-300">Date</label>
+ <label className="text-sm font-medium text-gray-300">
+ Date
+ </label>
  <input
  value={bookingDate}
  onChange={(event) => setBookingDate(event.target.value)}
@@ -283,7 +327,9 @@ export default function PublicBookingPage() {
  </div>
 
  <div>
- <label className="text-sm font-medium text-gray-300">Time</label>
+ <label className="text-sm font-medium text-gray-300">
+ Time
+ </label>
  <input
  value={bookingTime}
  onChange={(event) => setBookingTime(event.target.value)}
@@ -294,7 +340,9 @@ export default function PublicBookingPage() {
  </div>
 
  <div>
- <label className="text-sm font-medium text-gray-300">Notes</label>
+ <label className="text-sm font-medium text-gray-300">
+ Notes
+ </label>
  <textarea
  value={notes}
  onChange={(event) => setNotes(event.target.value)}

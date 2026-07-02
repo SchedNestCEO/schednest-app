@@ -37,7 +37,8 @@ created_at: string;
 export default function BookingRequestsPage() {
 const supabase = useMemo(() => createClient(), []);
 
-const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+const [businessProfile, setBusinessProfile] =
+useState<BusinessProfile | null>(null);
 const [services, setServices] = useState<Service[]>([]);
 const [requests, setRequests] = useState<BookingRequest[]>([]);
 const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +107,10 @@ setRequests(requestData || []);
 setIsLoading(false);
 }
 
-async function updateRequestStatus(bookingId: string, newStatus: "confirmed" | "cancelled") {
+async function updateRequestStatus(
+bookingId: string,
+newStatus: "confirmed" | "cancelled"
+) {
 setIsUpdating(bookingId);
 setErrorMessage("");
 setMessage("");
@@ -122,7 +126,37 @@ setIsUpdating(null);
 return;
 }
 
-setMessage(newStatus === "confirmed" ? "Booking request approved." : "Booking request declined.");
+const {
+data: { session },
+} = await supabase.auth.getSession();
+
+const notificationResponse = await fetch("/api/booking-notifications", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+Authorization: `Bearer ${session?.access_token}`,
+},
+body: JSON.stringify({
+bookingId,
+eventType:
+newStatus === "confirmed" ? "booking.approved" : "booking.declined",
+}),
+});
+
+if (!notificationResponse.ok) {
+setMessage(
+newStatus === "confirmed"
+? "Booking approved, but the email notification was not sent."
+: "Booking declined, but the email notification was not sent."
+);
+} else {
+setMessage(
+newStatus === "confirmed"
+? "Booking request approved and customer notified."
+: "Booking request declined and customer notified."
+);
+}
+
 await loadRequests();
 setIsUpdating(null);
 }
@@ -154,15 +188,29 @@ subtitle="Approve or decline appointment requests from your public booking page.
 >
 <div className="space-y-6">
 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
-<p className="text-sm font-semibold text-emerald-300">Pending Requests</p>
+<p className="text-sm font-semibold text-emerald-300">
+Pending Requests
+</p>
+
 <h2 className="mt-3 text-2xl font-bold">
 {isLoading
 ? "Loading requests..."
-: `${requests.length} pending request${requests.length === 1 ? "" : "s"}`}
+: `${requests.length} pending request${
+requests.length === 1 ? "" : "s"
+}`}
 </h2>
+
 <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-Public booking requests come in as pending. Approving a request confirms the appointment and keeps the customer saved in your client list.
+Public booking requests come in as pending. Approving a request
+confirms the appointment and keeps the customer saved in your client
+list.
 </p>
+
+{businessProfile && (
+<p className="mt-3 text-xs text-gray-500">
+Managing requests for {businessProfile.business_name || "your business"}.
+</p>
+)}
 
 {errorMessage && (
 <p className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -180,9 +228,12 @@ Public booking requests come in as pending. Approving a request confirms the app
 <div className="grid gap-4">
 {!isLoading && requests.length === 0 && (
 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
-<h3 className="text-xl font-bold text-white">No pending requests</h3>
+<h3 className="text-xl font-bold text-white">
+No pending requests
+</h3>
 <p className="mt-3 text-sm leading-6 text-gray-400">
-When someone requests a booking from your public page, it will appear here.
+When someone requests a booking from your public page, it will
+appear here.
 </p>
 </div>
 )}
@@ -211,7 +262,8 @@ Customer saved
 </div>
 
 <p className="mt-3 text-sm font-semibold text-gray-200">
-{getServiceName(request.service_id)} · {formatDateTime(request.start_time)}
+{getServiceName(request.service_id)} ·{" "}
+{formatDateTime(request.start_time)}
 </p>
 
 <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-300">
@@ -241,7 +293,9 @@ Source: {request.source || "booking_page"}
 
 <div className="flex flex-wrap gap-2">
 <button
-onClick={() => updateRequestStatus(request.id, "confirmed")}
+onClick={() =>
+updateRequestStatus(request.id, "confirmed")
+}
 disabled={isUpdating === request.id}
 className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
 >
@@ -249,7 +303,9 @@ className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 
 </button>
 
 <button
-onClick={() => updateRequestStatus(request.id, "cancelled")}
+onClick={() =>
+updateRequestStatus(request.id, "cancelled")
+}
 disabled={isUpdating === request.id}
 className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
 >
