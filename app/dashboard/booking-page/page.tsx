@@ -1,343 +1,433 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import DashboardShell from "../components/DashboardShell";
 import { createClient } from "../../lib/supabase/client";
 
 type BusinessProfile = {
-id: string;
-owner_id: string;
-business_name: string | null;
-slug: string | null;
-timezone: string | null;
+ id: string;
+ business_name: string | null;
+ slug: string | null;
 };
 
 type BusinessHour = {
-id?: string;
-business_id?: string;
-owner_id?: string;
-day_of_week: number;
-is_open: boolean;
-open_time: string | null;
-close_time: string | null;
+ id?: string;
+ business_id?: string;
+ day_of_week: string;
+ is_open: boolean;
+ open_time: string | null;
+ close_time: string | null;
 };
 
-const days = [
-"Sunday",
-"Monday",
-"Tuesday",
-"Wednesday",
-"Thursday",
-"Friday",
-"Saturday",
+const defaultHours: BusinessHour[] = [
+ {
+ day_of_week: "Monday",
+ is_open: true,
+ open_time: "09:00",
+ close_time: "17:00",
+ },
+ {
+ day_of_week: "Tuesday",
+ is_open: true,
+ open_time: "09:00",
+ close_time: "17:00",
+ },
+ {
+ day_of_week: "Wednesday",
+ is_open: true,
+ open_time: "09:00",
+ close_time: "17:00",
+ },
+ {
+ day_of_week: "Thursday",
+ is_open: true,
+ open_time: "09:00",
+ close_time: "17:00",
+ },
+ {
+ day_of_week: "Friday",
+ is_open: true,
+ open_time: "09:00",
+ close_time: "17:00",
+ },
+ {
+ day_of_week: "Saturday",
+ is_open: false,
+ open_time: null,
+ close_time: null,
+ },
+ {
+ day_of_week: "Sunday",
+ is_open: false,
+ open_time: null,
+ close_time: null,
+ },
 ];
 
-function defaultHours(businessId: string, ownerId: string): BusinessHour[] {
-return days.map((_, index) => ({
-business_id: businessId,
-owner_id: ownerId,
-day_of_week: index,
-is_open: index >= 1 && index <= 5,
-open_time: index >= 1 && index <= 5 ? "09:00" : null,
-close_time: index >= 1 && index <= 5 ? "17:00" : null,
-}));
-}
+const timeOptions = Array.from({ length: 48 }, (_, index) => {
+ const totalMinutes = index * 30;
+ const hour24 = Math.floor(totalMinutes / 60);
+ const minutes = totalMinutes % 60;
 
-function toTimeValue(value: string | null) {
-if (!value) return "";
-return value.slice(0, 5);
+ const value = `${String(hour24).padStart(2, "0")}:${String(minutes).padStart(
+ 2,
+ "0"
+ )}`;
+
+ const period = hour24 >= 12 ? "PM" : "AM";
+ const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+ const label = `${hour12}:${String(minutes).padStart(2, "0")} ${period}`;
+
+ return { value, label };
+});
+
+function normalizeTimeValue(value: string | null) {
+ if (!value) return "";
+
+ return value.slice(0, 5);
 }
 
 export default function BookingPageSettings() {
-const supabase = useMemo(() => createClient(), []);
+ const supabase = useMemo(() => createClient(), []);
+ const [profile, setProfile] = useState<BusinessProfile | null>(null);
+ const [slug, setSlug] = useState("");
+ const [hours, setHours] = useState<BusinessHour[]>(defaultHours);
+ const [origin, setOrigin] = useState("");
+ const [isLoading, setIsLoading] = useState(true);
+ const [isSavingSlug, setIsSavingSlug] = useState(false);
+ const [isSavingHours, setIsSavingHours] = useState(false);
+ const [message, setMessage] = useState("");
 
-const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
-const [hours, setHours] = useState<BusinessHour[]>([]);
-const [slug, setSlug] = useState("");
-const [isLoading, setIsLoading] = useState(true);
-const [isSaving, setIsSaving] = useState(false);
-const [message, setMessage] = useState("");
-const [errorMessage, setErrorMessage] = useState("");
+ const cleanSlug = slug
+ .toLowerCase()
+ .trim()
+ .replace(/[^a-z0-9-]/g, "-")
+ .replace(/-+/g, "-")
+ .replace(/^-|-$/g, "");
 
-const publicUrl =
-typeof window !== "undefined" && slug
-? `${window.location.origin}/book/${slug}`
-: slug
-? `/book/${slug}`
-: "";
+ const publicBookingUrl =
+ cleanSlug && origin ? `${origin}/book/${cleanSlug}` : "";
 
-async function loadSettings() {
-setIsLoading(true);
-setErrorMessage("");
-setMessage("");
+ async function loadBookingPageSettings() {
+ setIsLoading(true);
+ setMessage("");
 
-const {
-data: { user },
-error: userError,
-} = await supabase.auth.getUser();
+ const {
+ data: { user },
+ error: userError,
+ } = await supabase.auth.getUser();
 
-if (userError || !user) {
-setErrorMessage("Unable to load user session.");
-setIsLoading(false);
-return;
-}
+ if (userError || !user) {
+ setIsLoading(false);
+ return;
+ }
 
-const { data: profile, error: profileError } = await supabase
-.from("business_profiles")
-.select("id, owner_id, business_name, slug, timezone")
-.eq("owner_id", user.id)
-.single();
+ const { data: businessProfile, error: profileError } = await supabase
+ .from("business_profiles")
+ .select("id, business_name, slug")
+ .eq("owner_id", user.id)
+ .single();
 
-if (profileError || !profile) {
-setErrorMessage("Business profile not found.");
-setIsLoading(false);
-return;
-}
+ if (profileError || !businessProfile) {
+ setMessage("Could not load your business profile.");
+ setIsLoading(false);
+ return;
+ }
 
-setBusinessProfile(profile);
-setSlug(profile.slug || "");
+ setProfile(businessProfile);
+ setSlug(businessProfile.slug || "");
 
-const { data: hourData, error: hoursError } = await supabase
-.from("business_hours")
-.select("id, business_id, owner_id, day_of_week, is_open, open_time, close_time")
-.eq("business_id", profile.id)
-.order("day_of_week", { ascending: true });
+ const { data: existingHours, error: hoursError } = await supabase
+ .from("business_hours")
+ .select("id, business_id, day_of_week, is_open, open_time, close_time")
+ .eq("business_id", businessProfile.id);
 
-if (hoursError) {
-setErrorMessage(hoursError.message);
-setIsLoading(false);
-return;
-}
+ if (!hoursError && existingHours && existingHours.length > 0) {
+ const orderedHours = defaultHours.map((defaultDay) => {
+ const found = existingHours.find(
+ (item) => item.day_of_week === defaultDay.day_of_week
+ );
 
-if (!hourData || hourData.length === 0) {
-setHours(defaultHours(profile.id, profile.owner_id));
-} else {
-const normalized = days.map((_, index) => {
-const existing = hourData.find((hour) => hour.day_of_week === index);
+ if (!found) return defaultDay;
 
-return (
-existing || {
-business_id: profile.id,
-owner_id: profile.owner_id,
-day_of_week: index,
-is_open: false,
-open_time: null,
-close_time: null,
-}
-);
-});
+ return {
+ ...found,
+ open_time: normalizeTimeValue(found.open_time),
+ close_time: normalizeTimeValue(found.close_time),
+ };
+ });
 
-setHours(normalized);
-}
+ setHours(orderedHours);
+ } else {
+ setHours(defaultHours);
+ }
 
-setIsLoading(false);
-}
+ setIsLoading(false);
+ }
 
-function updateHour(index: number, changes: Partial<BusinessHour>) {
-setHours((current) =>
-current.map((hour) =>
-hour.day_of_week === index ? { ...hour, ...changes } : hour
-)
-);
-}
+ async function saveSlug() {
+ if (!profile) return;
 
-async function saveSettings() {
-if (!businessProfile) {
-setErrorMessage("Business profile not loaded.");
-return;
-}
+ if (!cleanSlug) {
+ setMessage("Please enter a valid booking link.");
+ return;
+ }
 
-if (!slug.trim()) {
-setErrorMessage("Booking page slug is required.");
-return;
-}
+ setIsSavingSlug(true);
+ setMessage("");
 
-setIsSaving(true);
-setErrorMessage("");
-setMessage("");
+ const { error } = await supabase
+ .from("business_profiles")
+ .update({ slug: cleanSlug })
+ .eq("id", profile.id);
 
-const cleanSlug = slug
-.trim()
-.toLowerCase()
-.replace(/[^a-z0-9-]/g, "-")
-.replace(/-+/g, "-")
-.replace(/^-|-$/g, "");
+ if (error) {
+ setMessage(error.message);
+ setIsSavingSlug(false);
+ return;
+ }
 
-const { error: profileError } = await supabase
-.from("business_profiles")
-.update({ slug: cleanSlug })
-.eq("id", businessProfile.id);
+ setSlug(cleanSlug);
+ setMessage("Booking link updated.");
+ setIsSavingSlug(false);
+ }
 
-if (profileError) {
-setErrorMessage(profileError.message);
-setIsSaving(false);
-return;
-}
+ async function saveHours() {
+ if (!profile) return;
 
-const rows = hours.map((hour) => ({
-business_id: businessProfile.id,
-owner_id: businessProfile.owner_id,
-day_of_week: hour.day_of_week,
-is_open: hour.is_open,
-open_time: hour.is_open ? toTimeValue(hour.open_time) || "09:00" : null,
-close_time: hour.is_open ? toTimeValue(hour.close_time) || "17:00" : null,
-}));
+ setIsSavingHours(true);
+ setMessage("");
 
-const { error: hoursError } = await supabase
-.from("business_hours")
-.upsert(rows, { onConflict: "business_id,day_of_week" });
+ const rows = hours.map((item) => ({
+ business_id: profile.id,
+ day_of_week: item.day_of_week,
+ is_open: item.is_open,
+ open_time: item.is_open ? item.open_time : null,
+ close_time: item.is_open ? item.close_time : null,
+ }));
 
-if (hoursError) {
-setErrorMessage(hoursError.message);
-setIsSaving(false);
-return;
-}
+ const { error } = await supabase.from("business_hours").upsert(rows, {
+ onConflict: "business_id,day_of_week",
+ });
 
-setSlug(cleanSlug);
-setMessage("Booking page settings saved.");
-await loadSettings();
-setIsSaving(false);
-}
+ if (error) {
+ setMessage(error.message);
+ setIsSavingHours(false);
+ return;
+ }
 
-useEffect(() => {
-loadSettings();
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+ setMessage("Business hours saved.");
+ setIsSavingHours(false);
+ }
 
-return (
-<DashboardShell
-title="Booking Page"
-subtitle="Set your public booking link and business hours."
->
-<div className="space-y-6">
-<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
-<p className="text-sm font-semibold text-emerald-300">Public Booking Link</p>
-<h2 className="mt-3 text-2xl font-bold">Share your booking page</h2>
-<p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-This is the link customers will use to request appointments.
-</p>
+ async function copyBookingLink() {
+ if (!publicBookingUrl) return;
 
-<div className="mt-6">
-<label className="text-sm font-medium text-gray-300">Booking slug</label>
-<input
-value={slug}
-onChange={(event) => setSlug(event.target.value)}
-placeholder="schednest"
-className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
-/>
-</div>
+ await navigator.clipboard.writeText(publicBookingUrl);
+ setMessage("Booking link copied.");
+ }
 
-{publicUrl && (
-<div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-<p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-Public URL
-</p>
-<a
-href={publicUrl}
-target="_blank"
-className="mt-2 block break-all text-sm font-semibold text-emerald-300 hover:text-emerald-200"
->
-{publicUrl}
-</a>
-</div>
-)}
-</div>
+ function updateHour(
+ day: string,
+ field: "is_open" | "open_time" | "close_time",
+ value: boolean | string
+ ) {
+ setHours((current) =>
+ current.map((item) =>
+ item.day_of_week === day ? { ...item, [field]: value } : item
+ )
+ );
+ }
 
-<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
-<p className="text-sm font-semibold text-emerald-300">Business Hours</p>
-<h2 className="mt-3 text-2xl font-bold">
-{isLoading ? "Loading hours..." : "Set your weekly availability"}
-</h2>
-<p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-These hours will appear on your public booking page. Later, SchedNest will use them to generate available time slots automatically.
-</p>
+ useEffect(() => {
+ setOrigin(window.location.origin);
+ loadBookingPageSettings();
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, []);
 
-<div className="mt-6 grid gap-4">
-{hours.map((hour) => (
-<div
-key={hour.day_of_week}
-className="grid gap-4 rounded-3xl border border-white/10 bg-black/20 p-5 md:grid-cols-[1fr_120px_1fr_1fr]"
->
-<div>
-<p className="font-semibold text-white">{days[hour.day_of_week]}</p>
-<p className="mt-1 text-sm text-gray-500">
-{hour.is_open ? "Open" : "Closed"}
-</p>
-</div>
+ return (
+ <DashboardShell
+ title="Booking Page"
+ subtitle="Set your public booking link and business hours."
+ >
+ <div className="grid gap-8">
+ <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8">
+ <p className="text-sm font-black text-emerald-300">
+ Public Booking Link
+ </p>
 
-<label className="flex items-center gap-2 text-sm text-gray-300">
-<input
-type="checkbox"
-checked={hour.is_open}
-onChange={(event) =>
-updateHour(hour.day_of_week, {
-is_open: event.target.checked,
-open_time: event.target.checked
-? hour.open_time || "09:00"
-: null,
-close_time: event.target.checked
-? hour.close_time || "17:00"
-: null,
-})
-}
-/>
-Open
-</label>
+ <h2 className="mt-4 text-3xl font-black text-white">
+ Share your booking page
+ </h2>
 
-<div>
-<label className="text-xs font-medium text-gray-400">Open time</label>
-<input
-type="time"
-value={toTimeValue(hour.open_time)}
-disabled={!hour.is_open}
-onChange={(event) =>
-updateHour(hour.day_of_week, {
-open_time: event.target.value,
-})
-}
-className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none disabled:opacity-40"
-/>
-</div>
+ <p className="mt-4 max-w-2xl text-gray-400">
+ This is the link customers will use to request appointments.
+ </p>
 
-<div>
-<label className="text-xs font-medium text-gray-400">Close time</label>
-<input
-type="time"
-value={toTimeValue(hour.close_time)}
-disabled={!hour.is_open}
-onChange={(event) =>
-updateHour(hour.day_of_week, {
-close_time: event.target.value,
-})
-}
-className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none disabled:opacity-40"
-/>
-</div>
-</div>
-))}
-</div>
+ {isLoading ? (
+ <p className="mt-6 text-sm text-gray-400">
+ Loading booking link...
+ </p>
+ ) : (
+ <>
+ <div className="mt-6 grid gap-3">
+ <label className="text-sm font-semibold text-gray-300">
+ Public booking URL
+ </label>
 
-{errorMessage && (
-<p className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-{errorMessage}
-</p>
-)}
+ <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-4">
+ <p className="break-all text-base font-bold text-emerald-200">
+ {publicBookingUrl ||
+ "Add a booking link to create your public booking page."}
+ </p>
+ </div>
+ </div>
 
-{message && (
-<p className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-{message}
-</p>
-)}
+ <div className="mt-5 grid gap-3">
+ <label className="text-sm font-semibold text-gray-300">
+ Booking link:
+ </label>
 
-<button
-onClick={saveSettings}
-disabled={isSaving}
-className="mt-6 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
->
-{isSaving ? "Saving..." : "Save booking page"}
-</button>
-</div>
-</div>
-</DashboardShell>
-);
+ <input
+ value={slug}
+ onChange={(event) => setSlug(event.target.value)}
+ placeholder="schednest"
+ className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-4 text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400"
+ />
+
+ <p className="text-xs leading-5 text-gray-500">
+ This is the link ending customers will use. Example:{" "}
+ <span className="text-gray-300">/book/schednest</span>
+ </p>
+ </div>
+
+ <div className="mt-6 flex flex-wrap gap-3">
+ <button
+ onClick={saveSlug}
+ disabled={isSavingSlug}
+ className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+ >
+ {isSavingSlug ? "Saving..." : "Save Link"}
+ </button>
+
+ <button
+ onClick={copyBookingLink}
+ disabled={!publicBookingUrl}
+ className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+ >
+ Copy Link
+ </button>
+
+ {publicBookingUrl && (
+ <Link
+ href={publicBookingUrl}
+ target="_blank"
+ className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+ >
+ Open Booking Page
+ </Link>
+ )}
+ </div>
+ </>
+ )}
+
+ {message && (
+ <p className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-gray-300">
+ {message}
+ </p>
+ )}
+ </section>
+
+ <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8">
+ <p className="text-sm font-black text-emerald-300">Business Hours</p>
+
+ <h2 className="mt-4 text-3xl font-black text-white">
+ Set your weekly availability
+ </h2>
+
+ <p className="mt-4 max-w-2xl text-gray-400">
+ These hours will appear on your public booking page. Later,
+ SchedNest will use them to generate available time slots
+ automatically.
+ </p>
+
+ <div className="mt-8 grid gap-4">
+ {hours.map((item) => (
+ <div
+ key={item.day_of_week}
+ className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center"
+ >
+ <div>
+ <p className="font-bold text-white">{item.day_of_week}</p>
+ <p className="text-sm text-gray-500">
+ {item.is_open ? "Open" : "Closed"}
+ </p>
+ </div>
+
+ <label className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+ <input
+ type="checkbox"
+ checked={item.is_open}
+ onChange={(event) =>
+ updateHour(
+ item.day_of_week,
+ "is_open",
+ event.target.checked
+ )
+ }
+ />
+ Open
+ </label>
+
+ <select
+ value={item.open_time || ""}
+ disabled={!item.is_open}
+ onChange={(event) =>
+ updateHour(item.day_of_week, "open_time", event.target.value)
+ }
+ className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-40"
+ >
+ <option value="">Opening time</option>
+ {timeOptions.map((option) => (
+ <option key={`${item.day_of_week}-open-${option.value}`} value={option.value}>
+ {option.label}
+ </option>
+ ))}
+ </select>
+
+ <select
+ value={item.close_time || ""}
+ disabled={!item.is_open}
+ onChange={(event) =>
+ updateHour(
+ item.day_of_week,
+ "close_time",
+ event.target.value
+ )
+ }
+ className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-40"
+ >
+ <option value="">Closing time</option>
+ {timeOptions.map((option) => (
+ <option key={`${item.day_of_week}-close-${option.value}`} value={option.value}>
+ {option.label}
+ </option>
+ ))}
+ </select>
+ </div>
+ ))}
+ </div>
+
+ <button
+ onClick={saveHours}
+ disabled={isSavingHours}
+ className="mt-6 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+ >
+ {isSavingHours ? "Saving..." : "Save Business Hours"}
+ </button>
+ </section>
+ </div>
+ </DashboardShell>
+ );
 }
