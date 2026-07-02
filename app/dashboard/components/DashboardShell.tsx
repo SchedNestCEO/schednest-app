@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
+import NotificationBell from "./NotificationBell";
+
+type DashboardShellProps = {
+children: ReactNode;
+title: string;
+subtitle?: string;
+};
 
 type ClientUser = {
 id: string;
@@ -10,10 +18,11 @@ email: string;
 };
 
 type BusinessProfile = {
-business_name: string;
-role: "founder" | "business_owner";
-plan: "essentials" | "growth" | "complete" | "teams";
-subscription_status: "beta" | "active" | "past_due" | "canceled";
+id: string;
+business_name: string | null;
+role: string | null;
+plan: string | null;
+subscription_status: string | null;
 };
 
 const navItems = [
@@ -24,54 +33,32 @@ const navItems = [
 { label: "Services", href: "/dashboard/services" },
 { label: "Booking Page", href: "/dashboard/booking-page" },
 { label: "Birdy", href: "/dashboard/birdy" },
-
 ];
 
 export default function DashboardShell({
 children,
 title,
 subtitle,
-}: {
-children: React.ReactNode;
-title: string;
-subtitle: string;
-}) {
+}: DashboardShellProps) {
+const supabase = useMemo(() => createClient(), []);
+const router = useRouter();
 const pathname = usePathname();
-const [isLoading, setIsLoading] = useState(true);
+
 const [clientUser, setClientUser] = useState<ClientUser | null>(null);
 const [businessProfile, setBusinessProfile] =
 useState<BusinessProfile | null>(null);
+const [isLoading, setIsLoading] = useState(true);
 
-const todayLabel = useMemo(() => {
-return new Intl.DateTimeFormat("en-US", {
-weekday: "long",
-month: "long",
-day: "numeric",
-year: "numeric",
-}).format(new Date());
-}, []);
+const currentPath = pathname || "/dashboard";
 
-useEffect(() => {
 async function checkUser() {
-const supabase = createClient();
-
 const {
 data: { user },
+error,
 } = await supabase.auth.getUser();
 
-if (!user) {
-window.location.href = "/login";
-return;
-}
-
-const { data: profile, error } = await supabase
-.from("business_profiles")
-.select("business_name, role, plan, subscription_status")
-.eq("owner_id", user.id)
-.single();
-
-if (error || !profile) {
-window.location.href = "/coming-soon";
+if (error || !user) {
+router.push("/login");
 return;
 }
 
@@ -80,24 +67,42 @@ id: user.id,
 email: user.email ?? "Signed-in owner",
 });
 
-setBusinessProfile(profile as BusinessProfile);
+const { data: profile } = await supabase
+.from("business_profiles")
+.select("id, business_name, role, plan, subscription_status")
+.eq("owner_id", user.id)
+.single();
+
+if (profile) {
+setBusinessProfile(profile);
+}
+
 setIsLoading(false);
 }
 
-checkUser();
-}, []);
-
 async function handleLogout() {
-const supabase = createClient();
 await supabase.auth.signOut();
-window.location.href = "/login";
+router.push("/login");
 }
+
+function isActiveRoute(href: string) {
+if (href === "/dashboard") {
+return currentPath === "/dashboard";
+}
+
+return currentPath.startsWith(href);
+}
+
+useEffect(() => {
+checkUser();
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
 if (isLoading) {
 return (
 <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
-<div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-7xl items-center justify-center">
-<div className="rounded-3xl border border-white/10 bg-[#07110d]/85 p-8 text-center shadow-[0_0_80px_rgba(16,185,129,0.12)] backdrop-blur-xl">
+<div className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-center">
+<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 text-center shadow-[0_0_80px_rgba(16,185,129,0.12)] backdrop-blur-xl">
 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
 SchedNest
 </p>
@@ -108,100 +113,154 @@ SchedNest
 );
 }
 
-if (!clientUser || !businessProfile) {
-return null;
-}
-
 return (
 <main className="min-h-screen bg-[#050807] text-white">
-<div className="flex min-h-screen">
-<aside className="hidden w-72 border-r border-white/10 bg-[#07110d]/80 px-6 py-8 lg:block">
-<a href="/" className="flex items-center gap-3">
-<div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10 text-sm font-black text-emerald-300">
-S
-</div>
-
-<div>
-<p className="text-lg font-bold tracking-tight">SchedNest</p>
-<p className="text-xs text-gray-500">
-{businessProfile.role === "founder"
-? "Founder Workspace"
-: "Client Dashboard"}
+<div className="mx-auto flex max-w-7xl">
+<aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-white/10 bg-black/20 px-5 py-6 lg:block">
+<Link href="/dashboard" className="block">
+<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
+SchedNest
 </p>
-</div>
-</a>
+<h1 className="mt-3 text-2xl font-black">
+{businessProfile?.business_name || "Dashboard"}
+</h1>
+</Link>
 
-<nav className="mt-10 space-y-2 text-sm">
+<div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+<p className="text-xs text-gray-500">Signed in as</p>
+<p className="mt-1 truncate text-sm font-semibold text-gray-200">
+{clientUser?.email}
+</p>
+
+<div className="mt-3 flex flex-wrap gap-2">
+<span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+{businessProfile?.plan || "growth"}
+</span>
+
+<span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+{businessProfile?.subscription_status || "active"}
+</span>
+</div>
+</div>
+
+<nav className="mt-6 grid gap-2">
 {navItems.map((item) => {
-const isActive = pathname === item.href;
+const active = isActiveRoute(item.href);
 
 return (
-<a
+<Link
 key={item.href}
 href={item.href}
-className={
-isActive
-? "block rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 font-semibold text-emerald-200"
-: "block rounded-2xl px-4 py-3 text-gray-400 transition hover:bg-white/[0.04] hover:text-white"
-}
+className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+active
+? "bg-emerald-400 text-black"
+: "text-gray-300 hover:bg-white/10 hover:text-white"
+}`}
 >
 {item.label}
-</a>
+</Link>
 );
 })}
 </nav>
 
-<div className="mt-10 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-<div className="flex items-center justify-between gap-3">
-<p className="text-sm font-semibold text-emerald-300">
-Birdy Suggestions
-</p>
-<span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-Soon
-</span>
-</div>
-
-<p className="mt-3 text-sm leading-6 text-gray-400">
-No urgent suggestions yet. Later, Birdy will help surface missed
-follow-ups, open time slots, no-shows, and customer messages that
-need attention.
-</p>
-</div>
+<button
+onClick={handleLogout}
+className="mt-6 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-semibold text-gray-300 transition hover:bg-white/10 hover:text-white"
+>
+Log out
+</button>
 </aside>
 
-<section className="flex-1 px-5 py-6 sm:px-8 lg:px-10">
-<header className="flex flex-col gap-5 border-b border-white/10 pb-6 md:flex-row md:items-center md:justify-between">
+<section className="min-h-screen flex-1 px-4 py-5 sm:px-6 lg:px-8">
+<div className="mb-5 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 lg:hidden">
+<div className="flex items-center justify-between gap-4">
 <div>
-<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-Client Workspace
+<p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
+SchedNest
 </p>
-<h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-{title}
-</h1>
-<p className="mt-2 text-sm text-gray-400">{subtitle}</p>
-<p className="mt-1 text-sm text-gray-500">{todayLabel}</p>
+<p className="mt-1 max-w-[180px] truncate text-sm font-bold text-white">
+{businessProfile?.business_name || "Dashboard"}
+</p>
 </div>
 
-<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-<div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-gray-300">
-<span className="font-semibold text-white">
-{businessProfile.business_name}
-</span>
-<span className="ml-2 text-gray-500">
-{businessProfile.plan}
-</span>
-</div>
+<div className="flex items-center gap-2">
+<NotificationBell variant="mobile" />
 
 <button
 onClick={handleLogout}
-className="rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-gray-300 transition hover:border-emerald-300 hover:text-emerald-300"
+className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-semibold text-gray-300"
 >
 Log out
 </button>
 </div>
+</div>
+
+<div className="mt-4">
+<label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+Dashboard Menu
+</label>
+
+<select
+value={
+navItems.some((item) => isActiveRoute(item.href))
+? navItems.find((item) => isActiveRoute(item.href))?.href
+: "/dashboard"
+}
+onChange={(event) => router.push(event.target.value)}
+className="w-full rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-semibold text-white outline-none focus:border-emerald-400"
+>
+{navItems.map((item) => (
+<option key={item.href} value={item.href}>
+{item.label}
+</option>
+))}
+</select>
+</div>
+</div>
+
+<div className="mb-6 hidden w-fit max-w-full rounded-[2rem] border border-white/10 bg-white/[0.04] py-3 pl-3 pr-8 lg:block">
+<div className="flex items-center gap-2 overflow-visible">
+{navItems.map((item) => {
+const active = isActiveRoute(item.href);
+
+return (
+<Link
+key={item.href}
+href={item.href}
+className={`whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold transition ${
+active
+? "bg-emerald-400 text-black"
+: "text-gray-300 hover:bg-white/10 hover:text-white"
+}`}
+>
+{item.label}
+</Link>
+);
+})}
+
+<div className="shrink-0">
+<NotificationBell variant="top" />
+</div>
+</div>
+</div>
+
+<header className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_0_80px_rgba(16,185,129,0.08)] backdrop-blur-xl sm:p-8">
+<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
+Owner Dashboard
+</p>
+
+<h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl">
+{title}
+</h1>
+
+{subtitle && (
+<p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400 sm:text-base">
+{subtitle}
+</p>
+)}
 </header>
 
-<div className="mt-8">{children}</div>
+{children}
 </section>
 </div>
 </main>
