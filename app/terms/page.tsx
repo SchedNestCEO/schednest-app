@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LegalReadTracker from "../components/LegalReadTracker";
 
 const sections = [
   {
@@ -146,6 +147,10 @@ const sections = [
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+        <LegalReadTracker
+  storageKey="schednest_terms_read_2026-07-02"
+  label="Terms of Service"
+/>
       <div className="mx-auto max-w-4xl">
         <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4">
           <Link href="/" className="text-sm font-black text-emerald-300">

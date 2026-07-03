@@ -1,6 +1,12 @@
+import LegalReadTracker from "../components/LegalReadTracker";
+
 export default function PrivacyPage() {
 return (
 <main className="min-h-screen bg-[#050807] px-6 py-16 text-white">
+    <LegalReadTracker
+  storageKey="schednest_privacy_read_2026-07-02"
+  label="Privacy Policy"
+/>
 <div className="mx-auto max-w-4xl">
 <a href="/" className="text-sm font-semibold text-emerald-300">
 ← Back to SchedNest
