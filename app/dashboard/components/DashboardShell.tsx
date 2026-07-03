@@ -1,268 +1,297 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import NotificationBell from "./NotificationBell";
 
 type DashboardShellProps = {
-children: ReactNode;
-title: string;
-subtitle?: string;
+  children: ReactNode;
 };
 
-type ClientUser = {
-id: string;
-email: string;
+type NavItem = {
+  href: string;
+  label: string;
+  adminOnly?: boolean;
 };
 
-type BusinessProfile = {
-id: string;
-business_name: string | null;
-role: string | null;
-plan: string | null;
-subscription_status: string | null;
-};
-
-const navItems = [
-{ label: "Dashboard", href: "/dashboard" },
-{ label: "Bookings", href: "/dashboard/bookings" },
-{ label: "Requests", href: "/dashboard/requests" },
-{ label: "Customers", href: "/dashboard/customers" },
-{ label: "Services", href: "/dashboard/services" },
-{ label: "Booking Page", href: "/dashboard/booking-page" },
-{ label: "Birdy", href: "/dashboard/birdy" },
+const navItems: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+  },
+  {
+    href: "/dashboard/profile",
+    label: "Profile",
+  },
+  {
+    href: "/dashboard/bookings",
+    label: "Bookings",
+  },
+  {
+    href: "/dashboard/requests",
+    label: "Requests",
+  },
+  {
+    href: "/dashboard/customers",
+    label: "Customers",
+  },
+  {
+    href: "/dashboard/services",
+    label: "Services",
+  },
+  {
+    href: "/dashboard/booking-page",
+    label: "Booking Page",
+  },
+  {
+    href: "/dashboard/birdy",
+    label: "Birdy",
+  },
+  {
+    href: "/dashboard/subscriptions",
+    label: "Subscriptions",
+    adminOnly: true,
+  },
 ];
 
-export default function DashboardShell({
-children,
-title,
-subtitle,
-}: DashboardShellProps) {
-const supabase = useMemo(() => createClient(), []);
-const router = useRouter();
-const pathname = usePathname();
+const ADMIN_EMAIL = "hello@schednest.com";
 
-const [clientUser, setClientUser] = useState<ClientUser | null>(null);
-const [businessProfile, setBusinessProfile] =
-useState<BusinessProfile | null>(null);
-const [isLoading, setIsLoading] = useState(true);
+export default function DashboardShell({ children }: DashboardShellProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
 
-const currentPath = pathname || "/dashboard";
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isSchedNestAdmin, setIsSchedNestAdmin] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-async function checkUser() {
-const {
-data: { user },
-error,
-} = await supabase.auth.getUser();
+  const visibleNavItems = navItems.filter(
+    (item) => !item.adminOnly || isSchedNestAdmin
+  );
 
-if (error || !user) {
-router.push("/login");
-return;
-}
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
-setClientUser({
-id: user.id,
-email: user.email ?? "Signed-in owner",
-});
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-const { data: profile } = await supabase
-.from("business_profiles")
-.select("id, business_name, role, plan, subscription_status")
-.eq("owner_id", user.id)
-.single();
+      const email = user?.email?.toLowerCase() || null;
 
-if (profile) {
-setBusinessProfile(profile);
-}
+      setUserEmail(email);
+      setIsSchedNestAdmin(email === ADMIN_EMAIL);
+    }
 
-setIsLoading(false);
-}
+    loadUser();
+  }, [supabase]);
 
-async function handleLogout() {
-await supabase.auth.signOut();
-router.push("/login");
-}
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
-function isActiveRoute(href: string) {
-if (href === "/dashboard") {
-return currentPath === "/dashboard";
-}
+  function isActiveRoute(href: string) {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
 
-return currentPath.startsWith(href);
-}
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
 
-useEffect(() => {
-checkUser();
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  function getNavLinkClass(href: string, isMobile = false) {
+    const isActive = isActiveRoute(href);
 
-if (isLoading) {
-return (
-<main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
-<div className="mx-auto flex min-h-[80vh] max-w-7xl items-center justify-center">
-<div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 text-center shadow-[0_0_80px_rgba(16,185,129,0.12)] backdrop-blur-xl">
-<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-SchedNest
-</p>
-<h1 className="mt-4 text-3xl font-bold">Checking session...</h1>
-</div>
-</div>
-</main>
-);
-}
+    if (isMobile) {
+      return `rounded-2xl px-4 py-3 text-sm font-black transition ${
+        isActive
+          ? "bg-emerald-400 text-black"
+          : "text-gray-300 hover:bg-white/10 hover:text-white"
+      }`;
+    }
 
-return (
-<main className="min-h-screen bg-[#050807] text-white">
-<div className="mx-auto flex max-w-7xl">
-<aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-white/10 bg-black/20 px-5 py-6 lg:block">
-<Link href="/dashboard" className="block">
-<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-SchedNest
-</p>
-<h1 className="mt-3 text-2xl font-black">
-{businessProfile?.business_name || "Dashboard"}
-</h1>
-</Link>
+    return `rounded-2xl px-4 py-3 text-sm font-black transition ${
+      isActive
+        ? "bg-emerald-400 text-black"
+        : "text-gray-300 hover:bg-white/10 hover:text-white"
+    }`;
+  }
 
-<div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-<p className="text-xs text-gray-500">Signed in as</p>
-<p className="mt-1 truncate text-sm font-semibold text-gray-200">
-{clientUser?.email}
-</p>
+  function getTopNavLinkClass(href: string) {
+    const isActive = isActiveRoute(href);
 
-<div className="mt-3 flex flex-wrap gap-2">
-<span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-{businessProfile?.plan || "growth"}
-</span>
+    return `whitespace-nowrap rounded-2xl px-4 py-2.5 text-sm font-black transition ${
+      isActive
+        ? "bg-emerald-400 text-black"
+        : "text-gray-300 hover:bg-white/10 hover:text-white"
+    }`;
+  }
 
-<span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
-{businessProfile?.subscription_status || "active"}
-</span>
-</div>
-</div>
+  return (
+    <main className="min-h-screen bg-[#050807] text-white">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-72 shrink-0 border-r border-white/10 bg-black/20 p-6 lg:block">
+          <div className="sticky top-6">
+            <Link href="/dashboard" className="block">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+                SchedNest
+              </p>
 
-<nav className="mt-6 grid gap-2">
-{navItems.map((item) => {
-const active = isActiveRoute(item.href);
+              <h1 className="mt-2 text-2xl font-black text-white">
+                SchedNest Founder
+              </h1>
+            </Link>
 
-return (
-<Link
-key={item.href}
-href={item.href}
-className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-active
-? "bg-emerald-400 text-black"
-: "text-gray-300 hover:bg-white/10 hover:text-white"
-}`}
->
-{item.label}
-</Link>
-);
-})}
-</nav>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <p className="text-xs font-bold text-gray-500">Signed in as</p>
 
-<button
-onClick={handleLogout}
-className="mt-6 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-semibold text-gray-300 transition hover:bg-white/10 hover:text-white"
->
-Log out
-</button>
-</aside>
+              <p className="mt-1 break-words text-sm font-black text-white">
+                {userEmail || "Loading..."}
+              </p>
 
-<section className="min-h-screen flex-1 px-4 py-5 sm:px-6 lg:px-8">
-<div className="mb-5 rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 lg:hidden">
-<div className="flex items-center justify-between gap-4">
-<div>
-<p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
-SchedNest
-</p>
-<p className="mt-1 max-w-[180px] truncate text-sm font-bold text-white">
-{businessProfile?.business_name || "Dashboard"}
-</p>
-</div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                  complete
+                </span>
 
-<div className="flex items-center gap-2">
-<NotificationBell variant="mobile" />
+                {isSchedNestAdmin && (
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
+                    admin
+                  </span>
+                )}
 
-<button
-onClick={handleLogout}
-className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-semibold text-gray-300"
->
-Log out
-</button>
-</div>
-</div>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300">
+                  beta
+                </span>
+              </div>
+            </div>
 
-<div className="mt-4">
-<label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-Dashboard Menu
-</label>
+            <nav className="mt-6 grid gap-2">
+              {visibleNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={getNavLinkClass(item.href)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-<select
-value={
-navItems.some((item) => isActiveRoute(item.href))
-? navItems.find((item) => isActiveRoute(item.href))?.href
-: "/dashboard"
-}
-onChange={(event) => router.push(event.target.value)}
-className="w-full rounded-2xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-semibold text-white outline-none focus:border-emerald-400"
->
-{navItems.map((item) => (
-<option key={item.href} value={item.href}>
-{item.label}
-</option>
-))}
-</select>
-</div>
-</div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-8 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+            >
+              Log out
+            </button>
+          </div>
+        </aside>
 
-<div className="mb-6 hidden w-fit max-w-full rounded-[2rem] border border-white/10 bg-white/[0.04] py-3 pl-3 pr-8 lg:block">
-<div className="flex items-center gap-2 overflow-visible">
-{navItems.map((item) => {
-const active = isActiveRoute(item.href);
+        <section className="flex min-w-0 flex-1 flex-col">
+          <header className="border-b border-white/10 bg-black/20 px-4 py-4 lg:hidden">
+            <div className="flex items-center justify-between gap-3">
+              <Link href="/dashboard">
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">
+                  SchedNest
+                </p>
+                <p className="text-lg font-black text-white">Dashboard</p>
+              </Link>
 
-return (
-<Link
-key={item.href}
-href={item.href}
-className={`whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-active
-? "bg-emerald-400 text-black"
-: "text-gray-300 hover:bg-white/10 hover:text-white"
-}`}
->
-{item.label}
-</Link>
-);
-})}
+              <div className="flex items-center gap-2">
+                <NotificationBell variant="mobile" />
 
-<div className="shrink-0">
-<NotificationBell variant="top" />
-</div>
-</div>
-</div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setIsMobileMenuOpen((currentValue) => !currentValue)
+                  }
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-white"
+                >
+                  Menu
+                </button>
+              </div>
+            </div>
 
-<header className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_0_80px_rgba(16,185,129,0.08)] backdrop-blur-xl sm:p-8">
-<p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
-Owner Dashboard
-</p>
+            {isMobileMenuOpen && (
+              <div className="mt-4 rounded-[2rem] border border-white/10 bg-[#07100d] p-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-xs font-bold text-gray-500">
+                    Signed in as
+                  </p>
 
-<h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl">
-{title}
-</h1>
+                  <p className="mt-1 break-words text-sm font-black text-white">
+                    {userEmail || "Loading..."}
+                  </p>
 
-{subtitle && (
-<p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400 sm:text-base">
-{subtitle}
-</p>
-)}
-</header>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                      complete
+                    </span>
 
-{children}
-</section>
-</div>
-</main>
-);
+                    {isSchedNestAdmin && (
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
+                        admin
+                      </span>
+                    )}
+
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300">
+                      beta
+                    </span>
+                  </div>
+                </div>
+
+                <nav className="mt-3 grid gap-2">
+                  {visibleNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={getNavLinkClass(item.href, true)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Log out
+                  </button>
+                </nav>
+              </div>
+            )}
+          </header>
+
+          <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="relative z-40 mb-6 hidden w-fit max-w-full overflow-visible rounded-[2rem] border border-white/10 bg-white/[0.04] p-3 lg:block">
+              <div className="flex flex-wrap items-center gap-2 overflow-visible">
+                {visibleNavItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={getTopNavLinkClass(item.href)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+
+                <div className="relative shrink-0 overflow-visible">
+                  <NotificationBell variant="top" />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative z-0">{children}</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
