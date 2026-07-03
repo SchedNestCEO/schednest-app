@@ -53,12 +53,21 @@ const sections = [
     ],
   },
   {
-    title: "Vulnerability Reporting",
-    body: [
-      "If you believe you have found a security vulnerability in SchedNest, please report it responsibly and do not access, modify, delete, download, or share data that does not belong to you.",
-      "Before full public launch, SchedNest should create a dedicated security contact email such as security@schednest.com.",
-    ],
-  },
+  title: "Vulnerability Reporting",
+  body: [
+    "If you believe you have found a security vulnerability in SchedNest, please report it responsibly to security@schednest.com.",
+    "Do not access, modify, delete, download, or share data that does not belong to you.",
+    "Please include enough detail for SchedNest to understand and investigate the issue, such as the affected page, steps to reproduce, screenshots if appropriate, and your contact information.",
+  ],
+},
+{
+  title: "Security Contact",
+  body: [
+    "Security reports and account safety concerns can be sent to security@schednest.com.",
+    "General support questions can be sent to support@schednest.com.",
+    "Privacy-related questions can be sent to privacy@schednest.com.",
+  ],
+},
 ];
 
 export default function SecurityPage() {

@@ -136,12 +136,17 @@ const sections = [
       "Continued use of SchedNest after updated Terms become effective means you accept the updated Terms.",
     ],
   },
+  
   {
-    title: "17. Contact",
-    body: [
-      "Questions about these Terms of Service can be sent to SchedNest through the contact methods provided on the website.",
-    ],
-  },
+  title: "17. Contact",
+  body: [
+    "Questions about these Terms of Service or legal notices can be sent to legal@schednest.com.",
+    "Billing, refund, invoice, and subscription questions can be sent to billing@schednest.com.",
+    "General support questions can be sent to support@schednest.com.",
+    "Privacy-related questions or data requests can be sent to privacy@schednest.com.",
+    "Security issues or vulnerability reports can be sent to security@schednest.com.",
+  ],
+},
 ];
 
 export default function TermsPage() {
