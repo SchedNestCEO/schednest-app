@@ -4,6 +4,7 @@ import { getPriceMetadata, stripe } from "../../../lib/stripe/billing";
 import { createAdminClient } from "../../../lib/supabase/admin";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function unixToIso(value: unknown) {
   if (typeof value !== "number") return null;
@@ -26,13 +27,33 @@ function getStripePriceId(subscription: Stripe.Subscription) {
 async function findPlanId(planKey: string) {
   const adminClient = createAdminClient();
 
-  const { data: plan } = await adminClient
+  const { data: planById, error: planByIdError } = await adminClient
+    .from("subscription_plans")
+    .select("id, name")
+    .eq("id", planKey)
+    .maybeSingle();
+
+  if (planByIdError) {
+    throw new Error(`Could not look up plan by id: ${planByIdError.message}`);
+  }
+
+  if (planById?.id) {
+    return planById.id;
+  }
+
+  const { data: planByName, error: planByNameError } = await adminClient
     .from("subscription_plans")
     .select("id, name")
     .ilike("name", planKey)
     .maybeSingle();
 
-  return plan?.id || null;
+  if (planByNameError) {
+    throw new Error(
+      `Could not look up plan by name: ${planByNameError.message}`
+    );
+  }
+
+  return planByName?.id || null;
 }
 
 async function findBusinessIdFromStripe(
@@ -43,20 +64,51 @@ async function findBusinessIdFromStripe(
 
   const adminClient = createAdminClient();
 
-  let query = adminClient
-    .from("business_subscriptions")
-    .select("business_id")
-    .limit(1);
-
   if (stripeSubscriptionId) {
-    query = query.eq("stripe_subscription_id", stripeSubscriptionId);
-  } else if (stripeCustomerId) {
-    query = query.eq("stripe_customer_id", stripeCustomerId);
+    const { data, error } = await adminClient
+      .from("business_subscriptions")
+      .select("business_id")
+      .eq("stripe_subscription_id", stripeSubscriptionId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(
+        `Could not find business by Stripe subscription: ${error.message}`
+      );
+    }
+
+    if (data?.business_id) {
+      return data.business_id;
+    }
   }
 
-  const { data } = await query.maybeSingle();
+  if (stripeCustomerId) {
+    const { data, error } = await adminClient
+      .from("business_subscriptions")
+      .select("business_id")
+      .eq("stripe_customer_id", stripeCustomerId)
+      .maybeSingle();
 
-  return data?.business_id || null;
+    if (error) {
+      throw new Error(
+        `Could not find business by Stripe customer: ${error.message}`
+      );
+    }
+
+    if (data?.business_id) {
+      return data.business_id;
+    }
+  }
+
+  return null;
+}
+
+function getMetadataValue(
+  primary: Stripe.Metadata | undefined,
+  fallback: Stripe.Metadata | null | undefined,
+  key: string
+) {
+  return primary?.[key] || fallback?.[key] || null;
 }
 
 async function syncSubscriptionToSupabase(
@@ -69,46 +121,62 @@ async function syncSubscriptionToSupabase(
   const stripeSubscriptionId = subscription.id;
   const stripePriceId = getStripePriceId(subscription);
 
-  const stripePriceMetadata = stripePriceId
-    ? getPriceMetadata(stripePriceId)
-    : null;
+  if (!stripePriceId) {
+    throw new Error("Stripe subscription is missing a price ID.");
+  }
+
+  const stripePriceMetadata = getPriceMetadata(stripePriceId);
 
   const businessId =
-    subscription.metadata.business_id ||
-    fallbackMetadata?.business_id ||
+    getMetadataValue(subscription.metadata, fallbackMetadata, "business_id") ||
     (await findBusinessIdFromStripe(stripeCustomerId, stripeSubscriptionId));
 
   if (!businessId) {
-    console.warn("Stripe webhook ignored: missing business_id.");
-    return;
+    throw new Error(
+      `Missing business_id. Subscription=${stripeSubscriptionId}, Customer=${stripeCustomerId}, Price=${stripePriceId}`
+    );
   }
 
   const planKey =
     stripePriceMetadata?.planKey ||
-    subscription.metadata.plan_key ||
-    fallbackMetadata?.plan_key ||
-    null;
+    getMetadataValue(subscription.metadata, fallbackMetadata, "plan_key");
+
+  if (!planKey) {
+    throw new Error(`Could not determine plan for Stripe price ${stripePriceId}`);
+  }
 
   const billingInterval =
     stripePriceMetadata?.billingInterval ||
-    subscription.metadata.billing_interval ||
-    fallbackMetadata?.billing_interval ||
-    null;
+    getMetadataValue(
+      subscription.metadata,
+      fallbackMetadata,
+      "billing_interval"
+    );
+
+  if (!billingInterval) {
+    throw new Error(
+      `Could not determine billing interval for Stripe price ${stripePriceId}`
+    );
+  }
 
   const pricingTier =
     stripePriceMetadata?.pricingTier ||
-    subscription.metadata.pricing_tier ||
-    fallbackMetadata?.pricing_tier ||
+    getMetadataValue(subscription.metadata, fallbackMetadata, "pricing_tier") ||
     "standard";
 
-  const planId = planKey ? await findPlanId(planKey) : null;
+  const planId = await findPlanId(planKey);
+
+  if (!planId) {
+    throw new Error(`No matching subscription plan found for ${planKey}`);
+  }
 
   const subscriptionWithPeriod = subscription as Stripe.Subscription & {
     current_period_end?: number;
   };
 
-  const payload: Record<string, unknown> = {
+  const payload = {
     business_id: businessId,
+    plan_id: planId,
     status: subscription.status,
     stripe_customer_id: stripeCustomerId,
     stripe_subscription_id: stripeSubscriptionId,
@@ -121,10 +189,6 @@ async function syncSubscriptionToSupabase(
     updated_at: new Date().toISOString(),
   };
 
-  if (planId) {
-    payload.plan_id = planId;
-  }
-
   const { error } = await adminClient
     .from("business_subscriptions")
     .upsert(payload, {
@@ -132,8 +196,34 @@ async function syncSubscriptionToSupabase(
     });
 
   if (error) {
-    console.error("Failed to sync Stripe subscription:", error.message);
+    throw new Error(`Failed to sync Stripe subscription: ${error.message}`);
   }
+}
+
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session
+) {
+  if (session.mode !== "subscription") {
+    return;
+  }
+
+  if (typeof session.subscription !== "string") {
+    throw new Error("Checkout session is missing subscription ID.");
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(
+    session.subscription
+  );
+
+  const fallbackMetadata: Stripe.Metadata = {
+    ...(session.metadata || {}),
+  };
+
+  if (!fallbackMetadata.business_id && session.client_reference_id) {
+    fallbackMetadata.business_id = session.client_reference_id;
+  }
+
+  await syncSubscriptionToSupabase(subscription, fallbackMetadata);
 }
 
 export async function POST(request: Request) {
@@ -171,17 +261,7 @@ export async function POST(request: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-
-      if (
-        session.mode === "subscription" &&
-        typeof session.subscription === "string"
-      ) {
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription
-        );
-
-        await syncSubscriptionToSupabase(subscription, session.metadata);
-      }
+      await handleCheckoutSessionCompleted(session);
     }
 
     if (
@@ -190,7 +270,6 @@ export async function POST(request: Request) {
       event.type === "customer.subscription.deleted"
     ) {
       const subscription = event.data.object as Stripe.Subscription;
-
       await syncSubscriptionToSupabase(subscription);
     }
 
