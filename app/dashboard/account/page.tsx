@@ -13,6 +13,71 @@ type BusinessProfile = {
 
 type AnyRow = Record<string, unknown>;
 
+type PlanOption = {
+  key: "essentials" | "growth" | "complete";
+  name: string;
+  founderMonthly: string;
+  founderAnnual: string;
+  standardMonthly: string;
+  standardAnnual: string;
+  description: string;
+  features: string[];
+};
+
+const ADMIN_EMAIL = "hello@schednest.com";
+
+const planOptions: PlanOption[] = [
+  {
+    key: "essentials",
+    name: "Essentials",
+    founderMonthly: "$4.99/mo",
+    founderAnnual: "$49.99/year",
+    standardMonthly: "$9.99/mo",
+    standardAnnual: "$99.99/year",
+    description: "For solo providers who need a clean booking system.",
+    features: [
+      "Booking page",
+      "Services",
+      "Bookings",
+      "Customers",
+      "Requests",
+      "Basic notifications",
+    ],
+  },
+  {
+    key: "growth",
+    name: "Growth",
+    founderMonthly: "$14.99/mo",
+    founderAnnual: "$149.99/year",
+    standardMonthly: "$19.99/mo",
+    standardAnnual: "$199.99/year",
+    description: "For businesses that want stronger branding and presentation.",
+    features: [
+      "Everything in Essentials",
+      "Custom booking page colors",
+      "Business description and contact info",
+      "Service samples",
+      "Featured services foundation",
+    ],
+  },
+  {
+    key: "complete",
+    name: "Complete",
+    founderMonthly: "$34.99/mo",
+    founderAnnual: "$349.99/year",
+    standardMonthly: "$39.99/mo",
+    standardAnnual: "$399.99/year",
+    description: "For businesses building a more complete customer experience.",
+    features: [
+      "Everything in Growth",
+      "Before/after gallery foundation",
+      "Portfolio-style booking page foundation",
+      "Advanced customer features later",
+      "Priority product updates",
+    ],
+  },
+];
+
 function getString(row: AnyRow | null, keys: string[], fallback = "Not set") {
   if (!row) return fallback;
 
@@ -98,11 +163,16 @@ function getStatusClass(status: string) {
   return "border-white/10 bg-white/10 text-gray-300";
 }
 
+function normalizePlanName(value: string) {
+  return value.toLowerCase().replace(/\s+/g, "_");
+}
+
 export default function AccountPage() {
   const supabase = useMemo(() => createClient(), []);
 
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [subscription, setSubscription] = useState<AnyRow | null>(null);
   const [plan, setPlan] = useState<AnyRow | null>(null);
@@ -122,6 +192,8 @@ export default function AccountPage() {
       return;
     }
 
+    setUserEmail(user.email || null);
+
     const { data: businessData, error: businessError } = await supabase
       .from("business_profiles")
       .select("id, owner_id, business_name")
@@ -137,6 +209,8 @@ export default function AccountPage() {
     if (!businessData) {
       setMessage("Create your business profile before managing billing.");
       setBusiness(null);
+      setSubscription(null);
+      setPlan(null);
       setIsLoading(false);
       return;
     }
@@ -193,6 +267,8 @@ export default function AccountPage() {
     getString(plan, ["name", "plan_name", "title"], "No plan assigned")
   );
 
+  const normalizedCurrentPlan = normalizePlanName(planName);
+
   const pricingTier = formatLabel(
     getString(subscription, ["pricing_tier", "tier"], "Not set")
   );
@@ -226,22 +302,50 @@ export default function AccountPage() {
     plan?.price_annual ??
     subscription?.annual_price;
 
+  const stripeCustomerId = getString(
+    subscription,
+    ["stripe_customer_id", "customer_id"],
+    "Not connected"
+  );
+
+  const stripeSubscriptionId = getString(
+    subscription,
+    ["stripe_subscription_id", "subscription_id"],
+    "Not connected"
+  );
+
+  const isAdmin = userEmail === ADMIN_EMAIL;
+  const hasSubscription = Boolean(subscription);
+
   return (
     <DashboardShell>
       <div className="space-y-6">
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-            Account
-          </p>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+                Account
+              </p>
 
-          <h1 className="mt-3 text-4xl font-black text-white">
-            Manage your account and billing.
-          </h1>
+              <h1 className="mt-3 text-4xl font-black text-white">
+                Manage your account and billing.
+              </h1>
 
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
-            Review your subscription status, plan details, billing interval, and
-            support options for your SchedNest account.
-          </p>
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
+                Review your subscription, compare plans, and prepare your
+                billing setup. Stripe automation is the next major launch step.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={loadAccount}
+              disabled={isLoading}
+              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoading ? "Refreshing..." : "Refresh account"}
+            </button>
+          </div>
 
           {message && (
             <p className="mt-5 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-gray-300">
@@ -315,6 +419,29 @@ export default function AccountPage() {
                 </p>
               </div>
             </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                disabled
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black opacity-60"
+              >
+                Upgrade with Stripe soon
+              </button>
+
+              <button
+                type="button"
+                disabled
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 opacity-60"
+              >
+                Billing portal soon
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs leading-5 text-gray-400">
+              These buttons are intentionally disabled until the Stripe checkout,
+              billing portal, and webhook routes are added.
+            </p>
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
@@ -390,7 +517,7 @@ export default function AccountPage() {
           </div>
         </section>
 
-        {!isLoading && !subscription && (
+        {!isLoading && !hasSubscription && (
           <section className="rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-6">
             <p className="text-sm font-black uppercase tracking-[0.28em] text-yellow-200">
               No Plan Assigned
@@ -401,17 +528,19 @@ export default function AccountPage() {
             </h2>
 
             <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-              Since billing is still being managed manually, the account can be
-              assigned a plan from the admin subscriptions page.
+              Billing is still being prepared for Stripe automation. For now,
+              founder beta access can be assigned manually.
             </p>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/dashboard/subscriptions"
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
-              >
-                Open admin subscriptions
-              </Link>
+              {isAdmin && (
+                <Link
+                  href="/dashboard/subscriptions"
+                  className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                >
+                  Open admin subscriptions
+                </Link>
+              )}
 
               <a
                 href="mailto:billing@schednest.com"
@@ -423,67 +552,210 @@ export default function AccountPage() {
           </section>
         )}
 
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                Plans
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Choose the level that fits the business.
+              </h2>
+
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-400">
+                These cards prepare the account page for Stripe checkout. Once
+                Stripe is wired, each plan can open the correct checkout session.
+              </p>
+            </div>
+
+            <span className="w-fit rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+              Founder beta ready
+            </span>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {planOptions.map((option) => {
+              const isCurrentPlan =
+                normalizedCurrentPlan === option.key ||
+                normalizedCurrentPlan.includes(option.key);
+
+              return (
+                <div
+                  key={option.key}
+                  className={`rounded-[2rem] border p-5 ${
+                    isCurrentPlan
+                      ? "border-emerald-400/30 bg-emerald-400/10"
+                      : "border-white/10 bg-black/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xl font-black text-white">
+                        {option.name}
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-gray-400">
+                        {option.description}
+                      </p>
+                    </div>
+
+                    {isCurrentPlan && (
+                      <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                        Current
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                      Founder beta
+                    </p>
+
+                    <p className="mt-2 text-lg font-black text-white">
+                      {option.founderMonthly}
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-400">
+                      {option.founderAnnual}
+                    </p>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                      Standard
+                    </p>
+
+                    <p className="mt-2 text-lg font-black text-white">
+                      {option.standardMonthly}
+                    </p>
+
+                    <p className="mt-1 text-sm text-gray-400">
+                      {option.standardAnnual}
+                    </p>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    {option.features.map((feature) => (
+                      <div key={feature} className="flex items-start gap-3">
+                        <span className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
+                        <p className="text-sm leading-5 text-gray-300">
+                          {feature}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled
+                    className="mt-6 w-full rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 opacity-60"
+                  >
+                    Stripe checkout coming next
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <p className="text-sm font-black text-emerald-300">
-              Billing Help
+              Stripe Readiness
             </p>
 
             <h3 className="mt-3 text-xl font-black text-white">
-              Questions about payment?
+              Billing automation status
             </h3>
 
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              Use billing support for payment questions, invoices, plan changes,
-              refunds, or cancellation help.
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-sm font-black text-emerald-300">
+                  Account page ready
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-300">
+                  Plan display, subscription summary, and billing support are in
+                  place.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
+                <p className="text-sm font-black text-yellow-200">
+                  Stripe routes next
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-300">
+                  Checkout, billing portal, and webhook routes still need to be
+                  added.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+            <p className="text-sm font-black text-emerald-300">
+              Stripe Records
             </p>
 
-            <a
-              href="mailto:billing@schednest.com"
-              className="mt-5 block rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
-            >
-              Email billing
-            </a>
+            <h3 className="mt-3 text-xl font-black text-white">
+              Connected billing IDs
+            </h3>
+
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                  Customer ID
+                </p>
+                <p className="mt-2 break-all text-sm font-black text-gray-300">
+                  {stripeCustomerId}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                  Subscription ID
+                </p>
+                <p className="mt-2 break-all text-sm font-black text-gray-300">
+                  {stripeSubscriptionId}
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <p className="text-sm font-black text-emerald-300">Support</p>
 
             <h3 className="mt-3 text-xl font-black text-white">
-              Need account help?
+              Need help?
             </h3>
 
             <p className="mt-3 text-sm leading-6 text-gray-400">
               Contact support for login issues, setup questions, booking page
-              problems, or customer notification issues.
+              problems, billing questions, or notification issues.
             </p>
 
-            <a
-              href="mailto:support@schednest.com"
-              className="mt-5 block rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
-            >
-              Email support
-            </a>
-          </div>
+            <div className="mt-5 grid gap-3">
+              <a
+                href="mailto:billing@schednest.com"
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+              >
+                Email billing
+              </a>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">Legal</p>
+              <a
+                href="mailto:support@schednest.com"
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+              >
+                Email support
+              </a>
 
-            <h3 className="mt-3 text-xl font-black text-white">
-              Terms and policies
-            </h3>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              Review the terms for billing, cancellations, refunds, and account
-              responsibilities.
-            </p>
-
-            <Link
-              href="/terms"
-              className="mt-5 block rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
-            >
-              View terms
-            </Link>
+              <Link
+                href="/terms"
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+              >
+                View terms
+              </Link>
+            </div>
           </div>
         </section>
       </div>

@@ -27,6 +27,9 @@ type PublicService = {
   description: string | null;
   price: number | null;
   duration_minutes: number | null;
+  sample_image_url: string | null;
+  sample_caption: string | null;
+  show_sample_on_booking_page: boolean | null;
 };
 
 type PublicHour = {
@@ -95,6 +98,30 @@ function normalizeColor(value: string | null, fallback: string) {
   }
 
   return fallback;
+}
+
+function getSafeImageUrl(value: string | null | undefined) {
+  if (!value) return "";
+
+  const cleanValue = value.trim();
+
+  if (
+    cleanValue.startsWith("https://") ||
+    cleanValue.startsWith("http://") ||
+    cleanValue.startsWith("/")
+  ) {
+    return cleanValue;
+  }
+
+  return "";
+}
+
+function shouldShowServiceSample(service: PublicService | null) {
+  if (!service) return false;
+
+  return Boolean(
+    service.show_sample_on_booking_page && getSafeImageUrl(service.sample_image_url)
+  );
 }
 
 function timeToMinutes(value: string | null) {
@@ -205,6 +232,12 @@ export default function PublicBookingPage() {
       null
     );
   }, [pageData, selectedServiceId]);
+
+  const visibleServiceSamples = useMemo(() => {
+    if (!pageData) return [];
+
+    return pageData.services.filter((service) => shouldShowServiceSample(service));
+  }, [pageData]);
 
   const bookingTimeMode = pageData?.business.booking_time_mode || "fixed_hours";
   const businessHoursEnabled =
@@ -544,6 +577,84 @@ export default function PublicBookingPage() {
           )}
         </section>
 
+        {visibleServiceSamples.length > 0 && (
+          <section className={cardClass}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p
+                  className="text-sm font-black uppercase tracking-[0.24em]"
+                  style={{ color: primaryColor }}
+                >
+                  Service Samples
+                </p>
+
+                <h2 className={`mt-3 text-2xl font-black ${titleTextClass}`}>
+                  See examples before you book.
+                </h2>
+
+                <p className={`mt-3 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
+                  Review sample work or service examples shared by this business.
+                </p>
+              </div>
+
+              <span
+                className={`w-fit rounded-full px-4 py-2 text-xs font-black ${
+                  isCleanTheme
+                    ? "border border-slate-200 bg-slate-50 text-slate-600"
+                    : "bg-white/10 text-gray-300"
+                }`}
+              >
+                {visibleServiceSamples.length} sample
+                {visibleServiceSamples.length === 1 ? "" : "s"}
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {visibleServiceSamples.map((service) => {
+                const imageUrl = getSafeImageUrl(service.sample_image_url);
+
+                return (
+                  <div
+                    key={service.id}
+                    className={`overflow-hidden rounded-[2rem] border ${
+                      isCleanTheme
+                        ? "border-slate-200 bg-slate-50"
+                        : "border-white/10 bg-black/20"
+                    }`}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={service.sample_caption || service.name}
+                      className="h-64 w-full object-cover"
+                    />
+
+                    <div className="p-5">
+                      <p
+                        className="text-xs font-black uppercase tracking-[0.2em]"
+                        style={{ color: primaryColor }}
+                      >
+                        {service.name}
+                      </p>
+
+                      <p className={`mt-2 text-sm font-black ${titleTextClass}`}>
+                        {service.sample_caption ||
+                          service.description ||
+                          "Service example"}
+                      </p>
+
+                      <p className={`mt-2 text-xs ${softTextClass}`}>
+                        {formatMoney(service.price)}
+                        {" · "}
+                        {service.duration_minutes ?? 60} min
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {confirmationSummary && (
           <section
             className="rounded-[2rem] border p-8 shadow-[0_0_40px_rgba(52,211,153,0.08)]"
@@ -759,6 +870,37 @@ export default function PublicBookingPage() {
                   <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
                     {selectedService.description}
                   </p>
+                )}
+
+                {shouldShowServiceSample(selectedService) && (
+                  <div
+                    className={`mt-4 overflow-hidden rounded-2xl border ${
+                      isCleanTheme
+                        ? "border-slate-200 bg-slate-50"
+                        : "border-white/10 bg-black/20"
+                    }`}
+                  >
+                    <img
+                      src={getSafeImageUrl(selectedService?.sample_image_url)}
+                      alt={selectedService?.sample_caption || selectedService?.name || "Service sample"}
+                      className="h-52 w-full object-cover"
+                    />
+
+                    <div className="p-4">
+                      <p
+                        className="text-xs font-black uppercase tracking-[0.2em]"
+                        style={{ color: primaryColor }}
+                      >
+                        Selected service sample
+                      </p>
+
+                      <p className={`mt-2 text-sm font-bold ${titleTextClass}`}>
+                        {selectedService?.sample_caption ||
+                          selectedService?.description ||
+                          selectedService?.name}
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
 

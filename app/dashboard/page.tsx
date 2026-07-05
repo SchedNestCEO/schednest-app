@@ -16,19 +16,39 @@ type DashboardStats = {
   todaysBookings: number;
   pendingRequests: number;
   customers: number;
-  followUps: number;
+  birdySuggestions: number;
   services: number;
+  activeServices: number;
   businessHours: number;
   unreadNotifications: number;
 };
 
-function getTodayDateValue() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+type BirdySuggestionPriority = "high" | "normal" | "low";
 
-  return `${year}-${month}-${day}`;
+type BirdySuggestion = {
+  id: string;
+  suggestion_type: string;
+  title: string;
+  description: string;
+  action_label: string | null;
+  action_href: string | null;
+  priority: BirdySuggestionPriority;
+  status: string;
+  source: string;
+  created_at: string;
+};
+
+function getTodayRange() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
 }
 
 function formatLabel(value?: string | null) {
@@ -40,6 +60,24 @@ function formatLabel(value?: string | null) {
     .join(" ");
 }
 
+function getPriorityClass(priority: BirdySuggestionPriority) {
+  if (priority === "high") {
+    return "border-red-400/20 bg-red-400/10 text-red-200";
+  }
+
+  if (priority === "normal") {
+    return "border-yellow-400/20 bg-yellow-400/10 text-yellow-200";
+  }
+
+  return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
+}
+
+function formatPriority(priority: BirdySuggestionPriority) {
+  if (priority === "high") return "High";
+  if (priority === "normal") return "Normal";
+  return "Low";
+}
+
 export default function DashboardPage() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -48,12 +86,16 @@ export default function DashboardPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(
     null
   );
+  const [birdySuggestions, setBirdySuggestions] = useState<BirdySuggestion[]>(
+    []
+  );
   const [stats, setStats] = useState<DashboardStats>({
     todaysBookings: 0,
     pendingRequests: 0,
     customers: 0,
-    followUps: 0,
+    birdySuggestions: 0,
     services: 0,
+    activeServices: 0,
     businessHours: 0,
     unreadNotifications: 0,
   });
@@ -86,15 +128,17 @@ export default function DashboardPage() {
     const safeBusiness = businessData as BusinessProfile;
     setBusiness(safeBusiness);
 
-    const today = getTodayDateValue();
+    const todayRange = getTodayRange();
 
     const [
       todaysBookingsResult,
       pendingRequestsResult,
       customersResult,
       servicesResult,
+      activeServicesResult,
       businessHoursResult,
-      followUpsResult,
+      birdySuggestionsCountResult,
+      birdySuggestionsResult,
       unreadNotificationsResult,
       subscriptionResult,
     ] = await Promise.all([
@@ -102,7 +146,8 @@ export default function DashboardPage() {
         .from("bookings")
         .select("id", { count: "exact", head: true })
         .eq("business_id", safeBusiness.id)
-        .eq("booking_date", today)
+        .gte("start_time", todayRange.start)
+        .lt("start_time", todayRange.end)
         .in("status", ["approved", "confirmed"]),
 
       supabase
@@ -122,6 +167,12 @@ export default function DashboardPage() {
         .eq("business_id", safeBusiness.id),
 
       supabase
+        .from("services")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", safeBusiness.id)
+        .eq("is_active", true),
+
+      supabase
         .from("business_hours")
         .select("id", { count: "exact", head: true })
         .eq("business_id", safeBusiness.id),
@@ -129,12 +180,25 @@ export default function DashboardPage() {
       supabase
         .from("birdy_suggestions")
         .select("id", { count: "exact", head: true })
-        .eq("business_id", safeBusiness.id),
+        .eq("business_id", safeBusiness.id)
+        .eq("status", "active"),
+
+      supabase
+        .from("birdy_suggestions")
+        .select(
+          "id, suggestion_type, title, description, action_label, action_href, priority, status, source, created_at"
+        )
+        .eq("business_id", safeBusiness.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(3),
 
       supabase
         .from("booking_notifications")
         .select("id", { count: "exact", head: true })
         .eq("business_id", safeBusiness.id)
+        .eq("event_type", "booking.requested")
+        .ilike("subject", "New booking request%")
         .is("read_at", null),
 
       supabase
@@ -149,11 +213,15 @@ export default function DashboardPage() {
       pendingRequests: pendingRequestsResult.count || 0,
       customers: customersResult.count || 0,
       services: servicesResult.count || 0,
+      activeServices: activeServicesResult.count || 0,
       businessHours: businessHoursResult.count || 0,
-      followUps: followUpsResult.count || 0,
+      birdySuggestions: birdySuggestionsCountResult.count || 0,
       unreadNotifications: unreadNotificationsResult.count || 0,
     });
 
+    setBirdySuggestions(
+      (birdySuggestionsResult.data || []) as BirdySuggestion[]
+    );
     setSubscriptionStatus(subscriptionResult.data?.status || null);
     setIsLoading(false);
   }
@@ -173,6 +241,10 @@ export default function DashboardPage() {
       isComplete: stats.services > 0,
     },
     {
+      title: "Activate at least one service",
+      isComplete: stats.activeServices > 0,
+    },
+    {
       title: "Set your working hours",
       isComplete: stats.businessHours > 0,
     },
@@ -181,8 +253,8 @@ export default function DashboardPage() {
       isComplete: Boolean(business?.slug),
     },
     {
-      title: "Review follow-ups with Birdy",
-      isComplete: stats.followUps > 0,
+      title: "Review suggestions with Birdy",
+      isComplete: stats.birdySuggestions > 0,
     },
   ];
 
@@ -201,25 +273,26 @@ export default function DashboardPage() {
       isUrgent: stats.pendingRequests > 0,
     },
     {
-      title: "Unread notifications",
+      title: "Unread booking notifications",
       description:
         stats.unreadNotifications > 0
-          ? `${stats.unreadNotifications} unread notification${
+          ? `${stats.unreadNotifications} unread booking notification${
               stats.unreadNotifications === 1 ? "" : "s"
             } waiting.`
-          : "You are caught up on notifications.",
+          : "You are caught up on booking notifications.",
       count: stats.unreadNotifications,
-      href: "/dashboard",
-      actionLabel: "Check notifications",
+      href: "/dashboard/requests",
+      actionLabel: "Review requests",
       isUrgent: stats.unreadNotifications > 0,
     },
     {
-      title: "Services not ready",
-      description: "Add at least one service before sharing your booking page.",
-      count: stats.services === 0 ? 1 : 0,
+      title: "No active services",
+      description:
+        "Activate at least one service before sharing your booking page.",
+      count: stats.activeServices === 0 ? 1 : 0,
       href: "/dashboard/services",
-      actionLabel: "Add service",
-      isUrgent: stats.services === 0,
+      actionLabel: "Manage services",
+      isUrgent: stats.activeServices === 0,
     },
     {
       title: "Business hours missing",
@@ -250,11 +323,11 @@ export default function DashboardPage() {
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
-                Manage bookings, customers, follow-ups, and open time from one
-                place.
+                Manage bookings, customers, Birdy suggestions, and open time
+                from one place.
               </p>
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/dashboard/bookings"
                   className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
@@ -267,6 +340,13 @@ export default function DashboardPage() {
                   className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
                 >
                   Review requests
+                </Link>
+
+                <Link
+                  href="/dashboard/birdy"
+                  className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-300 transition hover:bg-emerald-400/15"
+                >
+                  Open Birdy
                 </Link>
 
                 <Link
@@ -311,17 +391,19 @@ export default function DashboardPage() {
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
-                SchedNest surfaces urgent setup items, pending requests, and
-                unread alerts here so you always know what to do next.
+                SchedNest surfaces pending requests, unread booking alerts, and
+                setup issues here so you always know what to do next.
               </p>
             </div>
 
-            <Link
-              href="/dashboard/requests"
-              className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+            <button
+              type="button"
+              onClick={loadDashboard}
+              disabled={isLoading}
+              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Open requests
-            </Link>
+              {isLoading ? "Refreshing..." : "Refresh status"}
+            </button>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -336,8 +418,8 @@ export default function DashboardPage() {
                 </p>
 
                 <p className="mt-2 text-sm leading-6 text-gray-300">
-                  No urgent booking requests, setup issues, or unread alerts
-                  need attention right now.
+                  No urgent booking requests, setup issues, or unread booking
+                  notifications need attention right now.
                 </p>
               </div>
             ) : (
@@ -370,6 +452,109 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                Birdy Smart Suggestions
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
+                What Birdy recommends next
+              </h2>
+
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-300">
+                Birdy suggestions are saved recommendations based on your
+                bookings, services, customers, and requests.
+              </p>
+            </div>
+
+            <Link
+              href="/dashboard/birdy"
+              className="w-fit rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+            >
+              Open Birdy
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {isLoading ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <p className="text-sm text-gray-400">
+                  Loading Birdy suggestions...
+                </p>
+              </div>
+            ) : birdySuggestions.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <p className="text-sm font-black text-white">
+                  No active Birdy suggestions yet.
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-gray-300">
+                  Open Birdy and generate suggestions so they can appear here on
+                  your dashboard.
+                </p>
+
+                <Link
+                  href="/dashboard/birdy"
+                  className="mt-4 inline-block rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-black text-emerald-300 transition hover:bg-emerald-400/20"
+                >
+                  Generate in Birdy
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-3">
+                {birdySuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.id}
+                    className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${getPriorityClass(
+                          suggestion.priority
+                        )}`}
+                      >
+                        {formatPriority(suggestion.priority)}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-gray-300">
+                        Birdy
+                      </span>
+                    </div>
+
+                    <h3 className="mt-4 text-lg font-black text-white">
+                      {suggestion.title}
+                    </h3>
+
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-300">
+                      {suggestion.description}
+                    </p>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {suggestion.action_href && suggestion.action_label && (
+                        <Link
+                          href={suggestion.action_href}
+                          className="rounded-2xl bg-white px-4 py-3 text-xs font-black text-black transition hover:bg-gray-200"
+                        >
+                          {suggestion.action_label}
+                        </Link>
+                      )}
+
+                      <Link
+                        href="/dashboard/birdy"
+                        className="rounded-2xl border border-white/10 px-4 py-3 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                      >
+                        View in Birdy
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </section>
@@ -444,18 +629,24 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/birdy"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            className={`rounded-[2rem] border p-5 transition ${
+              stats.birdySuggestions > 0
+                ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
+                : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            }`}
           >
-            <p className="text-sm font-bold text-gray-400">Follow-ups</p>
+            <p className="text-sm font-bold text-gray-400">
+              Birdy Suggestions
+            </p>
 
             <p className="mt-4 text-4xl font-black text-white">
-              {isLoading ? "..." : stats.followUps}
+              {isLoading ? "..." : stats.birdySuggestions}
             </p>
 
             <p className="mt-3 text-sm leading-6 text-gray-400">
-              {stats.followUps > 0
-                ? "Birdy has follow-up suggestions ready."
-                : "Birdy will help surface people who need attention."}
+              {stats.birdySuggestions > 0
+                ? "Smart suggestions are ready to review."
+                : "Birdy can generate suggestions from your business activity."}
             </p>
           </Link>
         </section>
@@ -518,12 +709,37 @@ export default function DashboardPage() {
               </Link>
 
               <Link
+                href="/dashboard/birdy"
+                className={`rounded-2xl border p-4 transition ${
+                  stats.birdySuggestions > 0
+                    ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
+                    : "border-white/10 bg-black/20 hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
+                    3
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-black text-white">
+                      Review Birdy suggestions
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-gray-400">
+                      Let Birdy surface what needs attention so the business
+                      owner knows what to do next.
+                    </p>
+                  </div>
+                </div>
+              </Link>
+
+              <Link
                 href="/dashboard/booking-page"
                 className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
-                    3
+                    4
                   </div>
 
                   <div>
