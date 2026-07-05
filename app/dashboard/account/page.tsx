@@ -13,8 +13,11 @@ type BusinessProfile = {
 
 type AnyRow = Record<string, unknown>;
 
+type PlanKey = "essentials" | "growth" | "complete";
+type BillingInterval = "monthly" | "annual";
+
 type PlanOption = {
-  key: "essentials" | "growth" | "complete";
+  key: PlanKey;
   name: string;
   founderMonthly: string;
   founderAnnual: string;
@@ -22,6 +25,11 @@ type PlanOption = {
   standardAnnual: string;
   description: string;
   features: string[];
+};
+
+type StripeRouteResponse = {
+  url?: string;
+  error?: string;
 };
 
 const ADMIN_EMAIL = "hello@schednest.com";
@@ -167,10 +175,21 @@ function normalizePlanName(value: string) {
   return value.toLowerCase().replace(/\s+/g, "_");
 }
 
+function getCheckoutLoadingKey(
+  planKey: PlanKey,
+  billingInterval: BillingInterval
+) {
+  return `${planKey}:${billingInterval}`;
+}
+
 export default function AccountPage() {
   const supabase = useMemo(() => createClient(), []);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [checkoutLoadingKey, setCheckoutLoadingKey] = useState<string | null>(
+    null
+  );
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
@@ -254,6 +273,102 @@ export default function AccountPage() {
     setIsLoading(false);
   }
 
+  async function getAccessToken() {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error || !session?.access_token) {
+      throw new Error("You must be logged in to manage billing.");
+    }
+
+    return session.access_token;
+  }
+
+  async function startCheckout(
+    planKey: PlanKey,
+    billingInterval: BillingInterval
+  ) {
+    try {
+      setMessage("");
+      setCheckoutLoadingKey(getCheckoutLoadingKey(planKey, billingInterval));
+
+      const accessToken = await getAccessToken();
+
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          planKey,
+          billingInterval,
+        }),
+      });
+
+      const payload = (await response
+        .json()
+        .catch(() => null)) as StripeRouteResponse | null;
+
+      if (!response.ok || !payload?.url) {
+        throw new Error(
+          payload?.error || "Could not open Stripe checkout session."
+        );
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Could not start Stripe checkout.";
+
+      setMessage(errorMessage);
+      setCheckoutLoadingKey(null);
+    }
+  }
+
+  async function openBillingPortal() {
+    try {
+      setMessage("");
+      setIsPortalLoading(true);
+
+      const accessToken = await getAccessToken();
+
+      const response = await fetch(
+        "/api/stripe/create-billing-portal-session",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const payload = (await response
+        .json()
+        .catch(() => null)) as StripeRouteResponse | null;
+
+      if (!response.ok || !payload?.url) {
+        throw new Error(
+          payload?.error || "Could not open Stripe billing portal."
+        );
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Could not open Stripe billing portal.";
+
+      setMessage(errorMessage);
+      setIsPortalLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadAccount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -316,6 +431,7 @@ export default function AccountPage() {
 
   const isAdmin = userEmail === ADMIN_EMAIL;
   const hasSubscription = Boolean(subscription);
+  const hasStripeCustomer = stripeCustomerId !== "Not connected";
 
   return (
     <DashboardShell>
@@ -332,8 +448,8 @@ export default function AccountPage() {
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
-                Review your subscription, compare plans, and prepare your
-                billing setup. Stripe automation is the next major launch step.
+                Review your subscription, compare plans, start Stripe checkout,
+                and manage billing from one place.
               </p>
             </div>
 
@@ -421,26 +537,31 @@ export default function AccountPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                disabled
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black opacity-60"
+              <a
+                href="#plans"
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
               >
-                Upgrade with Stripe soon
-              </button>
+                Choose plan
+              </a>
 
               <button
                 type="button"
-                disabled
-                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 opacity-60"
+                onClick={openBillingPortal}
+                disabled={isPortalLoading || !hasStripeCustomer}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Billing portal soon
+                {isPortalLoading
+                  ? "Opening portal..."
+                  : hasStripeCustomer
+                    ? "Manage billing"
+                    : "Billing portal after checkout"}
               </button>
             </div>
 
             <p className="mt-3 text-xs leading-5 text-gray-400">
-              These buttons are intentionally disabled until the Stripe checkout,
-              billing portal, and webhook routes are added.
+              Checkout and billing portal buttons are now connected to the
+              Stripe API routes. Real checkout requires real Stripe keys and
+              price IDs.
             </p>
           </div>
 
@@ -528,8 +649,9 @@ export default function AccountPage() {
             </h2>
 
             <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-              Billing is still being prepared for Stripe automation. For now,
-              founder beta access can be assigned manually.
+              You can now start a Stripe checkout from the plan cards below. If
+              this is a founder beta account, assign founder beta status before
+              checkout.
             </p>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -543,6 +665,13 @@ export default function AccountPage() {
               )}
 
               <a
+                href="#plans"
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+              >
+                View plans
+              </a>
+
+              <a
                 href="mailto:billing@schednest.com"
                 className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
               >
@@ -552,7 +681,10 @@ export default function AccountPage() {
           </section>
         )}
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+        <section
+          id="plans"
+          className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"
+        >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
@@ -564,13 +696,14 @@ export default function AccountPage() {
               </h2>
 
               <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-400">
-                These cards prepare the account page for Stripe checkout. Once
-                Stripe is wired, each plan can open the correct checkout session.
+                These buttons now create Stripe checkout sessions. Replace the
+                placeholder Stripe keys and price IDs with real test values
+                before testing payment.
               </p>
             </div>
 
             <span className="w-fit rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-              Founder beta ready
+              Stripe connected
             </span>
           </div>
 
@@ -579,6 +712,14 @@ export default function AccountPage() {
               const isCurrentPlan =
                 normalizedCurrentPlan === option.key ||
                 normalizedCurrentPlan.includes(option.key);
+
+              const monthlyLoading =
+                checkoutLoadingKey ===
+                getCheckoutLoadingKey(option.key, "monthly");
+
+              const annualLoading =
+                checkoutLoadingKey ===
+                getCheckoutLoadingKey(option.key, "annual");
 
               return (
                 <div
@@ -646,13 +787,25 @@ export default function AccountPage() {
                     ))}
                   </div>
 
-                  <button
-                    type="button"
-                    disabled
-                    className="mt-6 w-full rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 opacity-60"
-                  >
-                    Stripe checkout coming next
-                  </button>
+                  <div className="mt-6 grid gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startCheckout(option.key, "monthly")}
+                      disabled={Boolean(checkoutLoadingKey)}
+                      className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {monthlyLoading ? "Opening checkout..." : "Choose monthly"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => startCheckout(option.key, "annual")}
+                      disabled={Boolean(checkoutLoadingKey)}
+                      className="w-full rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {annualLoading ? "Opening checkout..." : "Choose annual"}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -672,21 +825,30 @@ export default function AccountPage() {
             <div className="mt-5 grid gap-3">
               <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
                 <p className="text-sm font-black text-emerald-300">
-                  Account page ready
+                  Checkout route ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
-                  Plan display, subscription summary, and billing support are in
-                  place.
+                  Plan buttons can now call the Stripe checkout session route.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-sm font-black text-emerald-300">
+                  Billing portal route ready
+                </p>
+                <p className="mt-1 text-xs leading-5 text-gray-300">
+                  Businesses with a Stripe customer ID can open the billing
+                  portal.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
                 <p className="text-sm font-black text-yellow-200">
-                  Stripe routes next
+                  Real Stripe values needed
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
-                  Checkout, billing portal, and webhook routes still need to be
-                  added.
+                  Replace placeholder test keys and price IDs before testing
+                  live checkout.
                 </p>
               </div>
             </div>
@@ -725,9 +887,7 @@ export default function AccountPage() {
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <p className="text-sm font-black text-emerald-300">Support</p>
 
-            <h3 className="mt-3 text-xl font-black text-white">
-              Need help?
-            </h3>
+            <h3 className="mt-3 text-xl font-black text-white">Need help?</h3>
 
             <p className="mt-3 text-sm leading-6 text-gray-400">
               Contact support for login issues, setup questions, booking page
