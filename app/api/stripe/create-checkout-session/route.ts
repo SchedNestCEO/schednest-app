@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  BillingInterval,
-  PlanKey,
+  type BillingInterval,
+  type PlanKey,
   getStripePriceId,
   isBillingInterval,
   isPlanKey,
@@ -12,9 +12,18 @@ import {
   createAuthenticatedRouteClient,
 } from "../../../lib/supabase/admin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 type CheckoutBody = {
   planKey?: unknown;
   billingInterval?: unknown;
+};
+
+type BusinessProfile = {
+  id: string;
+  owner_id: string;
+  business_name: string | null;
 };
 
 function getSiteUrl() {
@@ -73,15 +82,43 @@ export async function POST(request: Request) {
 
     const adminClient = createAdminClient();
 
-    const { data: business, error: businessError } = await adminClient
+    const { data: userBusiness, error: userBusinessError } = await userClient
       .from("business_profiles")
       .select("id, owner_id, business_name")
       .eq("owner_id", user.id)
       .maybeSingle();
 
-    if (businessError || !business) {
+    let business = (userBusiness || null) as BusinessProfile | null;
+
+    if (!business) {
+      const { data: adminBusiness, error: adminBusinessError } =
+        await adminClient
+          .from("business_profiles")
+          .select("id, owner_id, business_name")
+          .eq("owner_id", user.id)
+          .maybeSingle();
+
+      if (adminBusinessError) {
+        return NextResponse.json(
+          {
+            error: `Could not check business profile: ${adminBusinessError.message}`,
+          },
+          { status: 500 }
+        );
+      }
+
+      business = (adminBusiness || null) as BusinessProfile | null;
+    }
+
+    if (!business) {
+      const detail = userBusinessError?.message
+        ? ` Business lookup detail: ${userBusinessError.message}`
+        : "";
+
       return NextResponse.json(
-        { error: "Create a business profile before starting checkout." },
+        {
+          error: `No business profile was found for the logged-in account ${user.email || user.id}.${detail}`,
+        },
         { status: 400 }
       );
     }
