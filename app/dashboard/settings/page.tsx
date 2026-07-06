@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { createClient } from "../../lib/supabase/client";
 
@@ -27,6 +27,25 @@ type Subscription = {
   pricing_tier: string | null;
   current_period_end: string | null;
   stripe_customer_id: string | null;
+};
+
+type BookingTimeMode = "fixed_hours" | "flexible_requests";
+
+type SectionKey =
+  | "businessInfo"
+  | "bookingSettings"
+  | "setupHealth"
+  | "quickLinks"
+  | "nextSteps";
+
+type CollapsiblePanelProps = {
+  title: string;
+  eyebrow: string;
+  description: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+  rightContent?: ReactNode;
 };
 
 const settingSections = [
@@ -102,11 +121,61 @@ function getNullableFormValue(value: string) {
   return trimmedValue || null;
 }
 
+function getSafeBookingMode(value: string | null | undefined): BookingTimeMode {
+  if (value === "flexible_requests") return "flexible_requests";
+
+  return "fixed_hours";
+}
+
+function CollapsiblePanel({
+  title,
+  eyebrow,
+  description,
+  isOpen,
+  onToggle,
+  children,
+  rightContent,
+}: CollapsiblePanelProps) {
+  return (
+    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="flex w-full flex-col gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div>
+          <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+            {eyebrow}
+          </p>
+
+          <h2 className="mt-3 text-2xl font-black text-white">{title}</h2>
+
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-400">
+            {description}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {rightContent}
+
+          <span className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300">
+            {isOpen ? "Collapse" : "Expand"}
+          </span>
+        </div>
+      </button>
+
+      {isOpen && <div className="border-t border-white/10 p-6">{children}</div>}
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const supabase = useMemo(() => createClient(), []);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
+  const [isSavingBookingSettings, setIsSavingBookingSettings] = useState(false);
   const [message, setMessage] = useState("");
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -119,12 +188,53 @@ export default function SettingsPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [timezone, setTimezone] = useState("");
 
+  const [bookingTimeMode, setBookingTimeMode] =
+    useState<BookingTimeMode>("fixed_hours");
+  const [businessHoursEnabled, setBusinessHoursEnabled] = useState(true);
+
+  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
+    businessInfo: true,
+    bookingSettings: true,
+    setupHealth: false,
+    quickLinks: false,
+    nextSteps: false,
+  });
+
+  function toggleSection(section: SectionKey) {
+    setOpenSections((currentSections) => ({
+      ...currentSections,
+      [section]: !currentSections[section],
+    }));
+  }
+
+  function expandAllSections() {
+    setOpenSections({
+      businessInfo: true,
+      bookingSettings: true,
+      setupHealth: true,
+      quickLinks: true,
+      nextSteps: true,
+    });
+  }
+
+  function collapseAllSections() {
+    setOpenSections({
+      businessInfo: false,
+      bookingSettings: false,
+      setupHealth: false,
+      quickLinks: false,
+      nextSteps: false,
+    });
+  }
+
   function syncBusinessForm(profile: BusinessProfile | null) {
     setBusinessName(profile?.business_name || "");
     setBusinessDescription(profile?.business_description || "");
     setContactEmail(profile?.contact_email || "");
     setContactPhone(profile?.contact_phone || "");
     setTimezone(profile?.timezone || "");
+    setBookingTimeMode(getSafeBookingMode(profile?.booking_time_mode));
+    setBusinessHoursEnabled(profile?.business_hours_enabled ?? true);
   }
 
   async function loadSettings() {
@@ -239,6 +349,44 @@ export default function SettingsPage() {
     setIsSavingBusinessInfo(false);
   }
 
+  async function saveBookingSettings() {
+    if (!business) {
+      setMessage("Create your business profile before saving booking settings.");
+      return;
+    }
+
+    setIsSavingBookingSettings(true);
+    setMessage("");
+
+    const { data, error } = await supabase
+      .from("business_profiles")
+      .update({
+        booking_time_mode: bookingTimeMode,
+        business_hours_enabled: businessHoursEnabled,
+      })
+      .eq("id", business.id)
+      .select(
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+      )
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      setIsSavingBookingSettings(false);
+      return;
+    }
+
+    const updatedBusiness = (data || null) as BusinessProfile | null;
+
+    if (updatedBusiness) {
+      setBusiness(updatedBusiness);
+      syncBusinessForm(updatedBusiness);
+    }
+
+    setMessage("Booking settings saved.");
+    setIsSavingBookingSettings(false);
+  }
+
   useEffect(() => {
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,6 +417,29 @@ export default function SettingsPage() {
   const bookingMode = formatLabel(business?.booking_time_mode, "Fixed Hours");
   const bookingPageUrl = business?.slug ? `/book/${business.slug}` : null;
 
+  const setupHealthItems: Array<{ label: string; complete: boolean }> = [
+    {
+      label: "Business name",
+      complete: Boolean(business?.business_name),
+    },
+    {
+      label: "Public slug",
+      complete: Boolean(business?.slug),
+    },
+    {
+      label: "Timezone",
+      complete: Boolean(business?.timezone),
+    },
+    {
+      label: "Business description",
+      complete: Boolean(business?.business_description),
+    },
+    {
+      label: "Contact info",
+      complete: Boolean(business?.contact_email || business?.contact_phone),
+    },
+  ];
+
   return (
     <DashboardShell>
       <div className="space-y-6">
@@ -284,19 +455,37 @@ export default function SettingsPage() {
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
-                Use this control center to check your setup status and quickly
-                update the business settings customers see on your booking page.
+                Use this control center to check your setup status, update
+                business details, and adjust booking settings from one page.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={loadSettings}
-              disabled={isLoading}
-              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoading ? "Refreshing..." : "Refresh settings"}
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={expandAllSections}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Expand all
+              </button>
+
+              <button
+                type="button"
+                onClick={collapseAllSections}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Collapse all
+              </button>
+
+              <button
+                type="button"
+                onClick={loadSettings}
+                disabled={isLoading}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoading ? "Refreshing..." : "Refresh settings"}
+              </button>
+            </div>
           </div>
 
           {message && (
@@ -372,32 +561,23 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
-                Business Info
-              </p>
-
-              <h2 className="mt-3 text-2xl font-black text-white">
-                Edit your main business details.
-              </h2>
-
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-                These details help customers understand who they are booking
-                with and how to contact the business.
-              </p>
-            </div>
-
+        <CollapsiblePanel
+          eyebrow="Business Info"
+          title="Edit your main business details."
+          description="These details help customers understand who they are booking with and how to contact the business."
+          isOpen={openSections.businessInfo}
+          onToggle={() => toggleSection("businessInfo")}
+          rightContent={
             <Link
               href="/dashboard/profile"
-              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/10"
+              onClick={(event) => event.stopPropagation()}
+              className="hidden rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/10 sm:inline-flex"
             >
-              Full profile page
+              Full profile
             </Link>
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          }
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
                 Business name
@@ -467,169 +647,297 @@ export default function SettingsPage() {
             </label>
           </div>
 
-          <button
-            type="button"
-            onClick={saveBusinessInfo}
-            disabled={!business || isSavingBusinessInfo}
-            className="mt-5 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSavingBusinessInfo ? "Saving..." : "Save business info"}
-          </button>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
-              Setup Health
-            </p>
-
-            <h2 className="mt-3 text-2xl font-black text-white">
-              Profile completion:{" "}
-              {getCompletionLabel(profileCompleted, profileTotal)}
-            </h2>
-
-            <div className="mt-6 grid gap-3">
-              {[
-                ["Business name", Boolean(business?.business_name)],
-                ["Public slug", Boolean(business?.slug)],
-                ["Timezone", Boolean(business?.timezone)],
-                [
-                  "Business description",
-                  Boolean(business?.business_description),
-                ],
-                [
-                  "Contact info",
-                  Boolean(business?.contact_email || business?.contact_phone),
-                ],
-              ].map(([label, complete]) => (
-                <div
-                  key={String(label)}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4"
-                >
-                  <p className="text-sm font-black text-white">{label}</p>
-
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-black ${
-                      complete
-                        ? "bg-emerald-400 text-black"
-                        : "bg-yellow-400/10 text-yellow-200"
-                    }`}
-                  >
-                    {complete ? "Done" : "Missing"}
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={saveBusinessInfo}
+              disabled={!business || isSavingBusinessInfo}
+              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSavingBusinessInfo ? "Saving..." : "Save business info"}
+            </button>
 
             <Link
               href="/dashboard/profile"
-              className="mt-5 inline-flex rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+              className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10 sm:hidden"
             >
-              Improve profile
+              Full profile page
             </Link>
           </div>
+        </CollapsiblePanel>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
-              Booking Setup
-            </p>
+        <CollapsiblePanel
+          eyebrow="Booking Settings"
+          title="Control how customers request appointments."
+          description="Choose whether customers must select from fixed available hours or can submit flexible time requests."
+          isOpen={openSections.bookingSettings}
+          onToggle={() => toggleSection("bookingSettings")}
+          rightContent={
+            <span className="hidden rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300 sm:inline-flex">
+              {bookingMode}
+            </span>
+          }
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setBookingTimeMode("fixed_hours")}
+              disabled={!business || isSavingBookingSettings}
+              className={`rounded-[2rem] border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                bookingTimeMode === "fixed_hours"
+                  ? "border-emerald-400/30 bg-emerald-400/10"
+                  : "border-white/10 bg-black/20 hover:bg-white/[0.03]"
+              }`}
+            >
+              <p className="text-lg font-black text-white">Fixed hours</p>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                Customers choose from available time slots based on your
+                configured business hours.
+              </p>
 
-            <h2 className="mt-3 text-2xl font-black text-white">
-              Current booking mode: {bookingMode}
-            </h2>
-
-            <div className="mt-6 grid gap-3">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                  Public link
-                </p>
-                <p className="mt-2 break-all text-sm font-black text-white">
-                  {bookingPageUrl || "Not ready"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                  Business hours
-                </p>
-                <p className="mt-2 text-sm font-black text-white">
-                  {hasOpenHours
-                    ? `${openHoursCount} open day(s) configured`
-                    : "No open hours configured"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                  Branding
-                </p>
-                <p className="mt-2 text-sm font-black text-white">
-                  {hasBranding ? "Custom branding started" : "Default branding"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/dashboard/booking-page"
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+              <span
+                className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                  bookingTimeMode === "fixed_hours"
+                    ? "bg-emerald-400 text-black"
+                    : "bg-white/10 text-gray-300"
+                }`}
               >
-                Edit booking page
-              </Link>
+                {bookingTimeMode === "fixed_hours" ? "Selected" : "Choose"}
+              </span>
+            </button>
 
-              {bookingPageUrl && (
-                <Link
-                  href={bookingPageUrl}
-                  className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
-                >
-                  View public page
-                </Link>
-              )}
+            <button
+              type="button"
+              onClick={() => setBookingTimeMode("flexible_requests")}
+              disabled={!business || isSavingBookingSettings}
+              className={`rounded-[2rem] border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                bookingTimeMode === "flexible_requests"
+                  ? "border-emerald-400/30 bg-emerald-400/10"
+                  : "border-white/10 bg-black/20 hover:bg-white/[0.03]"
+              }`}
+            >
+              <p className="text-lg font-black text-white">
+                Flexible requests
+              </p>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                Customers request their preferred time, and you can approve it
+                or confirm a different time.
+              </p>
+
+              <span
+                className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                  bookingTimeMode === "flexible_requests"
+                    ? "bg-emerald-400 text-black"
+                    : "bg-white/10 text-gray-300"
+                }`}
+              >
+                {bookingTimeMode === "flexible_requests"
+                  ? "Selected"
+                  : "Choose"}
+              </span>
+            </button>
+          </div>
+
+          <div className="mt-4 rounded-[2rem] border border-white/10 bg-black/20 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-lg font-black text-white">
+                  Show business hours
+                </p>
+                <p className="mt-2 text-sm leading-6 text-gray-400">
+                  Display your configured hours on the public booking page.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setBusinessHoursEnabled(
+                    (currentValue) => !currentValue
+                  )
+                }
+                disabled={!business || isSavingBookingSettings}
+                className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  businessHoursEnabled
+                    ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                    : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {businessHoursEnabled ? "Enabled" : "Disabled"}
+              </button>
             </div>
           </div>
-        </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {settingSections.map((section) => (
-            <Link
-              key={section.href}
-              href={section.href}
-              className="group rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:border-emerald-400/30 hover:bg-emerald-400/10"
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                Public link
+              </p>
+              <p className="mt-2 break-all text-sm font-black text-white">
+                {bookingPageUrl || "Not ready"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                Open days
+              </p>
+              <p className="mt-2 text-sm font-black text-white">
+                {hasOpenHours
+                  ? `${openHoursCount} open day(s)`
+                  : "No open hours"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                Branding
+              </p>
+              <p className="mt-2 text-sm font-black text-white">
+                {hasBranding ? "Custom branding" : "Default branding"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={saveBookingSettings}
+              disabled={!business || isSavingBookingSettings}
+              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <div className="flex h-full flex-col justify-between gap-6">
-                <div>
-                  <p className="text-xl font-black text-white">
-                    {section.title}
-                  </p>
+              {isSavingBookingSettings
+                ? "Saving..."
+                : "Save booking settings"}
+            </button>
 
-                  <p className="mt-3 text-sm leading-6 text-gray-400">
-                    {section.description}
-                  </p>
-                </div>
+            <Link
+              href="/dashboard/booking-page"
+              className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+            >
+              Edit business hours
+            </Link>
 
-                <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition group-hover:border-emerald-400/30 group-hover:bg-emerald-400 group-hover:text-black">
-                  {section.label}
+            {bookingPageUrl && (
+              <Link
+                href={bookingPageUrl}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+              >
+                View public page
+              </Link>
+            )}
+          </div>
+        </CollapsiblePanel>
+
+        <CollapsiblePanel
+          eyebrow="Setup Health"
+          title={`Profile completion: ${getCompletionLabel(
+            profileCompleted,
+            profileTotal
+          )}`}
+          description="Review what is complete and what still needs attention before customers book."
+          isOpen={openSections.setupHealth}
+          onToggle={() => toggleSection("setupHealth")}
+        >
+          <div className="grid gap-3">
+            {setupHealthItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4"
+              >
+                <p className="text-sm font-black text-white">{item.label}</p>
+
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    item.complete
+                      ? "bg-emerald-400 text-black"
+                      : "bg-yellow-400/10 text-yellow-200"
+                  }`}
+                >
+                  {item.complete ? "Done" : "Missing"}
                 </span>
               </div>
-            </Link>
-          ))}
-        </section>
+            ))}
+          </div>
 
-        <section className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
-          <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
-            Coming Next
-          </p>
+          <Link
+            href="/dashboard/profile"
+            className="mt-5 inline-flex rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+          >
+            Improve profile
+          </Link>
+        </CollapsiblePanel>
 
-          <h2 className="mt-3 text-2xl font-black text-white">
-            More direct settings.
-          </h2>
+        <CollapsiblePanel
+          eyebrow="Quick Links"
+          title="Jump to the full settings pages."
+          description="Use these cards when you need the full workflow for services, billing, customers, requests, or profile setup."
+          isOpen={openSections.quickLinks}
+          onToggle={() => toggleSection("quickLinks")}
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {settingSections.map((section) => (
+              <Link
+                key={section.href}
+                href={section.href}
+                className="group rounded-[2rem] border border-white/10 bg-black/20 p-6 transition hover:border-emerald-400/30 hover:bg-emerald-400/10"
+              >
+                <div className="flex h-full flex-col justify-between gap-6">
+                  <div>
+                    <p className="text-xl font-black text-white">
+                      {section.title}
+                    </p>
 
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-            Business info can now be edited here. Next, we can add booking mode,
-            notification preferences, and branding controls directly into this
-            settings dashboard.
-          </p>
-        </section>
+                    <p className="mt-3 text-sm leading-6 text-gray-400">
+                      {section.description}
+                    </p>
+                  </div>
+
+                  <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition group-hover:border-emerald-400/30 group-hover:bg-emerald-400 group-hover:text-black">
+                    {section.label}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CollapsiblePanel>
+
+        <CollapsiblePanel
+          eyebrow="Coming Next"
+          title="More direct settings."
+          description="Business info and booking mode can now be edited here. Next, we can add notification preferences and branding controls directly into this dashboard."
+          isOpen={openSections.nextSteps}
+          onToggle={() => toggleSection("nextSteps")}
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-lg font-black text-white">
+                Notification preferences
+              </p>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                Control owner alerts, customer emails, and future reminders.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-lg font-black text-white">
+                Branding controls
+              </p>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                Edit booking page colors, theme, and visual settings.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+              <p className="text-lg font-black text-white">
+                Billing shortcuts
+              </p>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                Surface plan changes and portal access inside Settings.
+              </p>
+            </div>
+          </div>
+        </CollapsiblePanel>
       </div>
     </DashboardShell>
   );
