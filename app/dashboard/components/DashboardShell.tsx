@@ -46,6 +46,10 @@ const navItems: NavItem[] = [
     label: "Booking Page",
   },
   {
+    href: "/dashboard/settings",
+    label: "Settings",
+  },
+  {
     href: "/dashboard/birdy",
     label: "Birdy",
   },
@@ -106,14 +110,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
   function getNavLinkClass(href: string, isMobile = false) {
     const isActive = isActiveRoute(href);
-
-    if (isMobile) {
-      return `rounded-2xl px-4 py-3 text-sm font-black transition ${
-        isActive
-          ? "bg-emerald-400 text-black"
-          : "text-gray-300 hover:bg-white/10 hover:text-white"
-      }`;
-    }
 
     return `rounded-2xl px-4 py-3 text-sm font-black transition ${
       isActive
