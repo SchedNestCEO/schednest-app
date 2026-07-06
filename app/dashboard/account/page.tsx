@@ -182,6 +182,17 @@ function getCheckoutLoadingKey(
   return `${planKey}:${billingInterval}`;
 }
 
+function isSubscriptionActive(status: string) {
+  const cleanStatus = status.toLowerCase();
+
+  return (
+    cleanStatus.includes("active") ||
+    cleanStatus.includes("trial") ||
+    cleanStatus.includes("past due") ||
+    cleanStatus.includes("past_due")
+  );
+}
+
 export default function AccountPage() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -432,6 +443,12 @@ export default function AccountPage() {
   const isAdmin = userEmail === ADMIN_EMAIL;
   const hasSubscription = Boolean(subscription);
   const hasStripeCustomer = stripeCustomerId !== "Not connected";
+  const hasStripeSubscription = stripeSubscriptionId !== "Not connected";
+  const hasActiveStripeSubscription =
+    hasSubscription &&
+    hasStripeCustomer &&
+    hasStripeSubscription &&
+    isSubscriptionActive(status);
 
   return (
     <DashboardShell>
@@ -484,7 +501,9 @@ export default function AccountPage() {
 
                 <p className="mt-3 text-sm leading-6 text-gray-300">
                   {subscription
-                    ? "Your current subscription information is shown below."
+                    ? hasActiveStripeSubscription
+                      ? "Your active Stripe subscription is synced and can be managed through the billing portal."
+                      : "Your current subscription information is shown below."
                     : "No subscription has been assigned to this business yet."}
                 </p>
               </div>
@@ -537,31 +556,53 @@ export default function AccountPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#plans"
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
-              >
-                Choose plan
-              </a>
+              {hasActiveStripeSubscription ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={openBillingPortal}
+                    disabled={isPortalLoading}
+                    className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isPortalLoading ? "Opening portal..." : "Manage billing"}
+                  </button>
 
-              <button
-                type="button"
-                onClick={openBillingPortal}
-                disabled={isPortalLoading || !hasStripeCustomer}
-                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isPortalLoading
-                  ? "Opening portal..."
-                  : hasStripeCustomer
-                    ? "Manage billing"
-                    : "Billing portal after checkout"}
-              </button>
+                  <a
+                    href="#plans"
+                    className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Compare plans
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a
+                    href="#plans"
+                    className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                  >
+                    Choose plan
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={openBillingPortal}
+                    disabled={isPortalLoading || !hasStripeCustomer}
+                    className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isPortalLoading
+                      ? "Opening portal..."
+                      : hasStripeCustomer
+                        ? "Manage billing"
+                        : "Billing portal after checkout"}
+                  </button>
+                </>
+              )}
             </div>
 
             <p className="mt-3 text-xs leading-5 text-gray-400">
-              Checkout and billing portal buttons are now connected to the
-              Stripe API routes. Real checkout requires real Stripe keys and
-              price IDs.
+              {hasActiveStripeSubscription
+                ? "Active subscriptions should be changed through the Stripe billing portal to avoid duplicate subscriptions."
+                : "New subscriptions start through Stripe checkout. After checkout, the billing portal becomes available."}
             </p>
           </div>
 
@@ -649,8 +690,8 @@ export default function AccountPage() {
             </h2>
 
             <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-              You can now start a Stripe checkout from the plan cards below. If
-              this is a founder beta account, assign founder beta status before
+              You can start a Stripe checkout from the plan cards below. If this
+              is a founder beta account, assign founder beta status before
               checkout.
             </p>
 
@@ -681,6 +722,33 @@ export default function AccountPage() {
           </section>
         )}
 
+        {hasActiveStripeSubscription && (
+          <section className="rounded-[2rem] border border-blue-400/20 bg-blue-400/10 p-6">
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-blue-200">
+              Active Subscription
+            </p>
+
+            <h2 className="mt-3 text-2xl font-black text-white">
+              Plan changes are handled in Stripe.
+            </h2>
+
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
+              To upgrade, downgrade, change billing interval, update payment
+              method, or cancel, open the billing portal. This prevents
+              duplicate subscriptions.
+            </p>
+
+            <button
+              type="button"
+              onClick={openBillingPortal}
+              disabled={isPortalLoading}
+              className="mt-5 rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPortalLoading ? "Opening portal..." : "Open billing portal"}
+            </button>
+          </section>
+        )}
+
         <section
           id="plans"
           className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"
@@ -696,9 +764,9 @@ export default function AccountPage() {
               </h2>
 
               <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-400">
-                These buttons now create Stripe checkout sessions. Replace the
-                placeholder Stripe keys and price IDs with real test values
-                before testing payment.
+                {hasActiveStripeSubscription
+                  ? "You can compare plan levels here. Existing subscriptions should be changed through the Stripe billing portal."
+                  : "These buttons create Stripe checkout sessions for new subscriptions."}
               </p>
             </div>
 
@@ -788,23 +856,55 @@ export default function AccountPage() {
                   </div>
 
                   <div className="mt-6 grid gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startCheckout(option.key, "monthly")}
-                      disabled={Boolean(checkoutLoadingKey)}
-                      className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {monthlyLoading ? "Opening checkout..." : "Choose monthly"}
-                    </button>
+                    {hasActiveStripeSubscription ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={openBillingPortal}
+                          disabled={isPortalLoading}
+                          className={`w-full rounded-2xl px-5 py-3 text-center text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            isCurrentPlan
+                              ? "border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15"
+                              : "bg-emerald-400 text-black hover:bg-emerald-300"
+                          }`}
+                        >
+                          {isPortalLoading
+                            ? "Opening portal..."
+                            : isCurrentPlan
+                              ? "Manage current plan"
+                              : `Change to ${option.name}`}
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => startCheckout(option.key, "annual")}
-                      disabled={Boolean(checkoutLoadingKey)}
-                      className="w-full rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {annualLoading ? "Opening checkout..." : "Choose annual"}
-                    </button>
+                        <p className="text-center text-xs leading-5 text-gray-500">
+                          Existing subscriptions are changed safely through
+                          Stripe billing portal.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => startCheckout(option.key, "monthly")}
+                          disabled={Boolean(checkoutLoadingKey)}
+                          className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {monthlyLoading
+                            ? "Opening checkout..."
+                            : "Choose monthly"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => startCheckout(option.key, "annual")}
+                          disabled={Boolean(checkoutLoadingKey)}
+                          className="w-full rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {annualLoading
+                            ? "Opening checkout..."
+                            : "Choose annual"}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -828,7 +928,7 @@ export default function AccountPage() {
                   Checkout route ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
-                  Plan buttons can now call the Stripe checkout session route.
+                  New subscriptions can start through the Stripe checkout route.
                 </p>
               </div>
 
@@ -842,13 +942,12 @@ export default function AccountPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
-                <p className="text-sm font-black text-yellow-200">
-                  Real Stripe values needed
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-sm font-black text-emerald-300">
+                  Webhook sync ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
-                  Replace placeholder test keys and price IDs before testing
-                  live checkout.
+                  Stripe subscription changes are syncing back to Supabase.
                 </p>
               </div>
             </div>
