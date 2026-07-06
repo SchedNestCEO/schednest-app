@@ -6,6 +6,33 @@ import { createAdminClient } from "../../../lib/supabase/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type StripeSubscriptionWithPeriod = Stripe.Subscription & {
+  current_period_end?: number;
+  current_period?: {
+    end?: number;
+  };
+  latest_invoice?: string | Stripe.Invoice | null;
+};
+
+type StripeSubscriptionItemWithPeriod = Stripe.SubscriptionItem & {
+  current_period_end?: number;
+  current_period?: {
+    end?: number;
+  };
+};
+
+type StripeInvoiceWithLines = Stripe.Invoice & {
+  lines?: {
+    data?: Array<
+      Stripe.InvoiceLineItem & {
+        period?: {
+          end?: number | null;
+        };
+      }
+    >;
+  };
+};
+
 function unixToIso(value: unknown) {
   if (typeof value !== "number") return null;
 
@@ -24,28 +51,59 @@ function getStripePriceId(subscription: Stripe.Subscription) {
   return subscription.items.data[0]?.price?.id || null;
 }
 
-function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
-  const subscriptionWithPeriod = subscription as Stripe.Subscription & {
-    current_period_end?: number;
-    current_period?: {
-      end?: number;
-    };
-  };
+function getPeriodEndFromInvoice(invoice: Stripe.Invoice | null | undefined) {
+  const invoiceWithLines = invoice as StripeInvoiceWithLines | null | undefined;
+  const firstLinePeriodEnd = invoiceWithLines?.lines?.data?.[0]?.period?.end;
 
-  const firstItem = subscription.items.data[0] as Stripe.SubscriptionItem & {
-    current_period_end?: number;
-    current_period?: {
-      end?: number;
-    };
-  };
+  return typeof firstLinePeriodEnd === "number" ? firstLinePeriodEnd : null;
+}
 
-  return (
+async function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
+  const subscriptionWithPeriod = subscription as StripeSubscriptionWithPeriod;
+
+  const firstItem = subscription.items
+    .data[0] as StripeSubscriptionItemWithPeriod | undefined;
+
+  const directPeriodEnd =
     subscriptionWithPeriod.current_period_end ||
     subscriptionWithPeriod.current_period?.end ||
     firstItem?.current_period_end ||
     firstItem?.current_period?.end ||
-    null
-  );
+    null;
+
+  if (typeof directPeriodEnd === "number") {
+    return directPeriodEnd;
+  }
+
+  const latestInvoice = subscriptionWithPeriod.latest_invoice;
+
+  if (latestInvoice && typeof latestInvoice !== "string") {
+    const invoicePeriodEnd = getPeriodEndFromInvoice(latestInvoice);
+
+    if (typeof invoicePeriodEnd === "number") {
+      return invoicePeriodEnd;
+    }
+  }
+
+  if (typeof latestInvoice === "string") {
+    const invoice = await stripe.invoices.retrieve(latestInvoice, {
+      expand: ["lines"],
+    });
+
+    const invoicePeriodEnd = getPeriodEndFromInvoice(invoice);
+
+    if (typeof invoicePeriodEnd === "number") {
+      return invoicePeriodEnd;
+    }
+  }
+
+  return null;
+}
+
+async function retrieveExpandedSubscription(subscriptionId: string) {
+  return stripe.subscriptions.retrieve(subscriptionId, {
+    expand: ["latest_invoice.lines"],
+  });
 }
 
 async function findPlanId(planKey: string) {
@@ -218,6 +276,8 @@ async function syncSubscriptionToSupabase(
     throw new Error(`No matching subscription plan found for ${planKey}`);
   }
 
+  const currentPeriodEnd = await getCurrentPeriodEnd(subscription);
+
   const payload = {
     business_id: businessId,
     owner_id: ownerId,
@@ -229,7 +289,7 @@ async function syncSubscriptionToSupabase(
     billing_interval: billingInterval,
     pricing_tier: pricingTier === "founder" ? "founder_beta" : "standard",
     founder_beta_spot: pricingTier === "founder",
-    current_period_end: unixToIso(getCurrentPeriodEnd(subscription)),
+    current_period_end: unixToIso(currentPeriodEnd),
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
@@ -256,9 +316,7 @@ async function handleCheckoutSessionCompleted(
     throw new Error("Checkout session is missing subscription ID.");
   }
 
-  const subscription = await stripe.subscriptions.retrieve(
-    session.subscription
-  );
+  const subscription = await retrieveExpandedSubscription(session.subscription);
 
   const fallbackMetadata: Stripe.Metadata = {
     ...(session.metadata || {}),
@@ -314,7 +372,11 @@ export async function POST(request: Request) {
       event.type === "customer.subscription.updated" ||
       event.type === "customer.subscription.deleted"
     ) {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscriptionEvent = event.data.object as Stripe.Subscription;
+      const subscription = await retrieveExpandedSubscription(
+        subscriptionEvent.id
+      );
+
       await syncSubscriptionToSupabase(subscription);
     }
 
