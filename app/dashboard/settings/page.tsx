@@ -34,6 +34,7 @@ type BookingTimeMode = "fixed_hours" | "flexible_requests";
 type SectionKey =
   | "businessInfo"
   | "bookingSettings"
+  | "brandingControls"
   | "setupHealth"
   | "quickLinks"
   | "nextSteps";
@@ -93,6 +94,24 @@ const settingSections = [
   },
 ];
 
+const colorPresets = [
+  { label: "Emerald", value: "#34d399" },
+  { label: "Blue", value: "#60a5fa" },
+  { label: "Purple", value: "#a78bfa" },
+  { label: "Pink", value: "#f472b6" },
+  { label: "Gold", value: "#fbbf24" },
+  { label: "Orange", value: "#fb923c" },
+  { label: "Red", value: "#f87171" },
+  { label: "Black", value: "#111827" },
+  { label: "White", value: "#f8fafc" },
+];
+
+const bookingThemeOptions = [
+  { label: "SchedNest Dark", value: "schednest_dark" },
+  { label: "Clean Light", value: "clean_light" },
+  { label: "Premium Dark", value: "premium_dark" },
+];
+
 function formatLabel(value: string | null | undefined, fallback = "Not set") {
   if (!value) return fallback;
 
@@ -119,6 +138,18 @@ function getNullableFormValue(value: string) {
   const trimmedValue = value.trim();
 
   return trimmedValue || null;
+}
+
+function getSafeColorValue(value: string, fallback = "#34d399") {
+  const trimmedValue = value.trim();
+
+  return trimmedValue || fallback;
+}
+
+function getColorInputValue(value: string, fallback = "#34d399") {
+  if (/^#[0-9A-Fa-f]{6}$/.test(value)) return value;
+
+  return fallback;
 }
 
 function getSafeBookingMode(value: string | null | undefined): BookingTimeMode {
@@ -176,6 +207,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
   const [isSavingBookingSettings, setIsSavingBookingSettings] = useState(false);
+  const [isSavingBrandingSettings, setIsSavingBrandingSettings] = useState(false);
   const [message, setMessage] = useState("");
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -191,10 +223,14 @@ export default function SettingsPage() {
   const [bookingTimeMode, setBookingTimeMode] =
     useState<BookingTimeMode>("fixed_hours");
   const [businessHoursEnabled, setBusinessHoursEnabled] = useState(true);
+  const [brandPrimaryColor, setBrandPrimaryColor] = useState("#34d399");
+  const [brandAccentColor, setBrandAccentColor] = useState("#34d399");
+  const [bookingPageTheme, setBookingPageTheme] = useState("schednest_dark");
 
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
     businessInfo: true,
     bookingSettings: true,
+    brandingControls: false,
     setupHealth: false,
     quickLinks: false,
     nextSteps: false,
@@ -211,6 +247,7 @@ export default function SettingsPage() {
     setOpenSections({
       businessInfo: true,
       bookingSettings: true,
+      brandingControls: true,
       setupHealth: true,
       quickLinks: true,
       nextSteps: true,
@@ -221,6 +258,7 @@ export default function SettingsPage() {
     setOpenSections({
       businessInfo: false,
       bookingSettings: false,
+      brandingControls: false,
       setupHealth: false,
       quickLinks: false,
       nextSteps: false,
@@ -235,6 +273,9 @@ export default function SettingsPage() {
     setTimezone(profile?.timezone || "");
     setBookingTimeMode(getSafeBookingMode(profile?.booking_time_mode));
     setBusinessHoursEnabled(profile?.business_hours_enabled ?? true);
+    setBrandPrimaryColor(profile?.brand_primary_color || "#34d399");
+    setBrandAccentColor(profile?.brand_accent_color || "#34d399");
+    setBookingPageTheme(profile?.booking_page_theme || "schednest_dark");
   }
 
   async function loadSettings() {
@@ -385,6 +426,45 @@ export default function SettingsPage() {
 
     setMessage("Booking settings saved.");
     setIsSavingBookingSettings(false);
+  }
+
+  async function saveBrandingSettings() {
+    if (!business) {
+      setMessage("Create your business profile before saving branding settings.");
+      return;
+    }
+
+    setIsSavingBrandingSettings(true);
+    setMessage("");
+
+    const { data, error } = await supabase
+      .from("business_profiles")
+      .update({
+        brand_primary_color: getSafeColorValue(brandPrimaryColor),
+        brand_accent_color: getSafeColorValue(brandAccentColor),
+        booking_page_theme: bookingPageTheme || "schednest_dark",
+      })
+      .eq("id", business.id)
+      .select(
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+      )
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      setIsSavingBrandingSettings(false);
+      return;
+    }
+
+    const updatedBusiness = (data || null) as BusinessProfile | null;
+
+    if (updatedBusiness) {
+      setBusiness(updatedBusiness);
+      syncBusinessForm(updatedBusiness);
+    }
+
+    setMessage("Branding settings saved.");
+    setIsSavingBrandingSettings(false);
   }
 
   useEffect(() => {
@@ -830,6 +910,207 @@ export default function SettingsPage() {
         </CollapsiblePanel>
 
         <CollapsiblePanel
+          eyebrow="Branding Controls"
+          title="Customize your public booking page style."
+          description="Update the colors and theme customers see when they visit your booking page."
+          isOpen={openSections.brandingControls}
+          onToggle={() => toggleSection("brandingControls")}
+          rightContent={
+            <span className="hidden rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300 sm:inline-flex">
+              {formatLabel(bookingPageTheme, "Theme")}
+            </span>
+          }
+        >
+          <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+            <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                    Primary color
+                  </span>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                    <input
+                      type="color"
+                      value={getColorInputValue(brandPrimaryColor)}
+                      onChange={(event) =>
+                        setBrandPrimaryColor(event.target.value)
+                      }
+                      disabled={!business || isSavingBrandingSettings}
+                      className="h-10 w-12 cursor-pointer rounded-xl border border-white/10 bg-transparent disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+
+                    <input
+                      value={brandPrimaryColor}
+                      onChange={(event) =>
+                        setBrandPrimaryColor(event.target.value)
+                      }
+                      disabled={!business || isSavingBrandingSettings}
+                      className="min-w-0 flex-1 bg-transparent text-sm font-black text-white outline-none placeholder:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      placeholder="#34d399"
+                    />
+                  </div>
+                </label>
+
+                <label className="grid gap-2">
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                    Accent color
+                  </span>
+
+                  <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                    <input
+                      type="color"
+                      value={getColorInputValue(brandAccentColor)}
+                      onChange={(event) =>
+                        setBrandAccentColor(event.target.value)
+                      }
+                      disabled={!business || isSavingBrandingSettings}
+                      className="h-10 w-12 cursor-pointer rounded-xl border border-white/10 bg-transparent disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+
+                    <input
+                      value={brandAccentColor}
+                      onChange={(event) =>
+                        setBrandAccentColor(event.target.value)
+                      }
+                      disabled={!business || isSavingBrandingSettings}
+                      className="min-w-0 flex-1 bg-transparent text-sm font-black text-white outline-none placeholder:text-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
+                      placeholder="#34d399"
+                    />
+                  </div>
+                </label>
+              </div>
+
+              <div className="grid gap-2">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                  Quick presets
+                </span>
+
+                <div className="flex flex-wrap gap-2">
+                  {colorPresets.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => {
+                        setBrandPrimaryColor(color.value);
+                        setBrandAccentColor(color.value);
+                      }}
+                      disabled={!business || isSavingBrandingSettings}
+                      className="flex items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span
+                        className="h-4 w-4 rounded-full border border-white/20"
+                        style={{ backgroundColor: color.value }}
+                      />
+                      {color.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="grid gap-2">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                  Booking page theme
+                </span>
+
+                <select
+                  value={bookingPageTheme}
+                  onChange={(event) => setBookingPageTheme(event.target.value)}
+                  disabled={!business || isSavingBrandingSettings}
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {bookingThemeOptions.map((theme) => (
+                    <option key={theme.value} value={theme.value}>
+                      {theme.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={saveBrandingSettings}
+                  disabled={!business || isSavingBrandingSettings}
+                  className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSavingBrandingSettings
+                    ? "Saving..."
+                    : "Save branding settings"}
+                </button>
+
+                <Link
+                  href="/dashboard/profile"
+                  className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+                >
+                  Open full profile
+                </Link>
+
+                {bookingPageUrl && (
+                  <Link
+                    href={bookingPageUrl}
+                    className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+                  >
+                    View public page
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Live Preview
+              </p>
+
+              <div
+                className="mt-4 rounded-[2rem] border border-white/10 p-5"
+                style={{
+                  background: `linear-gradient(135deg, ${getColorInputValue(
+                    brandPrimaryColor
+                  )}22, ${getColorInputValue(brandAccentColor)}11)`,
+                }}
+              >
+                <div
+                  className="h-12 w-12 rounded-2xl"
+                  style={{
+                    backgroundColor: getColorInputValue(brandPrimaryColor),
+                  }}
+                />
+
+                <h3 className="mt-5 text-2xl font-black text-white">
+                  {businessName || "Your Business"}
+                </h3>
+
+                <p className="mt-3 text-sm leading-6 text-gray-300">
+                  {businessDescription ||
+                    "A quick preview of how your brand colors can feel on the public booking page."}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <span
+                    className="rounded-2xl px-4 py-3 text-sm font-black text-black"
+                    style={{
+                      backgroundColor: getColorInputValue(brandPrimaryColor),
+                    }}
+                  >
+                    Book now
+                  </span>
+
+                  <span
+                    className="rounded-2xl border px-4 py-3 text-sm font-black text-white"
+                    style={{
+                      borderColor: getColorInputValue(brandAccentColor),
+                    }}
+                  >
+                    {formatLabel(bookingPageTheme, "Theme")}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CollapsiblePanel>
+
+        <CollapsiblePanel
           eyebrow="Setup Health"
           title={`Profile completion: ${getCompletionLabel(
             profileCompleted,
@@ -905,7 +1186,7 @@ export default function SettingsPage() {
         <CollapsiblePanel
           eyebrow="Coming Next"
           title="More direct settings."
-          description="Business info and booking mode can now be edited here. Next, we can add notification preferences and branding controls directly into this dashboard."
+          description="Business info, booking mode, and branding can now be edited here. Next, we can add notification preferences and billing shortcuts directly into this dashboard."
           isOpen={openSections.nextSteps}
           onToggle={() => toggleSection("nextSteps")}
         >
@@ -921,10 +1202,10 @@ export default function SettingsPage() {
 
             <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-lg font-black text-white">
-                Branding controls
+                Customer reminders
               </p>
               <p className="mt-2 text-sm leading-6 text-gray-400">
-                Edit booking page colors, theme, and visual settings.
+                Add automated reminder emails and no-show prevention tools.
               </p>
             </div>
 
