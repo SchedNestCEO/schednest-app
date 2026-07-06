@@ -24,6 +24,30 @@ function getStripePriceId(subscription: Stripe.Subscription) {
   return subscription.items.data[0]?.price?.id || null;
 }
 
+function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
+  const subscriptionWithPeriod = subscription as Stripe.Subscription & {
+    current_period_end?: number;
+    current_period?: {
+      end?: number;
+    };
+  };
+
+  const firstItem = subscription.items.data[0] as Stripe.SubscriptionItem & {
+    current_period_end?: number;
+    current_period?: {
+      end?: number;
+    };
+  };
+
+  return (
+    subscriptionWithPeriod.current_period_end ||
+    subscriptionWithPeriod.current_period?.end ||
+    firstItem?.current_period_end ||
+    firstItem?.current_period?.end ||
+    null
+  );
+}
+
 async function findPlanId(planKey: string) {
   const adminClient = createAdminClient();
 
@@ -194,10 +218,6 @@ async function syncSubscriptionToSupabase(
     throw new Error(`No matching subscription plan found for ${planKey}`);
   }
 
-  const subscriptionWithPeriod = subscription as Stripe.Subscription & {
-    current_period_end?: number;
-  };
-
   const payload = {
     business_id: businessId,
     owner_id: ownerId,
@@ -209,7 +229,7 @@ async function syncSubscriptionToSupabase(
     billing_interval: billingInterval,
     pricing_tier: pricingTier === "founder" ? "founder_beta" : "standard",
     founder_beta_spot: pricingTier === "founder",
-    current_period_end: unixToIso(subscriptionWithPeriod.current_period_end),
+    current_period_end: unixToIso(getCurrentPeriodEnd(subscription)),
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
