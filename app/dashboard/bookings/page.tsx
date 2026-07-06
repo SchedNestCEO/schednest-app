@@ -442,8 +442,7 @@ export default function BookingsPage() {
 
   return (
     <DashboardShell>
-     
-      <div className="space-y-6">
+     <div className="space-y-6">
         <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
           <p className="text-sm font-semibold text-emerald-300">
             Manual Booking
