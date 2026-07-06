@@ -84,20 +84,6 @@ function formatLabel(value: string | null | undefined, fallback = "Not set") {
     .join(" ");
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return "Not set";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Not set";
-
-  return date.toLocaleDateString([], {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 function getStatusClass(isGood: boolean) {
   return isGood
     ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
@@ -110,15 +96,36 @@ function getCompletionLabel(completed: number, total: number) {
   return `${Math.round((completed / total) * 100)}%`;
 }
 
+function getNullableFormValue(value: string) {
+  const trimmedValue = value.trim();
+
+  return trimmedValue || null;
+}
+
 export default function SettingsPage() {
   const supabase = useMemo(() => createClient(), []);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
   const [message, setMessage] = useState("");
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [servicesCount, setServicesCount] = useState(0);
   const [openHoursCount, setOpenHoursCount] = useState(0);
+
+  const [businessName, setBusinessName] = useState("");
+  const [businessDescription, setBusinessDescription] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [timezone, setTimezone] = useState("");
+
+  function syncBusinessForm(profile: BusinessProfile | null) {
+    setBusinessName(profile?.business_name || "");
+    setBusinessDescription(profile?.business_description || "");
+    setContactEmail(profile?.contact_email || "");
+    setContactPhone(profile?.contact_phone || "");
+    setTimezone(profile?.timezone || "");
+  }
 
   async function loadSettings() {
     setIsLoading(true);
@@ -154,6 +161,7 @@ export default function SettingsPage() {
       setSubscription(null);
       setServicesCount(0);
       setOpenHoursCount(0);
+      syncBusinessForm(null);
       setMessage("Create your business profile to unlock all settings.");
       setIsLoading(false);
       return;
@@ -161,6 +169,7 @@ export default function SettingsPage() {
 
     const safeBusiness = businessData as BusinessProfile;
     setBusiness(safeBusiness);
+    syncBusinessForm(safeBusiness);
 
     const { count: servicesTotal } = await supabase
       .from("services")
@@ -187,6 +196,47 @@ export default function SettingsPage() {
 
     setSubscription((subscriptionData || null) as Subscription | null);
     setIsLoading(false);
+  }
+
+  async function saveBusinessInfo() {
+    if (!business) {
+      setMessage("Create your business profile before saving settings.");
+      return;
+    }
+
+    setIsSavingBusinessInfo(true);
+    setMessage("");
+
+    const { data, error } = await supabase
+      .from("business_profiles")
+      .update({
+        business_name: getNullableFormValue(businessName),
+        business_description: getNullableFormValue(businessDescription),
+        contact_email: getNullableFormValue(contactEmail),
+        contact_phone: getNullableFormValue(contactPhone),
+        timezone: getNullableFormValue(timezone),
+      })
+      .eq("id", business.id)
+      .select(
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+      )
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      setIsSavingBusinessInfo(false);
+      return;
+    }
+
+    const updatedBusiness = (data || null) as BusinessProfile | null;
+
+    if (updatedBusiness) {
+      setBusiness(updatedBusiness);
+      syncBusinessForm(updatedBusiness);
+    }
+
+    setMessage("Business settings saved.");
+    setIsSavingBusinessInfo(false);
   }
 
   useEffect(() => {
@@ -235,8 +285,7 @@ export default function SettingsPage() {
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
                 Use this control center to check your setup status and quickly
-                jump to the pages that manage your business profile, booking
-                page, services, billing, customers, and notifications.
+                update the business settings customers see on your booking page.
               </p>
             </div>
 
@@ -323,6 +372,111 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        <section className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                Business Info
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Edit your main business details.
+              </h2>
+
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
+                These details help customers understand who they are booking
+                with and how to contact the business.
+              </p>
+            </div>
+
+            <Link
+              href="/dashboard/profile"
+              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/10"
+            >
+              Full profile page
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Business name
+              </span>
+              <input
+                value={businessName}
+                onChange={(event) => setBusinessName(event.target.value)}
+                disabled={!business || isSavingBusinessInfo}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="SchedNest LLC"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Timezone
+              </span>
+              <input
+                value={timezone}
+                onChange={(event) => setTimezone(event.target.value)}
+                disabled={!business || isSavingBusinessInfo}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="America/Los_Angeles"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Contact email
+              </span>
+              <input
+                value={contactEmail}
+                onChange={(event) => setContactEmail(event.target.value)}
+                disabled={!business || isSavingBusinessInfo}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="hello@schednest.com"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Contact phone
+              </span>
+              <input
+                value={contactPhone}
+                onChange={(event) => setContactPhone(event.target.value)}
+                disabled={!business || isSavingBusinessInfo}
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="(555) 555-5555"
+              />
+            </label>
+
+            <label className="grid gap-2 lg:col-span-2">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-gray-500">
+                Business description
+              </span>
+              <textarea
+                value={businessDescription}
+                onChange={(event) =>
+                  setBusinessDescription(event.target.value)
+                }
+                disabled={!business || isSavingBusinessInfo}
+                rows={5}
+                className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black leading-6 text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="Describe what your business offers and who you help."
+              />
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={saveBusinessInfo}
+            disabled={!business || isSavingBusinessInfo}
+            className="mt-5 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSavingBusinessInfo ? "Saving..." : "Save business info"}
+          </button>
+        </section>
+
         <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
@@ -330,7 +484,8 @@ export default function SettingsPage() {
             </p>
 
             <h2 className="mt-3 text-2xl font-black text-white">
-              Profile completion: {getCompletionLabel(profileCompleted, profileTotal)}
+              Profile completion:{" "}
+              {getCompletionLabel(profileCompleted, profileTotal)}
             </h2>
 
             <div className="mt-6 grid gap-3">
@@ -338,7 +493,10 @@ export default function SettingsPage() {
                 ["Business name", Boolean(business?.business_name)],
                 ["Public slug", Boolean(business?.slug)],
                 ["Timezone", Boolean(business?.timezone)],
-                ["Business description", Boolean(business?.business_description)],
+                [
+                  "Business description",
+                  Boolean(business?.business_description),
+                ],
                 [
                   "Contact info",
                   Boolean(business?.contact_email || business?.contact_phone),
@@ -463,12 +621,13 @@ export default function SettingsPage() {
           </p>
 
           <h2 className="mt-3 text-2xl font-black text-white">
-            Centralized editing.
+            More direct settings.
           </h2>
 
           <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
-            This settings dashboard now shows setup status. Next, we can make
-            these sections editable directly from this page.
+            Business info can now be edited here. Next, we can add booking mode,
+            notification preferences, and branding controls directly into this
+            settings dashboard.
           </p>
         </section>
       </div>
