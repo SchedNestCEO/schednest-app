@@ -111,6 +111,22 @@ function getMetadataValue(
   return primary?.[key] || fallback?.[key] || null;
 }
 
+async function findOwnerIdForBusiness(businessId: string) {
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient
+    .from("business_profiles")
+    .select("owner_id")
+    .eq("id", businessId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Could not look up business owner: ${error.message}`);
+  }
+
+  return data?.owner_id || null;
+}
+
 async function syncSubscriptionToSupabase(
   subscription: Stripe.Subscription,
   fallbackMetadata?: Stripe.Metadata | null
@@ -135,6 +151,14 @@ async function syncSubscriptionToSupabase(
     throw new Error(
       `Missing business_id. Subscription=${stripeSubscriptionId}, Customer=${stripeCustomerId}, Price=${stripePriceId}`
     );
+  }
+
+  const ownerId =
+    getMetadataValue(subscription.metadata, fallbackMetadata, "user_id") ||
+    (await findOwnerIdForBusiness(businessId));
+
+  if (!ownerId) {
+    throw new Error(`Missing owner_id for business ${businessId}`);
   }
 
   const planKey =
@@ -176,6 +200,7 @@ async function syncSubscriptionToSupabase(
 
   const payload = {
     business_id: businessId,
+    owner_id: ownerId,
     plan_id: planId,
     status: subscription.status,
     stripe_customer_id: stripeCustomerId,
