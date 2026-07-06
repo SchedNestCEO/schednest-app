@@ -17,6 +17,67 @@ type PriceMap = Record<
   Record<PlanKey, Record<BillingInterval, string | undefined>>
 >;
 
+type PriceEnvMap = Record<
+  PricingTier,
+  Record<PlanKey, Record<BillingInterval, string>>
+>;
+
+const priceEnvMap: PriceEnvMap = {
+  founder: {
+    essentials: {
+      monthly: "STRIPE_FOUNDER_ESSENTIALS_MONTHLY_PRICE_ID",
+      annual: "STRIPE_FOUNDER_ESSENTIALS_ANNUAL_PRICE_ID",
+    },
+    growth: {
+      monthly: "STRIPE_FOUNDER_GROWTH_MONTHLY_PRICE_ID",
+      annual: "STRIPE_FOUNDER_GROWTH_ANNUAL_PRICE_ID",
+    },
+    complete: {
+      monthly: "STRIPE_FOUNDER_COMPLETE_MONTHLY_PRICE_ID",
+      annual: "STRIPE_FOUNDER_COMPLETE_ANNUAL_PRICE_ID",
+    },
+  },
+  standard: {
+    essentials: {
+      monthly: "STRIPE_STANDARD_ESSENTIALS_MONTHLY_PRICE_ID",
+      annual: "STRIPE_STANDARD_ESSENTIALS_ANNUAL_PRICE_ID",
+    },
+    growth: {
+      monthly: "STRIPE_STANDARD_GROWTH_MONTHLY_PRICE_ID",
+      annual: "STRIPE_STANDARD_GROWTH_ANNUAL_PRICE_ID",
+    },
+    complete: {
+      monthly: "STRIPE_STANDARD_COMPLETE_MONTHLY_PRICE_ID",
+      annual: "STRIPE_STANDARD_COMPLETE_ANNUAL_PRICE_ID",
+    },
+  },
+};
+
+function readPriceEnv(
+  pricingTier: PricingTier,
+  planKey: PlanKey,
+  billingInterval: BillingInterval
+) {
+  const envName = priceEnvMap[pricingTier][planKey][billingInterval];
+  const value = process.env[envName];
+
+  if (!value) {
+    throw new Error(`Missing Stripe price ID env variable: ${envName}`);
+  }
+
+  if (value === "price_REPLACE_ME" || value.includes("REPLACE_ME")) {
+    throw new Error(`Stripe price ID still has placeholder value: ${envName}`);
+  }
+
+  if (!value.startsWith("price_")) {
+    throw new Error(
+      `Invalid Stripe price ID for ${envName}. Expected value to start with price_.`
+    );
+  }
+
+  return value;
+}
+
 const stripePriceMap: PriceMap = {
   founder: {
     essentials: {
@@ -61,15 +122,7 @@ export function getStripePriceId(
   billingInterval: BillingInterval,
   pricingTier: PricingTier
 ) {
-  const priceId = stripePriceMap[pricingTier][planKey][billingInterval];
-
-  if (!priceId) {
-    throw new Error(
-      `Missing Stripe price ID for ${pricingTier} ${planKey} ${billingInterval}.`
-    );
-  }
-
-  return priceId;
+  return readPriceEnv(pricingTier, planKey, billingInterval);
 }
 
 export function getPriceMetadata(priceId: string) {
@@ -80,7 +133,9 @@ export function getPriceMetadata(priceId: string) {
   for (const pricingTier of tiers) {
     for (const planKey of plans) {
       for (const billingInterval of intervals) {
-        if (stripePriceMap[pricingTier][planKey][billingInterval] === priceId) {
+        const envName = priceEnvMap[pricingTier][planKey][billingInterval];
+
+        if (process.env[envName] === priceId) {
           return {
             pricingTier,
             planKey,
