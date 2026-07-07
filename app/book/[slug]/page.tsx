@@ -21,6 +21,14 @@ type PublicBusiness = {
   booking_page_theme: string | null;
 };
 
+type PublicServiceSampleImage = {
+  id: string;
+  image_url: string;
+  caption: string | null;
+  sort_order: number | null;
+  is_visible: boolean | null;
+};
+
 type PublicService = {
   id: string;
   name: string;
@@ -30,6 +38,7 @@ type PublicService = {
   sample_image_url: string | null;
   sample_caption: string | null;
   show_sample_on_booking_page: boolean | null;
+  sample_images: PublicServiceSampleImage[];
 };
 
 type PublicHour = {
@@ -116,12 +125,36 @@ function getSafeImageUrl(value: string | null | undefined) {
   return "";
 }
 
-function shouldShowServiceSample(service: PublicService | null) {
-  if (!service) return false;
+function getServiceSampleImages(service: PublicService | null) {
+  if (!service) return [];
 
-  return Boolean(
-    service.show_sample_on_booking_page && getSafeImageUrl(service.sample_image_url)
+  const uploadedImages = (service.sample_images || []).filter(
+    (image) => image.is_visible !== false && getSafeImageUrl(image.image_url)
   );
+
+  if (uploadedImages.length > 0) {
+    return uploadedImages;
+  }
+
+  const legacyImageUrl = getSafeImageUrl(service.sample_image_url);
+
+  if (service.show_sample_on_booking_page && legacyImageUrl) {
+    return [
+      {
+        id: `legacy-${service.id}`,
+        image_url: legacyImageUrl,
+        caption: service.sample_caption,
+        sort_order: 0,
+        is_visible: true,
+      },
+    ];
+  }
+
+  return [];
+}
+
+function shouldShowServiceSample(service: PublicService | null) {
+  return getServiceSampleImages(service).length > 0;
 }
 
 function timeToMinutes(value: string | null) {
@@ -232,6 +265,10 @@ export default function PublicBookingPage() {
       null
     );
   }, [pageData, selectedServiceId]);
+
+  const selectedServiceImages = useMemo(() => {
+    return getServiceSampleImages(selectedService);
+  }, [selectedService]);
 
   const visibleServiceSamples = useMemo(() => {
     if (!pageData) return [];
@@ -662,14 +699,15 @@ export default function PublicBookingPage() {
                     : "bg-white/10 text-gray-300"
                 }`}
               >
-                {visibleServiceSamples.length} sample
-                {visibleServiceSamples.length === 1 ? "" : "s"}
+                {visibleServiceSamples.length} service
+                {visibleServiceSamples.length === 1 ? "" : "s"} with images
               </span>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {visibleServiceSamples.map((service) => {
-                const imageUrl = getSafeImageUrl(service.sample_image_url);
+                const serviceImages = getServiceSampleImages(service);
+                const primaryImage = serviceImages[0];
 
                 return (
                   <div
@@ -681,10 +719,23 @@ export default function PublicBookingPage() {
                     }`}
                   >
                     <img
-                      src={imageUrl}
-                      alt={service.sample_caption || service.name}
+                      src={getSafeImageUrl(primaryImage.image_url)}
+                      alt={primaryImage.caption || service.name}
                       className="h-64 w-full object-cover"
                     />
+
+                    {serviceImages.length > 1 && (
+                      <div className="grid grid-cols-4 gap-2 p-3">
+                        {serviceImages.slice(0, 5).map((image) => (
+                          <img
+                            key={image.id}
+                            src={getSafeImageUrl(image.image_url)}
+                            alt={image.caption || service.name}
+                            className="h-16 w-full rounded-xl object-cover"
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     <div className="p-5">
                       <p
@@ -695,7 +746,7 @@ export default function PublicBookingPage() {
                       </p>
 
                       <p className={`mt-2 text-sm font-black ${titleTextClass}`}>
-                        {service.sample_caption ||
+                        {primaryImage.caption ||
                           service.description ||
                           "Service example"}
                       </p>
@@ -704,6 +755,9 @@ export default function PublicBookingPage() {
                         {formatMoney(service.price)}
                         {" · "}
                         {service.duration_minutes ?? 60} min
+                        {" · "}
+                        {serviceImages.length} image
+                        {serviceImages.length === 1 ? "" : "s"}
                       </p>
                     </div>
                   </div>
@@ -1002,7 +1056,7 @@ export default function PublicBookingPage() {
                   })}
                 </div>
 
-                {shouldShowServiceSample(selectedService) && (
+                {selectedServiceImages.length > 0 && selectedService && (
                   <div
                     className={`mt-4 overflow-hidden rounded-2xl border ${
                       isCleanTheme
@@ -1011,23 +1065,40 @@ export default function PublicBookingPage() {
                     }`}
                   >
                     <img
-                      src={getSafeImageUrl(selectedService?.sample_image_url)}
-                      alt={selectedService?.sample_caption || selectedService?.name || "Service sample"}
+                      src={getSafeImageUrl(selectedServiceImages[0].image_url)}
+                      alt={
+                        selectedServiceImages[0].caption ||
+                        selectedService.name ||
+                        "Service sample"
+                      }
                       className="h-52 w-full object-cover"
                     />
+
+                    {selectedServiceImages.length > 1 && (
+                      <div className="grid grid-cols-4 gap-2 p-3">
+                        {selectedServiceImages.slice(0, 5).map((image) => (
+                          <img
+                            key={image.id}
+                            src={getSafeImageUrl(image.image_url)}
+                            alt={image.caption || selectedService.name}
+                            className="h-14 w-full rounded-xl object-cover"
+                          />
+                        ))}
+                      </div>
+                    )}
 
                     <div className="p-4">
                       <p
                         className="text-xs font-black uppercase tracking-[0.2em]"
                         style={{ color: primaryColor }}
                       >
-                        Selected service sample
+                        Selected service gallery
                       </p>
 
                       <p className={`mt-2 text-sm font-bold ${titleTextClass}`}>
-                        {selectedService?.sample_caption ||
-                          selectedService?.description ||
-                          selectedService?.name}
+                        {selectedServiceImages[0].caption ||
+                          selectedService.description ||
+                          selectedService.name}
                       </p>
                     </div>
                   </div>

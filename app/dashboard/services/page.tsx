@@ -26,6 +26,19 @@ type Service = {
   show_sample_on_booking_page: boolean | null;
 };
 
+type ServiceSampleImage = {
+  id: string;
+  service_id: string;
+  business_id: string;
+  owner_id: string;
+  image_url: string;
+  caption: string | null;
+  sort_order: number | null;
+  is_visible: boolean | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
 type AnyRow = Record<string, unknown>;
 
 type SampleEdit = {
@@ -137,15 +150,26 @@ export default function ServicesPage() {
   const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdit>>(
     {}
   );
+  const [serviceImagesByService, setServiceImagesByService] = useState<
+    Record<string, ServiceSampleImage[]>
+  >({});
+  const [uploadingServiceId, setUploadingServiceId] = useState<string | null>(
+    null
+  );
+  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
   const planAccess = getPlanAccess(subscription, plan);
+  const serviceImageLimit = planAccess.hasCompleteAccess
+    ? 5
+    : planAccess.hasGrowthAccess
+      ? 3
+      : 0;
 
   const activeServices = services.filter((service) => service.is_active);
   const pausedServices = services.filter((service) => !service.is_active);
-  const visibleSamples = services.filter(
-    (service) =>
-      service.show_sample_on_booking_page && service.sample_image_url?.trim()
-  );
+  const visibleSamples = Object.values(serviceImagesByService)
+    .flat()
+    .filter((image) => image.is_visible !== false && image.image_url?.trim());
 
   const previewBookingHref = businessProfile?.slug
     ? `/book/${businessProfile.slug}`
@@ -153,6 +177,215 @@ export default function ServicesPage() {
 
   const shouldShowAddService =
     isAddServiceOpen || (!isLoading && services.length === 0);
+
+  function getImagesForService(serviceId: string) {
+    return serviceImagesByService[serviceId] || [];
+  }
+
+  function getServiceImageLimit() {
+    if (planAccess.hasCompleteAccess) return 5;
+    if (planAccess.hasGrowthAccess) return 3;
+    return 0;
+  }
+
+  function getStoragePathFromPublicUrl(url: string) {
+    const marker = "/storage/v1/object/public/service-samples/";
+    const markerIndex = url.indexOf(marker);
+
+    if (markerIndex === -1) return null;
+
+    return decodeURIComponent(url.slice(markerIndex + marker.length).split("?")[0]);
+  }
+
+  function updateImageCaptionDraft(imageId: string, caption: string) {
+    setServiceImagesByService((currentImages) => {
+      const nextImages: Record<string, ServiceSampleImage[]> = {};
+
+      for (const [serviceId, images] of Object.entries(currentImages)) {
+        nextImages[serviceId] = images.map((image) =>
+          image.id === imageId ? { ...image, caption } : image
+        );
+      }
+
+      return nextImages;
+    });
+  }
+
+  async function handleUploadServiceImage(
+    service: Service,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!businessProfile) {
+      setErrorMessage("Business profile not loaded yet.");
+      return;
+    }
+
+    const imageLimit = getServiceImageLimit();
+    const currentImages = getImagesForService(service.id);
+
+    if (imageLimit <= 0) {
+      setErrorMessage("Service images are available on Growth and Complete.");
+      return;
+    }
+
+    if (currentImages.length >= imageLimit) {
+      setErrorMessage(`This plan allows up to ${imageLimit} images per service.`);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Please upload an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage("Images must be 5MB or smaller.");
+      return;
+    }
+
+    setUploadingServiceId(service.id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setErrorMessage("Please sign in again before uploading.");
+      setUploadingServiceId(null);
+      return;
+    }
+
+    const safeFileName = file.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]/g, "-")
+      .replace(/-+/g, "-");
+
+    const filePath = `${user.id}/${businessProfile.id}/${service.id}/${Date.now()}-${safeFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("service-samples")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      setErrorMessage(uploadError.message);
+      setUploadingServiceId(null);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("service-samples")
+      .getPublicUrl(filePath);
+
+    const { error: insertError } = await supabase
+      .from("service_sample_images")
+      .insert({
+        service_id: service.id,
+        business_id: businessProfile.id,
+        owner_id: businessProfile.owner_id,
+        image_url: publicUrlData.publicUrl,
+        caption: null,
+        sort_order: currentImages.length,
+        is_visible: true,
+      });
+
+    if (insertError) {
+      setErrorMessage(insertError.message);
+      setUploadingServiceId(null);
+      return;
+    }
+
+    setSuccessMessage("Service image uploaded.");
+    await loadServices();
+    setUploadingServiceId(null);
+  }
+
+  async function saveImageCaption(image: ServiceSampleImage) {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase
+      .from("service_sample_images")
+      .update({
+        caption: image.caption?.trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", image.id)
+      .eq("business_id", image.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage("Image caption saved.");
+    await loadServices();
+  }
+
+  async function toggleServiceImageVisibility(image: ServiceSampleImage) {
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase
+      .from("service_sample_images")
+      .update({
+        is_visible: image.is_visible === false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", image.id)
+      .eq("business_id", image.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSuccessMessage(
+      image.is_visible === false
+        ? "Image is now visible."
+        : "Image hidden from public booking page."
+    );
+
+    await loadServices();
+  }
+
+  async function deleteServiceImage(image: ServiceSampleImage) {
+    setDeletingImageId(image.id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const storagePath = getStoragePathFromPublicUrl(image.image_url);
+
+    if (storagePath) {
+      await supabase.storage.from("service-samples").remove([storagePath]);
+    }
+
+    const { error } = await supabase
+      .from("service_sample_images")
+      .delete()
+      .eq("id", image.id)
+      .eq("business_id", image.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      setDeletingImageId(null);
+      return;
+    }
+
+    setSuccessMessage("Service image removed.");
+    await loadServices();
+    setDeletingImageId(null);
+  }
 
   async function loadServices() {
     setIsLoading(true);
@@ -236,6 +469,44 @@ export default function ServicesPage() {
     });
 
     setSampleEdits(initialSampleEdits);
+
+    if (safeServices.length > 0) {
+      const { data: sampleImagesData, error: sampleImagesError } =
+        await supabase
+          .from("service_sample_images")
+          .select(
+            "id, service_id, business_id, owner_id, image_url, caption, sort_order, is_visible, created_at, updated_at"
+          )
+          .eq("business_id", safeProfile.id)
+          .in(
+            "service_id",
+            safeServices.map((service) => service.id)
+          )
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: true });
+
+      if (sampleImagesError) {
+        setErrorMessage(sampleImagesError.message);
+        setServiceImagesByService({});
+        setIsLoading(false);
+        return;
+      }
+
+      const groupedImages: Record<string, ServiceSampleImage[]> = {};
+
+      ((sampleImagesData || []) as ServiceSampleImage[]).forEach((image) => {
+        if (!groupedImages[image.service_id]) {
+          groupedImages[image.service_id] = [];
+        }
+
+        groupedImages[image.service_id].push(image);
+      });
+
+      setServiceImagesByService(groupedImages);
+    } else {
+      setServiceImagesByService({});
+    }
+
     setIsLoading(false);
   }
 
@@ -252,20 +523,6 @@ export default function ServicesPage() {
       return;
     }
 
-    if (planAccess.hasGrowthAccess && !isUsableImageUrl(newSampleImageUrl)) {
-      setErrorMessage("Sample image must be a valid image URL.");
-      return;
-    }
-
-    if (
-      planAccess.hasGrowthAccess &&
-      newShowSample &&
-      !newSampleImageUrl.trim()
-    ) {
-      setErrorMessage("Add a sample image URL before showing it publicly.");
-      return;
-    }
-
     setIsSaving(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -278,15 +535,9 @@ export default function ServicesPage() {
       price: price ? Number(price) : null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : 60,
       is_active: true,
-      sample_image_url: planAccess.hasGrowthAccess
-        ? newSampleImageUrl.trim() || null
-        : null,
-      sample_caption: planAccess.hasGrowthAccess
-        ? newSampleCaption.trim() || null
-        : null,
-      show_sample_on_booking_page: planAccess.hasGrowthAccess
-        ? newShowSample
-        : false,
+      sample_image_url: null,
+      sample_caption: null,
+      show_sample_on_booking_page: false,
     });
 
     if (error) {
@@ -566,90 +817,34 @@ export default function ServicesPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-black text-emerald-300">
-                          Service sample
+                          Service images
                         </p>
                         <p className="mt-2 text-xs leading-5 text-gray-500">
-                          Growth and Complete businesses can show a sample image
-                          on the public booking page.
+                          Add the service first, then upload images from the
+                          service card below. Growth gets up to 3 images per
+                          service. Complete gets up to 5.
                         </p>
                       </div>
 
                       <span
                         className={`w-fit rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${
-                          planAccess.hasGrowthAccess
+                          serviceImageLimit > 0
                             ? "bg-emerald-400/10 text-emerald-300"
                             : "bg-yellow-400/10 text-yellow-200"
                         }`}
                       >
-                        {planAccess.hasGrowthAccess ? "Unlocked" : "Growth"}
+                        {serviceImageLimit > 0
+                          ? `${serviceImageLimit} images`
+                          : "Upgrade"}
                       </span>
                     </div>
 
-                    {!planAccess.hasGrowthAccess && (
+                    {serviceImageLimit === 0 && (
                       <p className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4 text-sm leading-6 text-gray-300">
                         Essentials can add services, pricing, and duration.
-                        Growth and Complete can add service samples for a more
-                        branded booking page.
+                        Growth and Complete unlock service image uploads.
                       </p>
                     )}
-
-                    <div
-                      className={`mt-4 grid gap-4 ${
-                        !planAccess.hasGrowthAccess ? "opacity-50" : ""
-                      }`}
-                    >
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">
-                          Sample image URL
-                        </label>
-                        <input
-                          value={newSampleImageUrl}
-                          disabled={!planAccess.hasGrowthAccess}
-                          onChange={(event) =>
-                            setNewSampleImageUrl(event.target.value)
-                          }
-                          placeholder="https://example.com/sample.jpg"
-                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-gray-300">
-                          Sample caption
-                        </label>
-                        <input
-                          value={newSampleCaption}
-                          disabled={!planAccess.hasGrowthAccess}
-                          onChange={(event) =>
-                            setNewSampleCaption(event.target.value)
-                          }
-                          placeholder="Example: Before and after detail package"
-                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                        />
-                      </div>
-
-                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                        <input
-                          type="checkbox"
-                          checked={newShowSample}
-                          disabled={!planAccess.hasGrowthAccess}
-                          onChange={(event) =>
-                            setNewShowSample(event.target.checked)
-                          }
-                          className="mt-1 h-5 w-5 accent-emerald-400 disabled:cursor-not-allowed"
-                        />
-
-                        <span>
-                          <span className="block text-sm font-black text-white">
-                            Show this sample on booking page
-                          </span>
-                          <span className="mt-1 block text-xs leading-5 text-gray-500">
-                            Customers will see this visual example when
-                            reviewing your services.
-                          </span>
-                        </span>
-                      </label>
-                    </div>
                   </div>
 
                   <button
@@ -773,11 +968,14 @@ export default function ServicesPage() {
 
           <div className="mt-6 grid gap-4">
             {services.map((service) => {
-              const sampleEdit = sampleEdits[service.id] || {
-                sample_image_url: "",
-                sample_caption: "",
-                show_sample_on_booking_page: false,
-              };
+              const serviceImages = getImagesForService(service.id);
+              const visibleServiceImages = serviceImages.filter(
+                (image) => image.is_visible !== false && image.image_url
+              );
+              const currentImageLimit = getServiceImageLimit();
+              const canUploadMoreImages =
+                currentImageLimit > 0 &&
+                serviceImages.length < currentImageLimit;
 
               return (
                 <div
@@ -801,12 +999,12 @@ export default function ServicesPage() {
                           {service.is_active ? "Active" : "Paused"}
                         </span>
 
-                        {service.show_sample_on_booking_page &&
-                          service.sample_image_url && (
-                            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-                              Sample visible
-                            </span>
-                          )}
+                        {visibleServiceImages.length > 0 && (
+                          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+                            {visibleServiceImages.length} image
+                            {visibleServiceImages.length === 1 ? "" : "s"} visible
+                          </span>
+                        )}
                       </div>
 
                       {service.description ? (
@@ -853,126 +1051,153 @@ export default function ServicesPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-black text-emerald-300">
-                          Service sample
+                          Service images
                         </p>
 
                         <p className="mt-2 text-xs leading-5 text-gray-500">
-                          Growth and Complete can show this service sample on
-                          the public booking page.
+                          Upload real service photos instead of pasting image
+                          links. Growth allows 3 images per service. Complete
+                          allows 5.
                         </p>
                       </div>
 
                       <span
                         className={`w-fit rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${
-                          planAccess.hasGrowthAccess
+                          currentImageLimit > 0
                             ? "bg-emerald-400/10 text-emerald-300"
                             : "bg-yellow-400/10 text-yellow-200"
                         }`}
                       >
-                        {planAccess.hasGrowthAccess ? "Unlocked" : "Growth"}
+                        {currentImageLimit > 0
+                          ? `${serviceImages.length}/${currentImageLimit}`
+                          : "Upgrade"}
                       </span>
                     </div>
 
-                    <div
-                      className={`mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr] ${
-                        !planAccess.hasGrowthAccess ? "opacity-50" : ""
-                      }`}
-                    >
-                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                        {sampleEdit.sample_image_url ? (
-                          <img
-                            src={sampleEdit.sample_image_url}
-                            alt={sampleEdit.sample_caption || service.name}
-                            className="h-52 w-full object-cover"
-                          />
+                    {currentImageLimit === 0 ? (
+                      <p className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4 text-sm leading-6 text-gray-300">
+                        Service images are available on Growth and Complete.
+                        Upgrade to show visual examples on your booking page.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                          <label
+                            className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition ${
+                              canUploadMoreImages
+                                ? "cursor-pointer bg-emerald-400 text-black hover:bg-emerald-300"
+                                : "cursor-not-allowed border border-white/10 text-gray-500"
+                            }`}
+                          >
+                            {uploadingServiceId === service.id
+                              ? "Uploading..."
+                              : canUploadMoreImages
+                                ? "Upload image"
+                                : "Image limit reached"}
+
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              disabled={
+                                !canUploadMoreImages ||
+                                uploadingServiceId === service.id
+                              }
+                              onChange={(event) =>
+                                handleUploadServiceImage(service, event)
+                              }
+                              className="hidden"
+                            />
+                          </label>
+
+                          <p className="text-xs leading-5 text-gray-500">
+                            Max 5MB. JPG, PNG, WebP, or GIF.
+                          </p>
+                        </div>
+
+                        {serviceImages.length === 0 ? (
+                          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm leading-6 text-gray-500">
+                            No images uploaded yet. Add a photo to help
+                            customers understand what this service looks like.
+                          </div>
                         ) : (
-                          <div className="flex h-52 items-center justify-center p-6 text-center text-sm leading-6 text-gray-500">
-                            Add an image URL to preview this service sample.
+                          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {serviceImages.map((image) => (
+                              <div
+                                key={image.id}
+                                className="overflow-hidden rounded-2xl border border-white/10 bg-black/30"
+                              >
+                                <img
+                                  src={image.image_url}
+                                  alt={image.caption || service.name}
+                                  className="h-44 w-full object-cover"
+                                />
+
+                                <div className="grid gap-3 p-4">
+                                  <input
+                                    value={image.caption || ""}
+                                    onChange={(event) =>
+                                      updateImageCaptionDraft(
+                                        image.id,
+                                        event.target.value
+                                      )
+                                    }
+                                    placeholder="Optional image caption"
+                                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                                  />
+
+                                  <div className="flex flex-wrap gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => saveImageCaption(image)}
+                                      className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/20"
+                                    >
+                                      Save caption
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        toggleServiceImageVisibility(image)
+                                      }
+                                      className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                                    >
+                                      {image.is_visible === false
+                                        ? "Show"
+                                        : "Hide"}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={deletingImageId === image.id}
+                                      onClick={() => deleteServiceImage(image)}
+                                      className="rounded-2xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs font-black text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      {deletingImageId === image.id
+                                        ? "Removing..."
+                                        : "Remove"}
+                                    </button>
+                                  </div>
+
+                                  <span
+                                    className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                                      image.is_visible === false
+                                        ? "bg-white/10 text-gray-400"
+                                        : "bg-emerald-400/10 text-emerald-300"
+                                    }`}
+                                  >
+                                    {image.is_visible === false
+                                      ? "Hidden"
+                                      : "Visible"}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
-                      </div>
-
-                      <div className="grid gap-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-300">
-                            Sample image URL
-                          </label>
-                          <input
-                            value={sampleEdit.sample_image_url}
-                            disabled={!planAccess.hasGrowthAccess}
-                            onChange={(event) =>
-                              updateSampleEdit(
-                                service.id,
-                                "sample_image_url",
-                                event.target.value
-                              )
-                            }
-                            placeholder="https://example.com/sample.jpg"
-                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium text-gray-300">
-                            Sample caption
-                          </label>
-                          <input
-                            value={sampleEdit.sample_caption}
-                            disabled={!planAccess.hasGrowthAccess}
-                            onChange={(event) =>
-                              updateSampleEdit(
-                                service.id,
-                                "sample_caption",
-                                event.target.value
-                              )
-                            }
-                            placeholder="Example: Final result after service"
-                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                          />
-                        </div>
-
-                        <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4">
-                          <input
-                            type="checkbox"
-                            checked={sampleEdit.show_sample_on_booking_page}
-                            disabled={!planAccess.hasGrowthAccess}
-                            onChange={(event) =>
-                              updateSampleEdit(
-                                service.id,
-                                "show_sample_on_booking_page",
-                                event.target.checked
-                              )
-                            }
-                            className="mt-1 h-5 w-5 accent-emerald-400 disabled:cursor-not-allowed"
-                          />
-
-                          <span>
-                            <span className="block text-sm font-black text-white">
-                              Show sample on booking page
-                            </span>
-                            <span className="mt-1 block text-xs leading-5 text-gray-500">
-                              Customers will see this visual example when
-                              reviewing your services.
-                            </span>
-                          </span>
-                        </label>
-
-                        <button
-                          type="button"
-                          onClick={() => saveServiceSample(service)}
-                          disabled={
-                            !planAccess.hasGrowthAccess ||
-                            savingSampleId === service.id
-                          }
-                          className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {savingSampleId === service.id
-                            ? "Saving sample..."
-                            : "Save service sample"}
-                        </button>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
+
                 </div>
               );
             })}
