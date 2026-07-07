@@ -132,6 +132,7 @@ export default function CustomersPage() {
     "all" | "active" | "archived" | "blocked"
   >("active");
 
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const [isCustomerListOpen, setIsCustomerListOpen] = useState(true);
   const [flagNoteEdits, setFlagNoteEdits] = useState<Record<string, string>>(
     {}
@@ -183,6 +184,9 @@ export default function CustomersPage() {
 
   const shouldShowCustomerList =
     isCustomerListOpen || searchQuery.trim().length > 0;
+
+  const shouldShowAddCustomer =
+    isAddCustomerOpen || (!isLoading && customers.length === 0);
 
   function loadCustomerListPreference(customerCount: number) {
     const savedValue = window.localStorage.getItem(CUSTOMER_LIST_OPEN_KEY);
@@ -390,6 +394,7 @@ export default function CustomersPage() {
     setEmail("");
     setPhone("");
     setNotes("");
+    setIsAddCustomerOpen(false);
     setMessage("Customer added.");
 
     await loadCustomers();
@@ -538,72 +543,105 @@ export default function CustomersPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <h2 className="text-2xl font-black text-white">Add Customer</h2>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              Add customers manually or let SchedNest build this list
-              automatically from booking requests.
-            </p>
-
-            <form
-              onSubmit={handleAddCustomer}
-              className="mt-6 grid gap-4 lg:grid-cols-2"
+        <section className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
+          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+            <button
+              type="button"
+              onClick={() =>
+                setIsAddCustomerOpen((currentValue) => !currentValue)
+              }
+              className="flex w-full flex-col gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-start lg:justify-between"
             >
               <div>
-                <label className="text-sm font-bold text-gray-300">Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Customer name"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
-                  required
-                />
+                <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                  Add Customer
+                </p>
+
+                <h2 className="mt-3 text-2xl font-black text-white">
+                  Save a customer manually.
+                </h2>
+
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
+                  Add customers from phone calls, texts, DMs, or in-person
+                  conversations. SchedNest can also create customers
+                  automatically from public booking requests.
+                </p>
               </div>
 
-              <div>
-                <label className="text-sm font-bold text-gray-300">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="customer@example.com"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
-                />
-              </div>
+              <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300">
+                {shouldShowAddCustomer ? "Collapse" : "Expand"}
+              </span>
+            </button>
 
-              <div>
-                <label className="text-sm font-bold text-gray-300">Phone</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="Phone number"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
-                />
-              </div>
+            {shouldShowAddCustomer && (
+              <div className="border-t border-white/10 p-6">
+                <form
+                  onSubmit={handleAddCustomer}
+                  className="grid gap-4 lg:grid-cols-2"
+                >
+                  <div>
+                    <label className="text-sm font-bold text-gray-300">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Customer name"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label className="text-sm font-bold text-gray-300">Notes</label>
-                <input
-                  type="text"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Optional note"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
-                />
-              </div>
+                  <div>
+                    <label className="text-sm font-bold text-gray-300">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="customer@example.com"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 lg:col-span-2"
-              >
-                {isSaving ? "Adding customer..." : "Add Customer"}
-              </button>
-            </form>
+                  <div>
+                    <label className="text-sm font-bold text-gray-300">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="Phone number"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-gray-300">
+                      Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      placeholder="Optional note"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50 lg:col-span-2"
+                  >
+                    {isSaving ? "Adding customer..." : "Add Customer"}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
