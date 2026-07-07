@@ -44,8 +44,8 @@ export default function NotificationBell({
 
   const dropdownClass =
     variant === "mobile"
-      ? "left-4 right-4 top-24 w-auto max-w-none"
-      : "right-0 mt-3 w-96";
+      ? "left-1/2 top-24 w-[calc(100vw-1.5rem)] max-w-sm -translate-x-1/2"
+      : "right-0 mt-3 w-96 max-w-[calc(100vw-2rem)]";
 
   const loadNotifications = useCallback(async () => {
     setIsLoading(true);
@@ -332,7 +332,7 @@ export default function NotificationBell({
 
       {isOpen && (
         <div
-          className={`${dropdownPositionClass} z-50 rounded-[2rem] border border-white/10 bg-[#07100d] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.65)] ${dropdownClass}`}
+          className={`${dropdownPositionClass} z-[100] max-h-[calc(100vh-7rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#07100d] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.65)] ${dropdownClass}`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -365,7 +365,7 @@ export default function NotificationBell({
             </div>
           )}
 
-          <div className="mt-4 grid max-h-[28rem] gap-3 overflow-y-auto pr-1">
+          <div className="mt-4 grid max-h-[22rem] gap-3 overflow-y-auto pr-1 sm:max-h-[28rem]">
             {isLoading ? (
               <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                 <p className="text-sm text-gray-400">

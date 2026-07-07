@@ -376,22 +376,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           </header>
 
           <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="relative z-40 mb-6 hidden w-fit max-w-full overflow-visible rounded-[2rem] border border-white/10 bg-white/[0.04] p-3 lg:block">
-              <div className="flex flex-wrap items-center gap-2 overflow-visible">
-                {visibleNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={getTopNavLinkClass(item.href)}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-
-                <div className="relative shrink-0 overflow-visible">
-                  <NotificationBell variant="top" />
-                </div>
-              </div>
+            <div className="relative z-40 mb-6 hidden justify-end lg:flex">
+              <NotificationBell variant="top" />
             </div>
 
             <div className="relative z-0">{children}</div>
