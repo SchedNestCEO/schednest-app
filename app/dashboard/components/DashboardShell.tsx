@@ -13,6 +13,7 @@ type DashboardShellProps = {
 type NavItem = {
   href: string;
   label: string;
+  shortLabel: string;
   adminOnly?: boolean;
 };
 
@@ -20,42 +21,52 @@ const navItems: NavItem[] = [
   {
     href: "/dashboard",
     label: "Dashboard",
+    shortLabel: "D",
   },
   {
     href: "/dashboard/profile",
     label: "Profile",
+    shortLabel: "P",
   },
   {
     href: "/dashboard/bookings",
     label: "Bookings",
+    shortLabel: "B",
   },
   {
     href: "/dashboard/requests",
     label: "Requests",
+    shortLabel: "R",
   },
   {
     href: "/dashboard/customers",
     label: "Customers",
+    shortLabel: "C",
   },
   {
     href: "/dashboard/services",
     label: "Services",
+    shortLabel: "S",
   },
   {
     href: "/dashboard/booking-page",
     label: "Booking Page",
+    shortLabel: "BP",
   },
   {
     href: "/dashboard/settings",
     label: "Settings",
+    shortLabel: "⚙",
   },
   {
     href: "/dashboard/birdy",
     label: "Birdy",
+    shortLabel: "AI",
   },
   {
     href: "/dashboard/subscriptions",
     label: "Subscriptions",
+    shortLabel: "$",
     adminOnly: true,
   },
 ];
@@ -70,6 +81,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isSchedNestAdmin, setIsSchedNestAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const visibleNavItems = navItems.filter(
     (item) => !item.adminOnly || isSchedNestAdmin
@@ -80,6 +92,27 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     router.push("/");
     router.refresh();
   }
+
+  function toggleSidebar() {
+    setIsSidebarCollapsed((currentValue) => {
+      const nextValue = !currentValue;
+
+      window.localStorage.setItem(
+        "schednest-sidebar-collapsed",
+        String(nextValue)
+      );
+
+      return nextValue;
+    });
+  }
+
+  useEffect(() => {
+    const savedSidebarPreference = window.localStorage.getItem(
+      "schednest-sidebar-collapsed"
+    );
+
+    setIsSidebarCollapsed(savedSidebarPreference === "true");
+  }, []);
 
   useEffect(() => {
     async function loadUser() {
@@ -108,10 +141,20 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  function getNavLinkClass(href: string, isMobile = false) {
+  function getNavLinkClass(href: string) {
     const isActive = isActiveRoute(href);
 
     return `rounded-2xl px-4 py-3 text-sm font-black transition ${
+      isActive
+        ? "bg-emerald-400 text-black"
+        : "text-gray-300 hover:bg-white/10 hover:text-white"
+    }`;
+  }
+
+  function getCollapsedNavLinkClass(href: string) {
+    const isActive = isActiveRoute(href);
+
+    return `flex h-12 w-12 items-center justify-center rounded-2xl text-xs font-black transition ${
       isActive
         ? "bg-emerald-400 text-black"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
@@ -131,50 +174,112 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   return (
     <main className="min-h-screen bg-[#050807] text-white">
       <div className="flex min-h-screen">
-        <aside className="hidden w-72 shrink-0 border-r border-white/10 bg-black/20 p-6 lg:block">
+        <aside
+          className={`hidden shrink-0 border-r border-white/10 bg-black/20 transition-all duration-300 lg:block ${
+            isSidebarCollapsed ? "w-24 p-4" : "w-72 p-6"
+          }`}
+        >
           <div className="sticky top-6">
-            <Link href="/dashboard" className="block">
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-                SchedNest
-              </p>
+            <div
+              className={`flex gap-3 ${
+                isSidebarCollapsed
+                  ? "flex-col items-center"
+                  : "items-start justify-between"
+              }`}
+            >
+              <Link
+                href="/dashboard"
+                className={
+                  isSidebarCollapsed
+                    ? "flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-sm font-black text-emerald-300"
+                    : "block"
+                }
+                title="SchedNest Dashboard"
+              >
+                {isSidebarCollapsed ? (
+                  "SN"
+                ) : (
+                  <>
+                    <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+                      SchedNest
+                    </p>
 
-              <h1 className="mt-2 text-2xl font-black text-white">
-                SchedNest Founder
-              </h1>
-            </Link>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <p className="text-xs font-bold text-gray-500">Signed in as</p>
-
-              <p className="mt-1 break-words text-sm font-black text-white">
-                {userEmail || "Loading..."}
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
-                  complete
-                </span>
-
-                {isSchedNestAdmin && (
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
-                    admin
-                  </span>
+                    <h1 className="mt-2 text-2xl font-black text-white">
+                      SchedNest Founder
+                    </h1>
+                  </>
                 )}
+              </Link>
 
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300">
-                  beta
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                aria-label={
+                  isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+                }
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-lg font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              >
+                {isSidebarCollapsed ? "›" : "‹"}
+              </button>
             </div>
 
-            <nav className="mt-6 grid gap-2">
+            {isSidebarCollapsed ? (
+              <div
+                className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3"
+                title={userEmail || "Loading..."}
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400 text-sm font-black text-black">
+                  {userEmail?.charAt(0).toUpperCase() || "?"}
+                </div>
+
+                {isSchedNestAdmin && (
+                  <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                )}
+              </div>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p className="text-xs font-bold text-gray-500">Signed in as</p>
+
+                <p className="mt-1 break-words text-sm font-black text-white">
+                  {userEmail || "Loading..."}
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                    complete
+                  </span>
+
+                  {isSchedNestAdmin && (
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
+                      admin
+                    </span>
+                  )}
+
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300">
+                    beta
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <nav
+              className={`mt-6 grid gap-2 ${
+                isSidebarCollapsed ? "justify-center" : ""
+              }`}
+            >
               {visibleNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={getNavLinkClass(item.href)}
+                  title={item.label}
+                  aria-label={item.label}
+                  className={
+                    isSidebarCollapsed
+                      ? getCollapsedNavLinkClass(item.href)
+                      : getNavLinkClass(item.href)
+                  }
                 >
-                  {item.label}
+                  {isSidebarCollapsed ? item.shortLabel : item.label}
                 </Link>
               ))}
             </nav>
@@ -182,9 +287,14 @@ export default function DashboardShell({ children }: DashboardShellProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-8 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              title="Log out"
+              className={
+                isSidebarCollapsed
+                  ? "mx-auto mt-8 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                  : "mt-8 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              }
             >
-              Log out
+              {isSidebarCollapsed ? "↩" : "Log out"}
             </button>
           </div>
         </aside>
@@ -247,7 +357,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={getNavLinkClass(item.href, true)}
+                      className={getNavLinkClass(item.href)}
                     >
                       {item.label}
                     </Link>

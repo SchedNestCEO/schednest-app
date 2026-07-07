@@ -40,9 +40,11 @@ export default function NotificationBell({
 
   const unreadCount = notifications.length;
 
+  const dropdownPositionClass = variant === "mobile" ? "fixed" : "absolute";
+
   const dropdownClass =
     variant === "mobile"
-      ? "right-0 mt-3 w-[calc(100vw-2rem)] max-w-sm"
+      ? "left-4 right-4 top-24 w-auto max-w-none"
       : "right-0 mt-3 w-96";
 
   const loadNotifications = useCallback(async () => {
@@ -330,7 +332,7 @@ export default function NotificationBell({
 
       {isOpen && (
         <div
-          className={`absolute z-50 rounded-[2rem] border border-white/10 bg-[#07100d] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.65)] ${dropdownClass}`}
+          className={`${dropdownPositionClass} z-50 rounded-[2rem] border border-white/10 bg-[#07100d] p-4 shadow-[0_20px_80px_rgba(0,0,0,0.65)] ${dropdownClass}`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
