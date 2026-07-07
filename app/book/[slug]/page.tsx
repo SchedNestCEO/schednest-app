@@ -39,6 +39,15 @@ type PublicService = {
   sample_caption: string | null;
   show_sample_on_booking_page: boolean | null;
   sample_images: PublicServiceSampleImage[];
+  publish_at: string | null;
+  unpublish_at: string | null;
+  discount_type: string | null;
+  discount_value: number | null;
+  discount_label: string | null;
+  discount_starts_at: string | null;
+  discount_ends_at: string | null;
+  discount_is_active: boolean | null;
+  discounted_price: number | null;
 };
 
 type PublicHour = {
@@ -204,6 +213,25 @@ function formatMoney(value: number | null) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+function hasActiveDiscount(service: PublicService) {
+  return Boolean(
+    service.discount_is_active &&
+      service.discounted_price !== null &&
+      service.discounted_price !== undefined &&
+      service.price !== null &&
+      service.price !== undefined &&
+      service.discounted_price < service.price
+  );
+}
+
+function getServiceDisplayPrice(service: PublicService) {
+  if (hasActiveDiscount(service)) {
+    return service.discounted_price;
+  }
+
+  return service.price;
 }
 
 function formatDateLabel(dateValue: string) {
@@ -504,7 +532,7 @@ export default function PublicBookingPage() {
       customerName: customerName.trim(),
       businessName: pageData.business.business_name || "this business",
       serviceName: selectedService.name,
-      servicePrice: selectedService.price,
+      servicePrice: getServiceDisplayPrice(selectedService),
       serviceDuration: selectedService.duration_minutes,
       bookingDate,
       bookingTime,
@@ -926,12 +954,30 @@ export default function PublicBookingPage() {
                           </div>
 
                           <div className="shrink-0 text-left sm:text-right">
-                            <p className={`text-sm font-black ${titleTextClass}`}>
-                              {formatMoney(service.price)}
-                            </p>
+                            {hasActiveDiscount(service) ? (
+                              <div>
+                                <p className={`text-sm font-black ${titleTextClass}`}>
+                                  {formatMoney(service.discounted_price)}
+                                </p>
+                                <p className={`mt-1 text-xs line-through ${softTextClass}`}>
+                                  {formatMoney(service.price)}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className={`text-sm font-black ${titleTextClass}`}>
+                                {formatMoney(service.price)}
+                              </p>
+                            )}
+
                             <p className={`mt-1 text-xs ${softTextClass}`}>
                               {service.duration_minutes ?? 60} min
                             </p>
+
+                            {hasActiveDiscount(service) && (
+                              <p className="mt-2 rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
+                                {service.discount_label || "Promotion"}
+                              </p>
+                            )}
                           </div>
                         </div>
 

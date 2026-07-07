@@ -25,6 +25,13 @@ type Service = {
   sample_caption: string | null;
   show_sample_on_booking_page: boolean | null;
   deleted_at: string | null;
+  publish_at: string | null;
+  unpublish_at: string | null;
+  discount_type: string | null;
+  discount_value: number | null;
+  discount_label: string | null;
+  discount_starts_at: string | null;
+  discount_ends_at: string | null;
 };
 
 type ServiceSampleImage = {
@@ -46,6 +53,16 @@ type SampleEdit = {
   sample_image_url: string;
   sample_caption: string;
   show_sample_on_booking_page: boolean;
+};
+
+type ServiceSettingsEdit = {
+  publish_at: string;
+  unpublish_at: string;
+  discount_type: "none" | "percent" | "fixed";
+  discount_value: string;
+  discount_label: string;
+  discount_starts_at: string;
+  discount_ends_at: string;
 };
 
 function formatMoney(value: number | null) {
@@ -123,6 +140,51 @@ function isUsableImageUrl(value: string) {
   );
 }
 
+function toDateTimeLocalValue(value: string | null | undefined) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+
+  return localDate.toISOString().slice(0, 16);
+}
+
+function dateTimeLocalToIso(value: string) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString();
+}
+
+function getPublishLabel(service: Service) {
+  const now = new Date();
+
+  if (service.publish_at && new Date(service.publish_at) > now) {
+    return "Scheduled";
+  }
+
+  if (service.unpublish_at && new Date(service.unpublish_at) <= now) {
+    return "Ended";
+  }
+
+  return service.is_active === false ? "Paused" : "Live";
+}
+
+function hasSavedDiscount(service: Service) {
+  return Boolean(
+    service.discount_type &&
+      service.discount_type !== "none" &&
+      service.discount_value !== null &&
+      service.discount_value !== undefined
+  );
+}
+
 export default function ServicesPage() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -147,10 +209,18 @@ export default function ServicesPage() {
   const [newSampleImageUrl, setNewSampleImageUrl] = useState("");
   const [newSampleCaption, setNewSampleCaption] = useState("");
   const [newShowSample, setNewShowSample] = useState(false);
+  const [newPublishAt, setNewPublishAt] = useState("");
+  const [newUnpublishAt, setNewUnpublishAt] = useState("");
 
   const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdit>>(
     {}
   );
+  const [serviceSettingsEdits, setServiceSettingsEdits] = useState<
+    Record<string, ServiceSettingsEdit>
+  >({});
+  const [savingServiceSettingsId, setSavingServiceSettingsId] = useState<
+    string | null
+  >(null);
   const [serviceImagesByService, setServiceImagesByService] = useState<
     Record<string, ServiceSampleImage[]>
   >({});
@@ -451,7 +521,7 @@ export default function ServicesPage() {
     const { data: serviceData, error: servicesError } = await supabase
       .from("services")
       .select(
-        "id, business_id, owner_id, name, description, price, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at"
+        "id, business_id, owner_id, name, description, price, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at, publish_at, unpublish_at, discount_type, discount_value, discount_label, discount_starts_at, discount_ends_at"
       )
       .eq("business_id", safeProfile.id)
       .is("deleted_at", null)
@@ -467,6 +537,7 @@ export default function ServicesPage() {
     setServices(safeServices);
 
     const initialSampleEdits: Record<string, SampleEdit> = {};
+    const initialServiceSettingsEdits: Record<string, ServiceSettingsEdit> = {};
 
     safeServices.forEach((service) => {
       initialSampleEdits[service.id] = {
@@ -475,9 +546,26 @@ export default function ServicesPage() {
         show_sample_on_booking_page:
           service.show_sample_on_booking_page || false,
       };
+
+      initialServiceSettingsEdits[service.id] = {
+        publish_at: toDateTimeLocalValue(service.publish_at),
+        unpublish_at: toDateTimeLocalValue(service.unpublish_at),
+        discount_type:
+          service.discount_type === "percent" || service.discount_type === "fixed"
+            ? service.discount_type
+            : "none",
+        discount_value:
+          service.discount_value !== null && service.discount_value !== undefined
+            ? String(service.discount_value)
+            : "",
+        discount_label: service.discount_label || "",
+        discount_starts_at: toDateTimeLocalValue(service.discount_starts_at),
+        discount_ends_at: toDateTimeLocalValue(service.discount_ends_at),
+      };
     });
 
     setSampleEdits(initialSampleEdits);
+    setServiceSettingsEdits(initialServiceSettingsEdits);
 
     if (safeServices.length > 0) {
       const { data: sampleImagesData, error: sampleImagesError } =
@@ -544,6 +632,13 @@ export default function ServicesPage() {
       price: price ? Number(price) : null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : 60,
       is_active: true,
+      publish_at: dateTimeLocalToIso(newPublishAt),
+      unpublish_at: dateTimeLocalToIso(newUnpublishAt),
+      discount_type: "none",
+      discount_value: null,
+      discount_label: null,
+      discount_starts_at: null,
+      discount_ends_at: null,
       sample_image_url: null,
       sample_caption: null,
       show_sample_on_booking_page: false,
@@ -562,6 +657,8 @@ export default function ServicesPage() {
     setNewSampleImageUrl("");
     setNewSampleCaption("");
     setNewShowSample(false);
+    setNewPublishAt("");
+    setNewUnpublishAt("");
     setIsAddServiceOpen(false);
     setSuccessMessage("Service added.");
 
@@ -689,6 +786,101 @@ export default function ServicesPage() {
         [field]: value,
       },
     }));
+  }
+
+  function updateServiceSettingsEdit(
+    serviceId: string,
+    field: keyof ServiceSettingsEdit,
+    value: string
+  ) {
+    setServiceSettingsEdits((current) => ({
+      ...current,
+      [serviceId]: {
+        publish_at: current[serviceId]?.publish_at || "",
+        unpublish_at: current[serviceId]?.unpublish_at || "",
+        discount_type: current[serviceId]?.discount_type || "none",
+        discount_value: current[serviceId]?.discount_value || "",
+        discount_label: current[serviceId]?.discount_label || "",
+        discount_starts_at: current[serviceId]?.discount_starts_at || "",
+        discount_ends_at: current[serviceId]?.discount_ends_at || "",
+        [field]: value,
+      },
+    }));
+  }
+
+  async function saveServiceSettings(service: Service) {
+    const edit = serviceSettingsEdits[service.id];
+
+    if (!edit) {
+      setErrorMessage("Service settings not loaded yet.");
+      return;
+    }
+
+    const discountType = edit.discount_type || "none";
+    const discountValue =
+      discountType === "none" || !edit.discount_value.trim()
+        ? null
+        : Number(edit.discount_value);
+
+    if (
+      discountType !== "none" &&
+      (discountValue === null || Number.isNaN(discountValue) || discountValue <= 0)
+    ) {
+      setErrorMessage("Enter a valid discount amount.");
+      return;
+    }
+
+    if (discountType === "percent" && discountValue && discountValue > 100) {
+      setErrorMessage("Percent discounts cannot be greater than 100%.");
+      return;
+    }
+
+    const publishAt = dateTimeLocalToIso(edit.publish_at);
+    const unpublishAt = dateTimeLocalToIso(edit.unpublish_at);
+
+    if (
+      publishAt &&
+      unpublishAt &&
+      new Date(publishAt).getTime() >= new Date(unpublishAt).getTime()
+    ) {
+      setErrorMessage("The end date must be after the go-live date.");
+      return;
+    }
+
+    setSavingServiceSettingsId(service.id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase
+      .from("services")
+      .update({
+        publish_at: publishAt,
+        unpublish_at: unpublishAt,
+        discount_type: discountType,
+        discount_value: discountValue,
+        discount_label:
+          discountType === "none" ? null : edit.discount_label.trim() || null,
+        discount_starts_at:
+          discountType === "none"
+            ? null
+            : dateTimeLocalToIso(edit.discount_starts_at),
+        discount_ends_at:
+          discountType === "none"
+            ? null
+            : dateTimeLocalToIso(edit.discount_ends_at),
+      })
+      .eq("id", service.id)
+      .eq("business_id", service.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      setSavingServiceSettingsId(null);
+      return;
+    }
+
+    setSuccessMessage("Service publishing and promotion settings saved.");
+    await loadServices();
+    setSavingServiceSettingsId(null);
   }
 
   useEffect(() => {
@@ -853,6 +1045,47 @@ export default function ServicesPage() {
                         placeholder="60"
                         className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                       />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+                    <p className="text-sm font-black text-emerald-300">
+                      New service publishing
+                    </p>
+
+                    <p className="mt-2 text-xs leading-5 text-gray-500">
+                      Leave go-live blank to publish immediately. Add an end
+                      date if this is a temporary or seasonal service.
+                    </p>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Go live later
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={newPublishAt}
+                          onChange={(event) =>
+                            setNewPublishAt(event.target.value)
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Stop showing after
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={newUnpublishAt}
+                          onChange={(event) =>
+                            setNewUnpublishAt(event.target.value)
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1048,6 +1281,19 @@ export default function ServicesPage() {
                             {visibleServiceImages.length === 1 ? "" : "s"} visible
                           </span>
                         )}
+
+                        {service.publish_at &&
+                          new Date(service.publish_at) > new Date() && (
+                            <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-blue-200">
+                              Scheduled
+                            </span>
+                          )}
+
+                        {hasSavedDiscount(service) && (
+                          <span className="rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-yellow-200">
+                            Promo
+                          </span>
+                        )}
                       </div>
 
                       {service.description ? (
@@ -1074,6 +1320,19 @@ export default function ServicesPage() {
                             ? "Visible for booking"
                             : "Hidden from active booking flow"}
                         </span>
+
+                        <span className="rounded-full bg-white/5 px-3 py-1">
+                          {getPublishLabel(service)}
+                        </span>
+
+                        {hasSavedDiscount(service) && (
+                          <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-yellow-200">
+                            {service.discount_label ||
+                              (service.discount_type === "percent"
+                                ? `${service.discount_value}% off`
+                                : `${formatMoney(service.discount_value)} off`)}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1103,6 +1362,174 @@ export default function ServicesPage() {
                           : "Delete service"}
                       </button>
                     </div>
+                  </div>
+
+                  <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-emerald-300">
+                          Publishing & promotion
+                        </p>
+
+                        <p className="mt-2 text-xs leading-5 text-gray-500">
+                          Publish immediately, schedule this service for later,
+                          or run a limited-time discount.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-gray-300">
+                        {getPublishLabel(service)}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Go live later
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={serviceSettingsEdits[service.id]?.publish_at || ""}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "publish_at",
+                              event.target.value
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Stop showing after
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={serviceSettingsEdits[service.id]?.unpublish_at || ""}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "unpublish_at",
+                              event.target.value
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Discount type
+                        </label>
+                        <select
+                          value={serviceSettingsEdits[service.id]?.discount_type || "none"}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "discount_type",
+                              event.target.value
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        >
+                          <option value="none">No discount</option>
+                          <option value="percent">Percent off</option>
+                          <option value="fixed">Dollar amount off</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Discount amount
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={serviceSettingsEdits[service.id]?.discount_value || ""}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "discount_value",
+                              event.target.value
+                            )
+                          }
+                          placeholder="Example: 20"
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="text-sm font-medium text-gray-300">
+                        Promo label
+                      </label>
+                      <input
+                        value={serviceSettingsEdits[service.id]?.discount_label || ""}
+                        onChange={(event) =>
+                          updateServiceSettingsEdit(
+                            service.id,
+                            "discount_label",
+                            event.target.value
+                          )
+                        }
+                        placeholder="Example: Summer Special"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                      />
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Promo starts
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={serviceSettingsEdits[service.id]?.discount_starts_at || ""}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "discount_starts_at",
+                              event.target.value
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Promo ends
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={serviceSettingsEdits[service.id]?.discount_ends_at || ""}
+                          onChange={(event) =>
+                            updateServiceSettingsEdit(
+                              service.id,
+                              "discount_ends_at",
+                              event.target.value
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => saveServiceSettings(service)}
+                      disabled={savingServiceSettingsId === service.id}
+                      className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {savingServiceSettingsId === service.id
+                        ? "Saving..."
+                        : "Save publishing & promo"}
+                    </button>
                   </div>
 
                   <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
