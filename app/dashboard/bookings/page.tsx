@@ -60,13 +60,169 @@ function addDays(date: Date, days: number) {
   return nextDate;
 }
 
-function getTodayDateValue() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+function getDateValueFromDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function getTodayDateValue() {
+  return getDateValueFromDate(new Date());
+}
+
+function getNextWeekdayDateValue(weekdayName: string) {
+  const weekdays = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+
+  const wantedDay = weekdays.indexOf(weekdayName.toLowerCase());
+
+  if (wantedDay === -1) return "";
+
+  const today = new Date();
+  const todayDay = today.getDay();
+  let daysUntil = wantedDay - todayDay;
+
+  if (daysUntil <= 0) {
+    daysUntil += 7;
+  }
+
+  return getDateValueFromDate(addDays(today, daysUntil));
+}
+
+function normalizePhone(value: string | null | undefined) {
+  return (value || "").replace(/\D/g, "");
+}
+
+function extractEmail(value: string) {
+  return value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "";
+}
+
+function extractPhone(value: string) {
+  return (
+    value.match(
+      /(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/
+    )?.[0] || ""
+  );
+}
+
+function extractTime(value: string) {
+  const twelveHourMatch = value.match(
+    /\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm)\b/i
+  );
+
+  if (twelveHourMatch) {
+    let hour = Number(twelveHourMatch[1]);
+    const minute = twelveHourMatch[2] || "00";
+    const period = twelveHourMatch[3].toLowerCase();
+
+    if (period === "pm" && hour !== 12) hour += 12;
+    if (period === "am" && hour === 12) hour = 0;
+
+    return `${String(hour).padStart(2, "0")}:${minute}`;
+  }
+
+  const twentyFourHourMatch = value.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+
+  if (twentyFourHourMatch) {
+    return `${String(Number(twentyFourHourMatch[1])).padStart(2, "0")}:${
+      twentyFourHourMatch[2]
+    }`;
+  }
+
+  return "";
+}
+
+function extractDate(value: string) {
+  const lowerValue = value.toLowerCase();
+
+  if (lowerValue.includes("today")) {
+    return getTodayDateValue();
+  }
+
+  if (lowerValue.includes("tomorrow")) {
+    return getDateValueFromDate(addDays(new Date(), 1));
+  }
+
+  const weekdayMatch = lowerValue.match(
+    /\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/
+  );
+
+  if (weekdayMatch) {
+    return getNextWeekdayDateValue(weekdayMatch[1]);
+  }
+
+  const numericDateMatch = lowerValue.match(
+    /\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/
+  );
+
+  if (numericDateMatch) {
+    const now = new Date();
+    const month = Number(numericDateMatch[1]) - 1;
+    const day = Number(numericDateMatch[2]);
+    const year = numericDateMatch[3]
+      ? Number(
+          numericDateMatch[3].length === 2
+            ? `20${numericDateMatch[3]}`
+            : numericDateMatch[3]
+        )
+      : now.getFullYear();
+
+    const date = new Date(year, month, day);
+
+    if (!Number.isNaN(date.getTime())) {
+      return getDateValueFromDate(date);
+    }
+  }
+
+  return "";
+}
+
+function extractName(value: string) {
+  const patterns = [
+    /\bmy name is\s+([a-z][a-z\s.'-]{1,40})/i,
+    /\bthis is\s+([a-z][a-z\s.'-]{1,40})/i,
+    /\bi am\s+([a-z][a-z\s.'-]{1,40})/i,
+    /\bi'm\s+([a-z][a-z\s.'-]{1,40})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+
+    if (match?.[1]) {
+      return match[1]
+        .replace(/\b(and|for|at|on|can|could|would|looking)\b.*$/i, "")
+        .trim();
+    }
+  }
+
+  return "";
+}
+
+function inferSource(value: string) {
+  const lowerValue = value.toLowerCase();
+
+  if (lowerValue.includes("whatsapp")) return "whatsapp";
+  if (
+    lowerValue.includes("instagram") ||
+    lowerValue.includes("insta") ||
+    lowerValue.includes(" ig ") ||
+    lowerValue.includes("dm")
+  ) {
+    return "dm";
+  }
+  if (lowerValue.includes("text") || lowerValue.includes("sms")) return "text";
+  if (lowerValue.includes("call") || lowerValue.includes("phone")) return "phone";
+
+  return "manual";
 }
 
 function getStatusLabel(status?: string | null) {
@@ -127,6 +283,14 @@ export default function BookingsPage() {
   const [source, setSource] = useState("manual");
   const [notes, setNotes] = useState("");
   const [isCreateBookingOpen, setIsCreateBookingOpen] = useState(false);
+
+  const [captureText, setCaptureText] = useState("");
+  const [captureMessage, setCaptureMessage] = useState("");
+  const [capturedCustomerName, setCapturedCustomerName] = useState("");
+  const [capturedCustomerPhone, setCapturedCustomerPhone] = useState("");
+  const [capturedCustomerEmail, setCapturedCustomerEmail] = useState("");
+  const [isCreatingCapturedCustomer, setIsCreatingCapturedCustomer] =
+    useState(false);
 
   async function loadBookingsPage() {
     setIsLoading(true);
@@ -227,6 +391,164 @@ export default function BookingsPage() {
     }
 
     setIsLoading(false);
+  }
+
+  function findMatchingCustomer(
+    customerName: string,
+    customerPhone: string,
+    customerEmail: string
+  ) {
+    const email = customerEmail.trim().toLowerCase();
+    const phone = normalizePhone(customerPhone);
+    const name = customerName.trim().toLowerCase();
+
+    return (
+      customers.find((customer) => {
+        const customerEmailValue = (customer.email || "").toLowerCase();
+        const customerPhoneValue = normalizePhone(customer.phone);
+        const customerNameValue = (
+          customer.full_name ||
+          customer.name ||
+          ""
+        ).toLowerCase();
+
+        return (
+          (email && customerEmailValue === email) ||
+          (phone && customerPhoneValue.endsWith(phone.slice(-7))) ||
+          (name && customerNameValue.includes(name))
+        );
+      }) || null
+    );
+  }
+
+  function findMatchingService(message: string) {
+    const lowerMessage = message.toLowerCase();
+
+    return (
+      services.find((service) =>
+        lowerMessage.includes(service.name.toLowerCase())
+      ) || null
+    );
+  }
+
+  function handleExtractBookingDetails() {
+    if (!captureText.trim()) {
+      setCaptureMessage("Paste a customer message first.");
+      return;
+    }
+
+    const extractedEmail = extractEmail(captureText);
+    const extractedPhone = extractPhone(captureText);
+    const extractedName = extractName(captureText);
+    const extractedDate = extractDate(captureText);
+    const extractedTime = extractTime(captureText);
+    const extractedSource = inferSource(captureText);
+    const matchingCustomer = findMatchingCustomer(
+      extractedName,
+      extractedPhone,
+      extractedEmail
+    );
+    const matchingService = findMatchingService(captureText);
+
+    setCapturedCustomerName(extractedName);
+    setCapturedCustomerPhone(extractedPhone);
+    setCapturedCustomerEmail(extractedEmail);
+
+    if (matchingCustomer) {
+      setSelectedCustomerId(matchingCustomer.id);
+    }
+
+    if (matchingService) {
+      setSelectedServiceId(matchingService.id);
+    }
+
+    if (extractedDate) {
+      setBookingDate(extractedDate);
+    }
+
+    if (extractedTime) {
+      setBookingTime(extractedTime);
+    }
+
+    setSource(extractedSource);
+
+    const assistantNote = [
+      "Captured from customer message:",
+      captureText.trim(),
+      extractedName ? `Customer name found: ${extractedName}` : "",
+      extractedPhone ? `Phone found: ${extractedPhone}` : "",
+      extractedEmail ? `Email found: ${extractedEmail}` : "",
+      !matchingCustomer && (extractedName || extractedPhone || extractedEmail)
+        ? "No matching customer was found. Create the captured customer before saving."
+        : "",
+      !matchingService ? "No exact service match found. Choose the service manually." : "",
+      !extractedDate ? "No date found. Choose the date manually." : "",
+      !extractedTime ? "No time found. Choose the time manually." : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    setNotes(assistantNote);
+
+    setCaptureMessage(
+      [
+        matchingCustomer ? "Customer matched." : "Customer needs review.",
+        matchingService ? "Service matched." : "Choose service manually.",
+        extractedDate ? "Date found." : "Choose date manually.",
+        extractedTime ? "Time found." : "Choose time manually.",
+      ].join(" ")
+    );
+  }
+
+  async function createCapturedCustomer() {
+    if (!businessProfile) {
+      setCaptureMessage("Business profile not loaded yet.");
+      return;
+    }
+
+    if (
+      !capturedCustomerName.trim() &&
+      !capturedCustomerPhone.trim() &&
+      !capturedCustomerEmail.trim()
+    ) {
+      setCaptureMessage("No customer details were found to create.");
+      return;
+    }
+
+    setIsCreatingCapturedCustomer(true);
+    setCaptureMessage("");
+
+    const fallbackName =
+      capturedCustomerName.trim() ||
+      capturedCustomerPhone.trim() ||
+      capturedCustomerEmail.trim() ||
+      "Customer";
+
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({
+        business_id: businessProfile.id,
+        owner_id: businessProfile.owner_id,
+        full_name: fallbackName,
+        name: fallbackName,
+        phone: capturedCustomerPhone.trim() || null,
+        email: capturedCustomerEmail.trim() || null,
+      })
+      .select("id, full_name, name, phone, email")
+      .single();
+
+    if (error) {
+      setCaptureMessage(error.message);
+      setIsCreatingCapturedCustomer(false);
+      return;
+    }
+
+    const newCustomer = data as Customer;
+
+    setCustomers((currentCustomers) => [newCustomer, ...currentCustomers]);
+    setSelectedCustomerId(newCustomer.id);
+    setCaptureMessage("Captured customer created and selected.");
+    setIsCreatingCapturedCustomer(false);
   }
 
   async function handleAddBooking(event: FormEvent<HTMLFormElement>) {
@@ -563,6 +885,102 @@ export default function BookingsPage() {
 
           {shouldShowCreateBooking && (
             <div className="border-t border-white/10 p-6">
+
+          <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.22em] text-emerald-300">
+                  Booking Capture Assistant
+                </p>
+
+                <h3 className="mt-3 text-xl font-black text-white">
+                  Paste a DM, text, or email.
+                </h3>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-300">
+                  SchedNest will look for the customer, service, date, time,
+                  contact info, and source, then prefill the manual booking form
+                  for your review.
+                </p>
+              </div>
+
+              <span className="w-fit rounded-full bg-black/20 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+                Review before saving
+              </span>
+            </div>
+
+            <textarea
+              value={captureText}
+              onChange={(event) => setCaptureText(event.target.value)}
+              placeholder="Example: Hey this is Alex, can I book the total package this Friday at 3pm? My number is 323-555-0199."
+              className="mt-4 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+            />
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={handleExtractBookingDetails}
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+              >
+                Extract booking details
+              </button>
+
+              {(capturedCustomerName ||
+                capturedCustomerPhone ||
+                capturedCustomerEmail) &&
+                !selectedCustomerId && (
+                  <button
+                    type="button"
+                    onClick={createCapturedCustomer}
+                    disabled={isCreatingCapturedCustomer}
+                    className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isCreatingCapturedCustomer
+                      ? "Creating customer..."
+                      : "Create captured customer"}
+                  </button>
+                )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCaptureText("");
+                  setCaptureMessage("");
+                  setCapturedCustomerName("");
+                  setCapturedCustomerPhone("");
+                  setCapturedCustomerEmail("");
+                }}
+                className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Clear assistant
+              </button>
+            </div>
+
+            {captureMessage && (
+              <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-gray-300">
+                {captureMessage}
+              </p>
+            )}
+
+            {(capturedCustomerName ||
+              capturedCustomerPhone ||
+              capturedCustomerEmail) && (
+              <div className="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300 md:grid-cols-3">
+                <p>
+                  <span className="font-black text-white">Name:</span>{" "}
+                  {capturedCustomerName || "Not found"}
+                </p>
+                <p>
+                  <span className="font-black text-white">Phone:</span>{" "}
+                  {capturedCustomerPhone || "Not found"}
+                </p>
+                <p>
+                  <span className="font-black text-white">Email:</span>{" "}
+                  {capturedCustomerEmail || "Not found"}
+                </p>
+              </div>
+            )}
+          </div>
 
           {(customers.length === 0 || services.length === 0) && !isLoading && (
             <div className="mt-6 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
