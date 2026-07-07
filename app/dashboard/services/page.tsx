@@ -128,6 +128,7 @@ export default function ServicesPage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("60");
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
   const [newSampleImageUrl, setNewSampleImageUrl] = useState("");
   const [newSampleCaption, setNewSampleCaption] = useState("");
@@ -149,6 +150,9 @@ export default function ServicesPage() {
   const previewBookingHref = businessProfile?.slug
     ? `/book/${businessProfile.slug}`
     : "/dashboard/booking-page";
+
+  const shouldShowAddService =
+    isAddServiceOpen || (!isLoading && services.length === 0);
 
   async function loadServices() {
     setIsLoading(true);
@@ -298,6 +302,7 @@ export default function ServicesPage() {
     setNewSampleImageUrl("");
     setNewSampleCaption("");
     setNewShowSample(false);
+    setIsAddServiceOpen(false);
     setSuccessMessage("Service added.");
 
     await loadServices();
@@ -468,177 +473,195 @@ export default function ServicesPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
-              Service Menu
-            </p>
-
-            <h2 className="mt-3 text-2xl font-black text-white">
-              Add a service
-            </h2>
-
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-              Services become the options customers can choose from when they
-              request an appointment.
-            </p>
-
-            <form onSubmit={handleAddService} className="mt-6 grid gap-4">
+          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+            <button
+              type="button"
+              onClick={() =>
+                setIsAddServiceOpen((currentValue) => !currentValue)
+              }
+              className="flex w-full flex-col gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-start lg:justify-between"
+            >
               <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Service name
-                </label>
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Example: Haircut, Consultation, Mobile Detail"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
-                />
+                <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                  Service Menu
+                </p>
+
+                <h2 className="mt-3 text-2xl font-black text-white">
+                  Add a service
+                </h2>
+
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
+                  Services become the options customers can choose from when
+                  they request an appointment.
+                </p>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-300">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Briefly describe what is included."
-                  className="mt-2 min-h-24 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
-                />
-              </div>
+              <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300">
+                {shouldShowAddService ? "Collapse" : "Expand"}
+              </span>
+            </button>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-gray-300">
-                    Price
-                  </label>
-                  <input
-                    value={price}
-                    onChange={(event) => setPrice(event.target.value)}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="25.00"
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-300">
-                    Duration minutes
-                  </label>
-                  <input
-                    value={durationMinutes}
-                    onChange={(event) =>
-                      setDurationMinutes(event.target.value)
-                    }
-                    type="number"
-                    min="5"
-                    step="5"
-                    placeholder="60"
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            {shouldShowAddService && (
+              <div className="border-t border-white/10 p-6">
+                <form onSubmit={handleAddService} className="grid gap-4">
                   <div>
-                    <p className="text-sm font-black text-emerald-300">
-                      Service sample
-                    </p>
-                    <p className="mt-2 text-xs leading-5 text-gray-500">
-                      Growth and Complete businesses can show a sample image on
-                      the public booking page.
-                    </p>
+                    <label className="text-sm font-medium text-gray-300">
+                      Service name
+                    </label>
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Example: Haircut, Consultation, Mobile Detail"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                    />
                   </div>
 
-                  <span
-                    className={`w-fit rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${
-                      planAccess.hasGrowthAccess
-                        ? "bg-emerald-400/10 text-emerald-300"
-                        : "bg-yellow-400/10 text-yellow-200"
-                    }`}
+                  <div>
+                    <label className="text-sm font-medium text-gray-300">
+                      Description
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Briefly describe what is included."
+                      className="mt-2 min-h-24 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">
+                        Price
+                      </label>
+                      <input
+                        value={price}
+                        onChange={(event) => setPrice(event.target.value)}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="25.00"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">
+                        Duration minutes
+                      </label>
+                      <input
+                        value={durationMinutes}
+                        onChange={(event) =>
+                          setDurationMinutes(event.target.value)
+                        }
+                        type="number"
+                        min="5"
+                        step="5"
+                        placeholder="60"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-emerald-300">
+                          Service sample
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-gray-500">
+                          Growth and Complete businesses can show a sample image
+                          on the public booking page.
+                        </p>
+                      </div>
+
+                      <span
+                        className={`w-fit rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${
+                          planAccess.hasGrowthAccess
+                            ? "bg-emerald-400/10 text-emerald-300"
+                            : "bg-yellow-400/10 text-yellow-200"
+                        }`}
+                      >
+                        {planAccess.hasGrowthAccess ? "Unlocked" : "Growth"}
+                      </span>
+                    </div>
+
+                    {!planAccess.hasGrowthAccess && (
+                      <p className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4 text-sm leading-6 text-gray-300">
+                        Essentials can add services, pricing, and duration.
+                        Growth and Complete can add service samples for a more
+                        branded booking page.
+                      </p>
+                    )}
+
+                    <div
+                      className={`mt-4 grid gap-4 ${
+                        !planAccess.hasGrowthAccess ? "opacity-50" : ""
+                      }`}
+                    >
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Sample image URL
+                        </label>
+                        <input
+                          value={newSampleImageUrl}
+                          disabled={!planAccess.hasGrowthAccess}
+                          onChange={(event) =>
+                            setNewSampleImageUrl(event.target.value)
+                          }
+                          placeholder="https://example.com/sample.jpg"
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Sample caption
+                        </label>
+                        <input
+                          value={newSampleCaption}
+                          disabled={!planAccess.hasGrowthAccess}
+                          onChange={(event) =>
+                            setNewSampleCaption(event.target.value)
+                          }
+                          placeholder="Example: Before and after detail package"
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
+                        />
+                      </div>
+
+                      <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                        <input
+                          type="checkbox"
+                          checked={newShowSample}
+                          disabled={!planAccess.hasGrowthAccess}
+                          onChange={(event) =>
+                            setNewShowSample(event.target.checked)
+                          }
+                          className="mt-1 h-5 w-5 accent-emerald-400 disabled:cursor-not-allowed"
+                        />
+
+                        <span>
+                          <span className="block text-sm font-black text-white">
+                            Show this sample on booking page
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-gray-500">
+                            Customers will see this visual example when
+                            reviewing your services.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
                   >
-                    {planAccess.hasGrowthAccess ? "Unlocked" : "Growth"}
-                  </span>
-                </div>
-
-                {!planAccess.hasGrowthAccess && (
-                  <p className="mt-4 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4 text-sm leading-6 text-gray-300">
-                    Essentials can add services, pricing, and duration. Growth
-                    and Complete can add service samples for a more branded
-                    booking page.
-                  </p>
-                )}
-
-                <div
-                  className={`mt-4 grid gap-4 ${
-                    !planAccess.hasGrowthAccess ? "opacity-50" : ""
-                  }`}
-                >
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">
-                      Sample image URL
-                    </label>
-                    <input
-                      value={newSampleImageUrl}
-                      disabled={!planAccess.hasGrowthAccess}
-                      onChange={(event) =>
-                        setNewSampleImageUrl(event.target.value)
-                      }
-                      placeholder="https://example.com/sample.jpg"
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">
-                      Sample caption
-                    </label>
-                    <input
-                      value={newSampleCaption}
-                      disabled={!planAccess.hasGrowthAccess}
-                      onChange={(event) =>
-                        setNewSampleCaption(event.target.value)
-                      }
-                      placeholder="Example: Before and after detail package"
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed"
-                    />
-                  </div>
-
-                  <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <input
-                      type="checkbox"
-                      checked={newShowSample}
-                      disabled={!planAccess.hasGrowthAccess}
-                      onChange={(event) =>
-                        setNewShowSample(event.target.checked)
-                      }
-                      className="mt-1 h-5 w-5 accent-emerald-400 disabled:cursor-not-allowed"
-                    />
-
-                    <span>
-                      <span className="block text-sm font-black text-white">
-                        Show this sample on booking page
-                      </span>
-                      <span className="mt-1 block text-xs leading-5 text-gray-500">
-                        Customers will see this visual example when reviewing
-                        your services.
-                      </span>
-                    </span>
-                  </label>
-                </div>
+                    {isSaving ? "Saving..." : "Add service"}
+                  </button>
+                </form>
               </div>
-
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-bold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
-              >
-                {isSaving ? "Saving..." : "Add service"}
-              </button>
-            </form>
+            )}
           </div>
 
           <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
