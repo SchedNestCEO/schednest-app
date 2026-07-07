@@ -153,10 +153,6 @@ function getServiceSampleImages(service: PublicService | null) {
   return [];
 }
 
-function shouldShowServiceSample(service: PublicService | null) {
-  return getServiceSampleImages(service).length > 0;
-}
-
 function timeToMinutes(value: string | null) {
   if (!value) return null;
 
@@ -269,12 +265,6 @@ export default function PublicBookingPage() {
   const selectedServiceImages = useMemo(() => {
     return getServiceSampleImages(selectedService);
   }, [selectedService]);
-
-  const visibleServiceSamples = useMemo(() => {
-    if (!pageData) return [];
-
-    return pageData.services.filter((service) => shouldShowServiceSample(service));
-  }, [pageData]);
 
   const bookingTimeMode = pageData?.business.booking_time_mode || "fixed_hours";
   const businessHoursEnabled =
@@ -671,101 +661,6 @@ export default function PublicBookingPage() {
             </div>
           )}
         </section>
-
-        {visibleServiceSamples.length > 0 && (
-          <section className={cardClass}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p
-                  className="text-sm font-black uppercase tracking-[0.24em]"
-                  style={{ color: primaryColor }}
-                >
-                  Service Samples
-                </p>
-
-                <h2 className={`mt-3 text-2xl font-black ${titleTextClass}`}>
-                  See examples before you book.
-                </h2>
-
-                <p className={`mt-3 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
-                  Review sample work or service examples shared by this business.
-                </p>
-              </div>
-
-              <span
-                className={`w-fit rounded-full px-4 py-2 text-xs font-black ${
-                  isCleanTheme
-                    ? "border border-slate-200 bg-slate-50 text-slate-600"
-                    : "bg-white/10 text-gray-300"
-                }`}
-              >
-                {visibleServiceSamples.length} service
-                {visibleServiceSamples.length === 1 ? "" : "s"} with images
-              </span>
-            </div>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {visibleServiceSamples.map((service) => {
-                const serviceImages = getServiceSampleImages(service);
-                const primaryImage = serviceImages[0];
-
-                return (
-                  <div
-                    key={service.id}
-                    className={`overflow-hidden rounded-[2rem] border ${
-                      isCleanTheme
-                        ? "border-slate-200 bg-slate-50"
-                        : "border-white/10 bg-black/20"
-                    }`}
-                  >
-                    <img
-                      src={getSafeImageUrl(primaryImage.image_url)}
-                      alt={primaryImage.caption || service.name}
-                      className="h-64 w-full object-cover"
-                    />
-
-                    {serviceImages.length > 1 && (
-                      <div className="grid grid-cols-4 gap-2 p-3">
-                        {serviceImages.slice(0, 5).map((image) => (
-                          <img
-                            key={image.id}
-                            src={getSafeImageUrl(image.image_url)}
-                            alt={image.caption || service.name}
-                            className="h-16 w-full rounded-xl object-cover"
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="p-5">
-                      <p
-                        className="text-xs font-black uppercase tracking-[0.2em]"
-                        style={{ color: primaryColor }}
-                      >
-                        {service.name}
-                      </p>
-
-                      <p className={`mt-2 text-sm font-black ${titleTextClass}`}>
-                        {primaryImage.caption ||
-                          service.description ||
-                          "Service example"}
-                      </p>
-
-                      <p className={`mt-2 text-xs ${softTextClass}`}>
-                        {formatMoney(service.price)}
-                        {" · "}
-                        {service.duration_minutes ?? 60} min
-                        {" · "}
-                        {serviceImages.length} image
-                        {serviceImages.length === 1 ? "" : "s"}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         {confirmationSummary && (
           <section

@@ -24,6 +24,7 @@ type Service = {
   sample_image_url: string | null;
   sample_caption: string | null;
   show_sample_on_booking_page: boolean | null;
+  deleted_at: string | null;
 };
 
 type ServiceSampleImage = {
@@ -157,6 +158,9 @@ export default function ServicesPage() {
     null
   );
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [deletingServiceId, setDeletingServiceId] = useState<string | null>(
+    null
+  );
 
   const planAccess = getPlanAccess(subscription, plan);
   const serviceImageLimit = planAccess.hasCompleteAccess
@@ -447,9 +451,10 @@ export default function ServicesPage() {
     const { data: serviceData, error: servicesError } = await supabase
       .from("services")
       .select(
-        "id, business_id, owner_id, name, description, price, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page"
+        "id, business_id, owner_id, name, description, price, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at"
       )
       .eq("business_id", safeProfile.id)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (servicesError) {
@@ -568,10 +573,13 @@ export default function ServicesPage() {
     setErrorMessage("");
     setSuccessMessage("");
 
+    const nextIsActive = service.is_active === false;
+
     const { error } = await supabase
       .from("services")
-      .update({ is_active: !service.is_active })
-      .eq("id", service.id);
+      .update({ is_active: nextIsActive })
+      .eq("id", service.id)
+      .eq("business_id", service.business_id);
 
     if (error) {
       setErrorMessage(error.message);
@@ -579,12 +587,43 @@ export default function ServicesPage() {
     }
 
     setSuccessMessage(
-      service.is_active
-        ? "Service paused. It will not appear as active."
-        : "Service reactivated."
+      nextIsActive
+        ? "Service reactivated."
+        : "Service paused. It will not appear as active."
     );
 
     await loadServices();
+  }
+
+  async function deleteService(service: Service) {
+    const confirmed = window.confirm(
+      `Delete "${service.name}" from your service menu? Existing booking history will stay safe.`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingServiceId(service.id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase
+      .from("services")
+      .update({
+        deleted_at: new Date().toISOString(),
+        is_active: false,
+      })
+      .eq("id", service.id)
+      .eq("business_id", service.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      setDeletingServiceId(null);
+      return;
+    }
+
+    setSuccessMessage("Service removed from your menu.");
+    await loadServices();
+    setDeletingServiceId(null);
   }
 
   async function saveServiceSample(service: Service) {
@@ -1038,17 +1077,32 @@ export default function ServicesPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => toggleServiceStatus(service)}
-                      className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
-                        service.is_active !== false
-                          ? "border-white/10 text-gray-200 hover:bg-white/10"
-                          : "border-emerald-400/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20"
-                      }`}
-                    >
-                      {service.is_active !== false ? "Pause service" : "Reactivate"}
-                    </button>
+                    <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+                      <button
+                        type="button"
+                        onClick={() => toggleServiceStatus(service)}
+                        className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
+                          service.is_active !== false
+                            ? "border-white/10 text-gray-200 hover:bg-white/10"
+                            : "border-emerald-400/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20"
+                        }`}
+                      >
+                        {service.is_active !== false
+                          ? "Pause service"
+                          : "Reactivate"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteService(service)}
+                        disabled={deletingServiceId === service.id}
+                        className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm font-black text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingServiceId === service.id
+                          ? "Deleting..."
+                          : "Delete service"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
