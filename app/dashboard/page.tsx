@@ -591,6 +591,76 @@ export default function DashboardPage() {
           </Link>
         </section>
 
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Link
+            href="/dashboard/bookings"
+            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+          >
+            <p className="text-sm font-black text-emerald-300">
+              Quick Launch
+            </p>
+            <h3 className="mt-3 text-xl font-black text-white">
+              Manage bookings
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-gray-400">
+              View today, upcoming appointments, and booking history.
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/requests"
+            className={`rounded-[2rem] border p-5 transition ${
+              stats.pendingRequests > 0
+                ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
+                : "border-white/10 bg-black/20 hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            }`}
+          >
+            <p className="text-sm font-black text-emerald-300">
+              Requests
+            </p>
+            <h3 className="mt-3 text-xl font-black text-white">
+              Review pending
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-gray-400">
+              {stats.pendingRequests > 0
+                ? `${stats.pendingRequests} request${
+                    stats.pendingRequests === 1 ? "" : "s"
+                  } need a decision.`
+                : "No customer requests waiting right now."}
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/services"
+            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+          >
+            <p className="text-sm font-black text-emerald-300">
+              Services
+            </p>
+            <h3 className="mt-3 text-xl font-black text-white">
+              Update menu
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-gray-400">
+              Add services, change pricing, upload samples, or pause offers.
+            </p>
+          </Link>
+
+          <Link
+            href={bookingPageHref}
+            className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5 transition hover:bg-emerald-400/15"
+          >
+            <p className="text-sm font-black text-emerald-300">
+              Public Page
+            </p>
+            <h3 className="mt-3 text-xl font-black text-white">
+              Preview booking
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              See what customers see when they open your booking link.
+            </p>
+          </Link>
+        </section>
+
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
