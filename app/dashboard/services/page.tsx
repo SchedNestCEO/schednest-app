@@ -165,8 +165,12 @@ export default function ServicesPage() {
       ? 3
       : 0;
 
-  const activeServices = services.filter((service) => service.is_active);
-  const pausedServices = services.filter((service) => !service.is_active);
+  const activeServices = services.filter(
+    (service) => service.is_active !== false
+  );
+  const pausedServices = services.filter(
+    (service) => service.is_active === false
+  );
   const visibleSamples = Object.values(serviceImagesByService)
     .flat()
     .filter((image) => image.is_visible !== false && image.image_url?.trim());
@@ -991,12 +995,12 @@ export default function ServicesPage() {
 
                         <span
                           className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.16em] ${
-                            service.is_active
+                            service.is_active !== false
                               ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
                               : "border-white/10 bg-white/10 text-gray-400"
                           }`}
                         >
-                          {service.is_active ? "Active" : "Paused"}
+                          {service.is_active !== false ? "Active" : "Paused"}
                         </span>
 
                         {visibleServiceImages.length > 0 && (
@@ -1027,7 +1031,7 @@ export default function ServicesPage() {
                         </span>
 
                         <span className="rounded-full bg-white/5 px-3 py-1">
-                          {service.is_active
+                          {service.is_active !== false
                             ? "Visible for booking"
                             : "Hidden from active booking flow"}
                         </span>
@@ -1038,12 +1042,12 @@ export default function ServicesPage() {
                       type="button"
                       onClick={() => toggleServiceStatus(service)}
                       className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
-                        service.is_active
+                        service.is_active !== false
                           ? "border-white/10 text-gray-200 hover:bg-white/10"
                           : "border-emerald-400/30 bg-emerald-400/10 text-emerald-200 hover:bg-emerald-400/20"
                       }`}
                     >
-                      {service.is_active ? "Pause service" : "Reactivate"}
+                      {service.is_active !== false ? "Pause service" : "Reactivate"}
                     </button>
                   </div>
 
