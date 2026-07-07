@@ -126,6 +126,7 @@ export default function BookingsPage() {
   const [status, setStatus] = useState("confirmed");
   const [source, setSource] = useState("manual");
   const [notes, setNotes] = useState("");
+  const [isCreateBookingOpen, setIsCreateBookingOpen] = useState(false);
 
   async function loadBookingsPage() {
     setIsLoading(true);
@@ -429,29 +430,139 @@ export default function BookingsPage() {
   }, []);
 
   const bookingSections = getBookingSections();
-  const upcomingCount =
+  const todayCount =
     bookingSections.find((section) => section.key === "today")?.bookings
-      .length ||
-    0 +
-      (bookingSections.find((section) => section.key === "tomorrow")?.bookings
-        .length || 0) +
-      (bookingSections.find((section) => section.key === "this-week")?.bookings
-        .length || 0) +
-      (bookingSections.find((section) => section.key === "later")?.bookings
-        .length || 0);
+      .length || 0;
+  const tomorrowCount =
+    bookingSections.find((section) => section.key === "tomorrow")?.bookings
+      .length || 0;
+  const thisWeekCount =
+    bookingSections.find((section) => section.key === "this-week")?.bookings
+      .length || 0;
+  const laterCount =
+    bookingSections.find((section) => section.key === "later")?.bookings
+      .length || 0;
+  const pastCount =
+    bookingSections.find((section) => section.key === "past")?.bookings
+      .length || 0;
+
+  const upcomingCount = todayCount + tomorrowCount + thisWeekCount + laterCount;
+  const pendingCount = bookings.filter(
+    (booking) => !booking.status || booking.status === "pending"
+  ).length;
+  const canCreateBooking = customers.length > 0 && services.length > 0;
+  const shouldShowCreateBooking =
+    isCreateBookingOpen || (!isLoading && bookings.length === 0);
 
   return (
     <DashboardShell>
-     <div className="space-y-6">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
-          <p className="text-sm font-semibold text-emerald-300">
-            Manual Booking
-          </p>
-          <h2 className="mt-3 text-2xl font-bold">Create a booking</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
-            Start by creating bookings manually. Later, customers will request
-            bookings from the public booking page.
-          </p>
+      <div className="space-y-6">
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+                Bookings
+              </p>
+
+              <h1 className="mt-3 text-4xl font-black text-white">
+                Manage your schedule.
+              </h1>
+
+              <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
+                Create manual bookings, review upcoming appointments, and keep
+                your customer schedule organized from one focused page.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() =>
+                  setIsCreateBookingOpen((currentValue) => !currentValue)
+                }
+                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+              >
+                {shouldShowCreateBooking ? "Hide booking form" : "Add booking"}
+              </button>
+
+              <Link
+                href="/dashboard/requests"
+                className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+              >
+                Review requests
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-gray-500">
+              Total Bookings
+            </p>
+            <p className="mt-3 text-3xl font-black text-white">
+              {isLoading ? "..." : bookings.length}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
+              Upcoming
+            </p>
+            <p className="mt-3 text-3xl font-black text-white">
+              {isLoading ? "..." : upcomingCount}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-5">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-yellow-200">
+              Pending
+            </p>
+            <p className="mt-3 text-3xl font-black text-white">
+              {isLoading ? "..." : pendingCount}
+            </p>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-gray-500">
+              Past
+            </p>
+            <p className="mt-3 text-3xl font-black text-white">
+              {isLoading ? "..." : pastCount}
+            </p>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+          <button
+            type="button"
+            onClick={() =>
+              setIsCreateBookingOpen((currentValue) => !currentValue)
+            }
+            className="flex w-full flex-col gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-start lg:justify-between"
+          >
+            <div>
+              <p className="text-sm font-black text-emerald-300">
+                Manual Booking
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Create a booking
+              </h2>
+
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
+                Add appointments manually when a customer books through text,
+                phone, DM, or in person.
+              </p>
+            </div>
+
+            <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300">
+              {shouldShowCreateBooking ? "Collapse" : "Expand"}
+            </span>
+          </button>
+
+          {shouldShowCreateBooking && (
+            <div className="border-t border-white/10 p-6">
 
           {(customers.length === 0 || services.length === 0) && !isLoading && (
             <div className="mt-6 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
@@ -615,9 +726,11 @@ export default function BookingsPage() {
               {isSaving ? "Saving..." : "Create booking"}
             </button>
           </form>
-        </div>
+            </div>
+          )}
+        </section>
 
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-sm font-semibold text-emerald-300">
@@ -791,7 +904,7 @@ export default function BookingsPage() {
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </DashboardShell>
   );
