@@ -38,6 +38,14 @@ type BirdySuggestion = {
   created_at: string;
 };
 
+type SetupItem = {
+  title: string;
+  description: string;
+  isComplete: boolean;
+  href: string;
+  actionLabel: string;
+};
+
 function getTodayRange() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -78,6 +86,12 @@ function formatPriority(priority: BirdySuggestionPriority) {
   return "Low";
 }
 
+function getCompletionPercent(completed: number, total: number) {
+  if (total === 0) return 0;
+
+  return Math.round((completed / total) * 100);
+}
+
 export default function DashboardPage() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -89,6 +103,7 @@ export default function DashboardPage() {
   const [birdySuggestions, setBirdySuggestions] = useState<BirdySuggestion[]>(
     []
   );
+  const [copyMessage, setCopyMessage] = useState("");
   const [stats, setStats] = useState<DashboardStats>({
     todaysBookings: 0,
     pendingRequests: 0,
@@ -226,37 +241,75 @@ export default function DashboardPage() {
     setIsLoading(false);
   }
 
+  async function copyBookingLink() {
+    if (!business?.slug) {
+      setCopyMessage("Create your booking page slug first.");
+      return;
+    }
+
+    const bookingUrl = `${window.location.origin}/book/${business.slug}`;
+
+    await navigator.clipboard.writeText(bookingUrl);
+    setCopyMessage("Booking link copied.");
+
+    window.setTimeout(() => {
+      setCopyMessage("");
+    }, 2500);
+  }
+
   useEffect(() => {
     loadDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setupItems = [
+  const bookingPageHref = business?.slug
+    ? `/book/${business.slug}`
+    : "/dashboard/booking-page";
+
+  const setupItems: SetupItem[] = [
     {
       title: "Create your business profile",
+      description: "Add your business name and basic booking identity.",
       isComplete: Boolean(business),
+      href: "/dashboard/profile",
+      actionLabel: "Edit profile",
     },
     {
       title: "Add your services",
+      description: "Create the services customers can request.",
       isComplete: stats.services > 0,
+      href: "/dashboard/services",
+      actionLabel: "Manage services",
     },
     {
       title: "Activate at least one service",
+      description: "Make sure at least one service is active and bookable.",
       isComplete: stats.activeServices > 0,
+      href: "/dashboard/services",
+      actionLabel: "Activate services",
     },
     {
       title: "Set your working hours",
+      description: "Tell customers when your business is available.",
       isComplete: stats.businessHours > 0,
+      href: "/dashboard/booking-page",
+      actionLabel: "Set hours",
     },
     {
-      title: "Turn on customer booking requests",
+      title: "Create your public booking link",
+      description: "Your booking page needs a public slug before sharing.",
       isComplete: Boolean(business?.slug),
-    },
-    {
-      title: "Review suggestions with Birdy",
-      isComplete: stats.birdySuggestions > 0,
+      href: "/dashboard/booking-page",
+      actionLabel: "Open booking page",
     },
   ];
+
+  const completedSetupItems = setupItems.filter((item) => item.isComplete);
+  const setupPercent = getCompletionPercent(
+    completedSetupItems.length,
+    setupItems.length
+  );
+  const nextSetupItem = setupItems.find((item) => !item.isComplete);
 
   const needsAttentionItems = [
     {
@@ -282,7 +335,7 @@ export default function DashboardPage() {
           : "You are caught up on booking notifications.",
       count: stats.unreadNotifications,
       href: "/dashboard/requests",
-      actionLabel: "Review requests",
+      actionLabel: "Review alerts",
       isUrgent: stats.unreadNotifications > 0,
     },
     {
@@ -308,151 +361,359 @@ export default function DashboardPage() {
     (item) => item.isUrgent
   );
 
+  const mainAction =
+    stats.pendingRequests > 0
+      ? {
+          label: `Review ${stats.pendingRequests} request${
+            stats.pendingRequests === 1 ? "" : "s"
+          }`,
+          href: "/dashboard/requests",
+        }
+      : nextSetupItem
+      ? {
+          label: nextSetupItem.actionLabel,
+          href: nextSetupItem.href,
+        }
+      : {
+          label: "View bookings",
+          href: "/dashboard/bookings",
+        };
+
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_17rem] lg:items-start">
-            <div>
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+          <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-6 lg:p-8">
               <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-                Owner Dashboard
+                Command Center
               </p>
 
-              <h1 className="mt-3 text-4xl font-black text-white">
-                Manage your Nest.
+              <h1 className="mt-3 text-4xl font-black text-white md:text-5xl">
+                {isLoading
+                  ? "Checking your Nest..."
+                  : stats.pendingRequests > 0
+                  ? "You have requests waiting."
+                  : nextSetupItem
+                  ? "Finish your setup."
+                  : "Your Nest is ready."}
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-400">
-                Manage bookings, customers, Birdy suggestions, and open time
-                from one place.
+                {isLoading
+                  ? "Loading your bookings, setup status, requests, and customer activity."
+                  : stats.pendingRequests > 0
+                  ? "Start by reviewing customer booking requests so no opportunity sits unanswered."
+                  : nextSetupItem
+                  ? `${nextSetupItem.title}: ${nextSetupItem.description}`
+                  : "Manage bookings, customers, services, and booking growth from one focused dashboard."}
               </p>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
-                  href="/dashboard/bookings"
+                  href={mainAction.href}
                   className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
                 >
-                  View bookings
+                  {mainAction.label}
                 </Link>
 
-                <Link
-                  href="/dashboard/requests"
+                <button
+                  type="button"
+                  onClick={copyBookingLink}
                   className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  Review requests
-                </Link>
+                  Copy booking link
+                </button>
 
                 <Link
-                  href="/dashboard/birdy"
+                  href={bookingPageHref}
                   className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-300 transition hover:bg-emerald-400/15"
                 >
-                  Open Birdy
+                  View booking page
                 </Link>
 
                 <Link
-                  href="/dashboard/booking-page"
+                  href="/dashboard/settings"
                   className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
                 >
-                  Share booking link
+                  Open settings
+                </Link>
+              </div>
+
+              {copyMessage && (
+                <p className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-300">
+                  {copyMessage}
+                </p>
+              )}
+            </div>
+
+            <div className="border-t border-white/10 bg-black/20 p-6 lg:border-l lg:border-t-0 lg:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black text-emerald-300">
+                    Setup Progress
+                  </p>
+
+                  <h2 className="mt-2 text-4xl font-black text-white">
+                    {isLoading ? "..." : `${setupPercent}%`}
+                  </h2>
+                </div>
+
+                <Link
+                  href="/dashboard/settings"
+                  className="rounded-2xl border border-white/10 px-4 py-3 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  Manage
+                </Link>
+              </div>
+
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-emerald-400 transition-all"
+                  style={{ width: `${setupPercent}%` }}
+                />
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-gray-400">
+                {completedSetupItems.length} of {setupItems.length} setup steps
+                complete.
+              </p>
+
+              <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+                  Subscription
+                </p>
+
+                <p className="mt-2 text-2xl font-black text-white">
+                  {isLoading ? "..." : formatLabel(subscriptionStatus)}
+                </p>
+
+                <Link
+                  href="/dashboard/account"
+                  className="mt-3 inline-block text-sm font-black text-emerald-300 transition hover:text-emerald-200"
+                >
+                  Manage account →
                 </Link>
               </div>
             </div>
-
-            <Link
-              href="/dashboard/account"
-              className="rounded-[1.5rem] border border-emerald-400/20 bg-emerald-400/10 p-5 shadow-[0_0_35px_rgba(52,211,153,0.08)] transition hover:border-emerald-400/40 hover:bg-emerald-400/15"
-            >
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-emerald-300">
-                Subscription
-              </p>
-
-              <p className="mt-3 text-sm font-bold text-gray-400">Status</p>
-
-              <h2 className="mt-1 text-2xl font-black text-white">
-                {isLoading ? "..." : formatLabel(subscriptionStatus)}
-              </h2>
-
-              <p className="mt-3 text-xs font-bold text-emerald-300">
-                Manage account →
-              </p>
-            </Link>
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-sm font-black text-emerald-300">
-                Needs Attention
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <Link
+            href="/dashboard/bookings"
+            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+          >
+            <p className="text-sm font-bold text-gray-400">
+              Today&apos;s Bookings
+            </p>
+
+            <p className="mt-4 text-4xl font-black text-white">
+              {isLoading ? "..." : stats.todaysBookings}
+            </p>
+
+            <p className="mt-3 text-sm leading-6 text-gray-400">
+              {stats.todaysBookings > 0
+                ? "Appointments scheduled for today."
+                : "No appointments scheduled for today yet."}
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/requests"
+            className={`rounded-[2rem] border p-5 transition ${
+              stats.pendingRequests > 0
+                ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
+                : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-bold text-gray-400">
+                Pending Requests
               </p>
 
-              <h2 className="mt-2 text-2xl font-black text-white">
-                What needs action?
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
-                SchedNest surfaces pending requests, unread booking alerts, and
-                setup issues here so you always know what to do next.
-              </p>
+              {stats.pendingRequests > 0 && (
+                <span className="rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
+                  Action
+                </span>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={loadDashboard}
-              disabled={isLoading}
-              className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoading ? "Refreshing..." : "Refresh status"}
-            </button>
+            <p className="mt-4 text-4xl font-black text-white">
+              {isLoading ? "..." : stats.pendingRequests}
+            </p>
+
+            <p className="mt-3 text-sm leading-6 text-gray-400">
+              {stats.pendingRequests > 0
+                ? "New customer requests are waiting for review."
+                : "No pending requests right now."}
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/customers"
+            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+          >
+            <p className="text-sm font-bold text-gray-400">Customers</p>
+
+            <p className="mt-4 text-4xl font-black text-white">
+              {isLoading ? "..." : stats.customers}
+            </p>
+
+            <p className="mt-3 text-sm leading-6 text-gray-400">
+              {stats.customers > 0
+                ? "Customers saved from your booking flow."
+                : "Customers will appear here after they book with you."}
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/services"
+            className={`rounded-[2rem] border p-5 transition ${
+              stats.activeServices > 0
+                ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
+                : "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
+            }`}
+          >
+            <p className="text-sm font-bold text-gray-400">Active Services</p>
+
+            <p className="mt-4 text-4xl font-black text-white">
+              {isLoading ? "..." : stats.activeServices}
+            </p>
+
+            <p className="mt-3 text-sm leading-6 text-gray-400">
+              {stats.activeServices > 0
+                ? `${stats.services} total service${
+                    stats.services === 1 ? "" : "s"
+                  } created.`
+                : "Activate a service before sharing your booking page."}
+            </p>
+          </Link>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-emerald-300">
+                  Needs Attention
+                </p>
+
+                <h2 className="mt-2 text-2xl font-black text-white">
+                  What needs action?
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={loadDashboard}
+                disabled={isLoading}
+                className="w-fit rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4">
+              {isLoading ? (
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400">
+                  Checking your Nest...
+                </div>
+              ) : activeNeedsAttentionItems.length === 0 ? (
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5">
+                  <p className="text-sm font-black text-emerald-300">
+                    Your Nest is calm.
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-300">
+                    No urgent booking requests, setup issues, or unread booking
+                    notifications need attention right now.
+                  </p>
+                </div>
+              ) : (
+                activeNeedsAttentionItems.map((item) => (
+                  <div
+                    key={item.title}
+                    className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-white">
+                          {item.title}
+                        </p>
+
+                        <p className="mt-2 text-xs leading-5 text-gray-300">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-yellow-300 px-2 text-xs font-black text-black">
+                        {item.count}
+                      </span>
+                    </div>
+
+                    <Link
+                      href={item.href}
+                      className="mt-4 block rounded-2xl bg-white px-4 py-3 text-center text-xs font-black text-black transition hover:bg-gray-200"
+                    >
+                      {item.actionLabel}
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {isLoading ? (
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-gray-400 md:col-span-2 xl:col-span-4">
-                Checking your Nest...
-              </div>
-            ) : activeNeedsAttentionItems.length === 0 ? (
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5 md:col-span-2 xl:col-span-4">
-                <p className="text-sm font-black text-emerald-300">
-                  Your Nest is calm.
-                </p>
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+            <p className="text-sm font-black text-emerald-300">
+              Setup Checklist
+            </p>
 
-                <p className="mt-2 text-sm leading-6 text-gray-300">
-                  No urgent booking requests, setup issues, or unread booking
-                  notifications need attention right now.
-                </p>
-              </div>
-            ) : (
-              activeNeedsAttentionItems.map((item) => (
-                <div
+            <h2 className="mt-2 text-2xl font-black text-white">
+              Build your booking system
+            </h2>
+
+            <div className="mt-6 grid gap-3">
+              {setupItems.map((item) => (
+                <Link
                   key={item.title}
-                  className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4"
+                  href={item.href}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-black text-white">
-                        {item.title}
-                      </p>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`mt-1 h-4 w-4 shrink-0 rounded-full border ${
+                        item.isComplete
+                          ? "border-emerald-400 bg-emerald-400"
+                          : "border-yellow-300"
+                      }`}
+                    />
 
-                      <p className="mt-2 text-xs leading-5 text-gray-300">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm font-black text-white">
+                          {item.title}
+                        </p>
+
+                        <span
+                          className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                            item.isComplete
+                              ? "bg-emerald-400 text-black"
+                              : "bg-yellow-300 text-black"
+                          }`}
+                        >
+                          {item.isComplete ? "Done" : "Next"}
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-xs leading-5 text-gray-400">
                         {item.description}
                       </p>
                     </div>
-
-                    <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-yellow-300 px-2 text-xs font-black text-black">
-                      {item.count}
-                    </span>
                   </div>
-
-                  <Link
-                    href={item.href}
-                    className="mt-4 block rounded-2xl bg-white px-4 py-3 text-center text-xs font-black text-black transition hover:bg-gray-200"
-                  >
-                    {item.actionLabel}
-                  </Link>
-                </div>
-              ))
-            )}
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -556,233 +817,6 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Link
-            href="/dashboard/bookings"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-          >
-            <p className="text-sm font-bold text-gray-400">
-              Today&apos;s Bookings
-            </p>
-
-            <p className="mt-4 text-4xl font-black text-white">
-              {isLoading ? "..." : stats.todaysBookings}
-            </p>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              {stats.todaysBookings > 0
-                ? "Appointments scheduled for today."
-                : "No appointments scheduled for today yet."}
-            </p>
-          </Link>
-
-          <Link
-            href="/dashboard/requests"
-            className={`rounded-[2rem] border p-5 transition ${
-              stats.pendingRequests > 0
-                ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
-                : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-bold text-gray-400">
-                Pending Requests
-              </p>
-
-              {stats.pendingRequests > 0 && (
-                <span className="rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
-                  Action
-                </span>
-              )}
-            </div>
-
-            <p className="mt-4 text-4xl font-black text-white">
-              {isLoading ? "..." : stats.pendingRequests}
-            </p>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              {stats.pendingRequests > 0
-                ? "New customer requests are waiting for review."
-                : "No pending requests right now."}
-            </p>
-          </Link>
-
-          <Link
-            href="/dashboard/customers"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-          >
-            <p className="text-sm font-bold text-gray-400">Customers</p>
-
-            <p className="mt-4 text-4xl font-black text-white">
-              {isLoading ? "..." : stats.customers}
-            </p>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              {stats.customers > 0
-                ? "Customers saved from your booking flow."
-                : "Customers will appear here after they book with you."}
-            </p>
-          </Link>
-
-          <Link
-            href="/dashboard/birdy"
-            className={`rounded-[2rem] border p-5 transition ${
-              stats.birdySuggestions > 0
-                ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
-                : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-            }`}
-          >
-            <p className="text-sm font-bold text-gray-400">
-              Birdy Suggestions
-            </p>
-
-            <p className="mt-4 text-4xl font-black text-white">
-              {isLoading ? "..." : stats.birdySuggestions}
-            </p>
-
-            <p className="mt-3 text-sm leading-6 text-gray-400">
-              {stats.birdySuggestions > 0
-                ? "Smart suggestions are ready to review."
-                : "Birdy can generate suggestions from your business activity."}
-            </p>
-          </Link>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
-              Today&apos;s Focus
-            </p>
-
-            <h2 className="mt-2 text-2xl font-black text-white">
-              Keep the business moving
-            </h2>
-
-            <div className="mt-6 grid gap-4">
-              <Link
-                href="/dashboard/bookings"
-                className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
-                    1
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-black text-white">
-                      Review today&apos;s schedule
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                      See what is booked, what is open, and what needs attention
-                      before the day gets busy.
-                    </p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                href="/dashboard/requests"
-                className={`rounded-2xl border p-4 transition ${
-                  stats.pendingRequests > 0
-                    ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
-                    : "border-white/10 bg-black/20 hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
-                    2
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-black text-white">
-                      Respond to pending requests
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                      Keep customers from waiting too long and reduce missed
-                      revenue opportunities.
-                    </p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                href="/dashboard/birdy"
-                className={`rounded-2xl border p-4 transition ${
-                  stats.birdySuggestions > 0
-                    ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
-                    : "border-white/10 bg-black/20 hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
-                    3
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-black text-white">
-                      Review Birdy suggestions
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                      Let Birdy surface what needs attention so the business
-                      owner knows what to do next.
-                    </p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                href="/dashboard/booking-page"
-                className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-black text-black">
-                    4
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-black text-white">
-                      Protect open time slots
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                      Spot gaps in the schedule that could be filled with new
-                      appointments.
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
-              Setup Checklist
-            </p>
-
-            <h2 className="mt-2 text-2xl font-black text-white">
-              Build your booking system
-            </h2>
-
-            <div className="mt-6 grid gap-3">
-              {setupItems.map((item) => (
-                <div
-                  key={item.title}
-                  className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-4"
-                >
-                  <div
-                    className={`h-3 w-3 shrink-0 rounded-full border ${
-                      item.isComplete
-                        ? "border-emerald-400 bg-emerald-400"
-                        : "border-emerald-400"
-                    }`}
-                  />
-
-                  <p className="text-sm font-bold text-white">{item.title}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
       </div>
