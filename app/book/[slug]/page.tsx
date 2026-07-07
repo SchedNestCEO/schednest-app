@@ -256,19 +256,28 @@ export default function PublicBookingPage() {
   );
   const bookingPageTheme =
     pageData?.business.booking_page_theme || "schednest_dark";
-  const isCleanTheme = bookingPageTheme === "brand_clean";
+  const isCleanTheme =
+    bookingPageTheme === "clean_light" || bookingPageTheme === "brand_clean";
+  const isPremiumTheme = bookingPageTheme === "premium_dark";
+  const hasContactInfo = Boolean(
+    customerName.trim() && (customerPhone.trim() || customerEmail.trim())
+  );
 
   const pageClass = isCleanTheme
-    ? "min-h-screen bg-slate-50 px-6 py-10 text-slate-950"
-    : "min-h-screen bg-[#050807] px-6 py-10 text-white";
+    ? "min-h-screen bg-slate-50 px-4 py-6 text-slate-950 sm:px-6 sm:py-10"
+    : isPremiumTheme
+      ? "min-h-screen bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.16),_transparent_32%),#050807] px-4 py-6 text-white sm:px-6 sm:py-10"
+      : "min-h-screen bg-[#050807] px-4 py-6 text-white sm:px-6 sm:py-10";
 
   const cardClass = isCleanTheme
     ? "rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
     : "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6";
 
   const heroCardClass = isCleanTheme
-    ? "rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm"
-    : "rounded-[2rem] border border-white/10 bg-white/[0.04] p-8";
+    ? "rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    : isPremiumTheme
+      ? "rounded-[2rem] border border-emerald-400/20 bg-white/[0.05] p-6 shadow-[0_0_60px_rgba(52,211,153,0.08)] sm:p-8"
+      : "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8";
 
   const mutedTextClass = isCleanTheme ? "text-slate-600" : "text-gray-400";
   const softTextClass = isCleanTheme ? "text-slate-500" : "text-gray-500";
@@ -389,6 +398,11 @@ export default function PublicBookingPage() {
 
     if (!customerName.trim()) {
       setErrorMessage("Please enter your name.");
+      return;
+    }
+
+    if (!customerPhone.trim() && !customerEmail.trim()) {
+      setErrorMessage("Please enter a phone number or email so the business can follow up.");
       return;
     }
 
@@ -523,7 +537,7 @@ export default function PublicBookingPage() {
 
   return (
     <main className={pageClass}>
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <section className={heroCardClass}>
           <div
             className="h-2 w-24 rounded-full"
@@ -534,16 +548,60 @@ export default function PublicBookingPage() {
             <span style={{ color: primaryColor }}>SchedNest Booking</span>
           </p>
 
-          <h1 className={`mt-3 text-4xl font-black ${titleTextClass}`}>
+          <h1 className={`mt-3 text-4xl font-black ${titleTextClass} md:text-5xl`}>
             Book with {pageData.business.business_name || "this business"}
           </h1>
 
           <p className={`mt-4 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
             {pageData.business.business_description ||
               (isFlexibleRequest
-                ? "Choose a service and request your preferred time. The business will confirm or respond with a time that works."
-                : "Choose a service and request a time. Your appointment will be marked pending until confirmed.")}
+                ? "Choose a service, request your preferred time, and the business will confirm or offer another time."
+                : "Choose a service and available time. Your request is sent to the business for confirmation.")}
           </p>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {[
+              ["1", "Choose service", selectedService ? selectedService.name : "Pick what you need"],
+              [
+                "2",
+                isFlexibleRequest ? "Request time" : "Pick time",
+                bookingDate && bookingTime
+                  ? `${formatDateLabel(bookingDate)} · ${formatTime12Hour(bookingTime)}`
+                  : "Select date and time",
+              ],
+              [
+                "3",
+                "Send request",
+                hasContactInfo
+                  ? "Contact info ready"
+                  : "Add name and contact info",
+              ],
+            ].map(([step, title, description]) => (
+              <div
+                key={step}
+                className={`rounded-2xl border p-4 ${
+                  isCleanTheme
+                    ? "border-slate-200 bg-slate-50"
+                    : "border-white/10 bg-black/20"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-black"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {step}
+                  </span>
+                  <p className={`text-sm font-black ${titleTextClass}`}>
+                    {title}
+                  </p>
+                </div>
+                <p className={`mt-2 line-clamp-2 text-xs leading-5 ${mutedTextClass}`}>
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
 
           {(pageData.business.contact_email ||
             pageData.business.contact_phone) && (
@@ -844,33 +902,105 @@ export default function PublicBookingPage() {
               Choose your booking details
             </h2>
 
+            {pageData.services.length === 0 ? (
+              <div
+                className="mt-6 rounded-2xl border p-5"
+                style={{
+                  borderColor: `${primaryColor}35`,
+                  backgroundColor: `${primaryColor}12`,
+                }}
+              >
+                <p className="text-sm font-black" style={{ color: primaryColor }}>
+                  No services available yet.
+                </p>
+                <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                  This business has not published any services for online booking yet. Use the contact information above to reach out directly.
+                </p>
+              </div>
+            ) : (
             <form onSubmit={submitBooking} className="mt-6 grid gap-4">
               <div>
-                <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                  Service
-                </label>
-                <select
-                  value={selectedServiceId}
-                  onChange={(event) => {
-                    setSelectedServiceId(event.target.value);
-                    setBookingTime("");
-                    setErrorMessage("");
-                  }}
-                  className={inputClass}
-                >
-                  {pageData.services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} — {formatMoney(service.price)} —{" "}
-                      {service.duration_minutes ?? 60} min
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
+                      Service
+                    </label>
+                    <p className={`mt-1 text-xs ${softTextClass}`}>
+                      Pick the service you want to request.
+                    </p>
+                  </div>
 
-                {selectedService?.description && (
-                  <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
-                    {selectedService.description}
-                  </p>
-                )}
+                  <span
+                    className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                      isCleanTheme
+                        ? "border border-slate-200 bg-slate-50 text-slate-600"
+                        : "bg-white/10 text-gray-300"
+                    }`}
+                  >
+                    {pageData.services.length} service
+                    {pageData.services.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                <div className="mt-3 grid gap-3">
+                  {pageData.services.map((service) => {
+                    const isSelected = service.id === selectedServiceId;
+
+                    return (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedServiceId(service.id);
+                          setBookingTime("");
+                          setErrorMessage("");
+                          setConfirmationSummary(null);
+                        }}
+                        className={`rounded-2xl border p-4 text-left transition ${
+                          isSelected
+                            ? "border-emerald-400/40 bg-emerald-400/10"
+                            : isCleanTheme
+                              ? "border-slate-200 bg-slate-50 hover:bg-slate-100"
+                              : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className={`text-sm font-black ${titleTextClass}`}>
+                              {service.name}
+                            </p>
+                            {service.description && (
+                              <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
+                                {service.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 text-left sm:text-right">
+                            <p className={`text-sm font-black ${titleTextClass}`}>
+                              {formatMoney(service.price)}
+                            </p>
+                            <p className={`mt-1 text-xs ${softTextClass}`}>
+                              {service.duration_minutes ?? 60} min
+                            </p>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
+                            isSelected
+                              ? "bg-emerald-400 text-black"
+                              : isCleanTheme
+                                ? "bg-white text-slate-600"
+                                : "bg-white/10 text-gray-300"
+                          }`}
+                        >
+                          {isSelected ? "Selected" : "Choose service"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {shouldShowServiceSample(selectedService) && (
                   <div
@@ -919,7 +1049,7 @@ export default function PublicBookingPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    Phone
+                    Phone <span className="font-normal opacity-70">or email required</span>
                   </label>
                   <input
                     value={customerPhone}
@@ -931,7 +1061,7 @@ export default function PublicBookingPage() {
 
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    Email
+                    Email <span className="font-normal opacity-70">or phone required</span>
                   </label>
                   <input
                     value={customerEmail}
@@ -1095,10 +1225,15 @@ export default function PublicBookingPage() {
                 {isSubmitting
                   ? "Sending request..."
                   : isFlexibleRequest
-                    ? "Request preferred time"
-                    : "Request booking"}
+                    ? "Send preferred time request"
+                    : "Send booking request"}
               </button>
+
+              <p className={`text-center text-xs leading-5 ${softTextClass}`}>
+                No payment is collected here. The business will review your request and follow up using the contact information you provide.
+              </p>
             </form>
+            )}
           </div>
         </section>
 
