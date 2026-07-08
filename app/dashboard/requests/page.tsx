@@ -31,6 +31,7 @@ type BookingRequest = {
   customer_phone: string | null;
   customer_email: string | null;
   notes: string | null;
+  intake_answers: Record<string, string | boolean> | null;
   created_at: string;
 };
 
@@ -123,7 +124,7 @@ export default function BookingRequestsPage() {
     const { data: requestData, error: requestError } = await supabase
       .from("bookings")
       .select(
-        "id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes, created_at"
+        "id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes, intake_answers, created_at"
       )
       .eq("business_id", profile.id)
       .eq("status", "pending")
@@ -328,6 +329,18 @@ export default function BookingRequestsPage() {
     }).format(value);
   }
 
+  function getIntakeEntries(request: BookingRequest | null) {
+    if (!request?.intake_answers) return [];
+
+    return Object.entries(request.intake_answers).filter(
+      ([, value]) =>
+        value !== null &&
+        value !== undefined &&
+        value !== "" &&
+        value !== false
+    );
+  }
+
   useEffect(() => {
     loadRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -433,6 +446,12 @@ export default function BookingRequestsPage() {
                     {request.customer_id && (
                       <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                         Customer saved
+                      </span>
+                    )}
+
+                    {getIntakeEntries(request).length > 0 && (
+                      <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-semibold text-blue-200">
+                        Intake included
                       </span>
                     )}
                   </div>
@@ -730,6 +749,36 @@ export default function BookingRequestsPage() {
                       "No note was included with this request."}
                   </p>
                 </div>
+
+                {getIntakeEntries(selectedRequest).length > 0 && (
+                  <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
+                    <p className="text-sm font-black text-emerald-300">
+                      Intake Answers
+                    </p>
+
+                    <div className="mt-4 grid gap-3">
+                      {getIntakeEntries(selectedRequest).map(
+                        ([question, answer]) => (
+                          <div
+                            key={question}
+                            className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                          >
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                              {question}
+                            </p>
+                            <p className="mt-2 whitespace-pre-line text-sm font-black text-white">
+                              {typeof answer === "boolean"
+                                ? answer
+                                  ? "Yes"
+                                  : "No"
+                                : String(answer)}
+                            </p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="sticky bottom-0 mt-6 border-t border-white/10 bg-[#07100d] py-5">

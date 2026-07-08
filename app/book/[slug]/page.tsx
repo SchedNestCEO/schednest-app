@@ -58,10 +58,23 @@ type PublicHour = {
   close_time: string | null;
 };
 
+type PublicBookingQuestion = {
+  id: string;
+  business_id: string;
+  service_id: string | null;
+  question_label: string;
+  question_type: "short_text" | "long_text" | "select" | "checkbox";
+  options: string[];
+  is_required: boolean;
+  is_active: boolean;
+  sort_order: number;
+};
+
 type PublicBookingPageData = {
   business: PublicBusiness;
   services: PublicService[];
   business_hours: PublicHour[];
+  booking_questions: PublicBookingQuestion[];
 };
 
 type ConfirmationSummary = {
@@ -299,6 +312,19 @@ function getDateDayIndex(dateValue: string) {
   return date.getDay();
 }
 
+function normalizeQuestionOptions(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+
+  return [];
+}
+
+function isIntakeAnswerMissing(value: string | boolean | undefined) {
+  if (typeof value === "boolean") return value !== true;
+  return !value || !value.trim();
+}
+
 export default function PublicBookingPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
@@ -318,6 +344,9 @@ export default function PublicBookingPage() {
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [notes, setNotes] = useState("");
+  const [intakeAnswers, setIntakeAnswers] = useState<
+    Record<string, string | boolean>
+  >({});
 
   const selectedService = useMemo(() => {
     if (!pageData) return null;
@@ -331,6 +360,16 @@ export default function PublicBookingPage() {
   const selectedServiceImages = useMemo(() => {
     return getServiceSampleImages(selectedService);
   }, [selectedService]);
+
+  const selectedBookingQuestions = useMemo(() => {
+    if (!pageData || !selectedServiceId) return [];
+
+    return pageData.booking_questions.filter(
+      (question) =>
+        question.is_active !== false &&
+        (!question.service_id || question.service_id === selectedServiceId)
+    );
+  }, [pageData, selectedServiceId]);
 
   const bookingTimeMode = pageData?.business.booking_time_mode || "fixed_hours";
   const businessHoursEnabled =
@@ -456,7 +495,27 @@ export default function PublicBookingPage() {
 
     const typedData = data as PublicBookingPageData;
 
-    setPageData(typedData);
+    const { data: questionData } = await supabase
+      .from("booking_questions")
+      .select(
+        "id, business_id, service_id, question_label, question_type, options, is_required, is_active, sort_order"
+      )
+      .eq("business_id", typedData.business.id)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    const safeQuestions = ((questionData || []) as PublicBookingQuestion[]).map(
+      (question) => ({
+        ...question,
+        options: normalizeQuestionOptions(question.options),
+      })
+    );
+
+    setPageData({
+      ...typedData,
+      booking_questions: safeQuestions,
+    });
 
     if (typedData.services.length > 0) {
       setSelectedServiceId(typedData.services[0].id);
@@ -474,6 +533,7 @@ export default function PublicBookingPage() {
     setBookingDate("");
     setBookingTime("");
     setNotes("");
+    setIntakeAnswers({});
   }
 
   async function submitBooking(event: React.FormEvent<HTMLFormElement>) {
@@ -508,6 +568,16 @@ export default function PublicBookingPage() {
       return;
     }
 
+    const missingRequiredQuestion = selectedBookingQuestions.find(
+      (question) =>
+        question.is_required && isIntakeAnswerMissing(intakeAnswers[question.id])
+    );
+
+    if (missingRequiredQuestion) {
+      setErrorMessage(`Please answer: ${missingRequiredQuestion.question_label}`);
+      return;
+    }
+
     if (usesFixedHours) {
       const selectedTimeIsAvailable = availableTimes.some(
         (time) => time.value === bookingTime
@@ -534,15 +604,31 @@ export default function PublicBookingPage() {
           .join("\n\n")
       : notes.trim();
 
-    const { data, error } = await supabase.rpc("create_public_booking", {
-      p_business_id: pageData.business.id,
-      p_service_id: selectedServiceId,
-      p_customer_name: customerName,
-      p_customer_phone: customerPhone,
-      p_customer_email: customerEmail,
-      p_start_time: startDateTime.toISOString(),
-      p_notes: requestNotes,
-    });
+    const intakePayload = selectedBookingQuestions.reduce<
+      Record<string, string | boolean>
+    >((answers, question) => {
+      const value = intakeAnswers[question.id];
+
+      if (!isIntakeAnswerMissing(value)) {
+        answers[question.question_label] = value;
+      }
+
+      return answers;
+    }, {});
+
+    const { data, error } = await supabase.rpc(
+      "create_public_booking_with_intake",
+      {
+        p_business_id: pageData.business.id,
+        p_service_id: selectedServiceId,
+        p_customer_name: customerName,
+        p_customer_phone: customerPhone,
+        p_customer_email: customerEmail,
+        p_start_time: startDateTime.toISOString(),
+        p_notes: requestNotes,
+        p_intake_answers: intakePayload,
+      }
+    );
 
     if (error) {
       setErrorMessage(error.message);
@@ -974,6 +1060,7 @@ export default function PublicBookingPage() {
                           setBookingTime("");
                           setErrorMessage("");
                           setConfirmationSummary(null);
+                          setIntakeAnswers({});
                         }}
                         className={`rounded-2xl border p-4 text-left transition ${
                           isSelected
@@ -1249,6 +1336,116 @@ export default function PublicBookingPage() {
                       ? "This preferred time will be sent to the business for review."
                       : "This appointment will be pending until the business confirms it."}
                   </p>
+                </div>
+              )}
+
+              {selectedBookingQuestions.length > 0 && (
+                <div
+                  className={`rounded-2xl border p-5 ${
+                    isCleanTheme
+                      ? "border-slate-200 bg-slate-50"
+                      : "border-white/10 bg-black/20"
+                  }`}
+                >
+                  <p className={`text-sm font-black ${titleTextClass}`}>
+                    A few details for this service
+                  </p>
+                  <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
+                    These questions help the business prepare before confirming
+                    your request.
+                  </p>
+
+                  <div className="mt-4 grid gap-4">
+                    {selectedBookingQuestions.map((question) => (
+                      <div key={question.id}>
+                        <label
+                          className={`text-sm font-bold ${
+                            isCleanTheme ? "text-slate-700" : "text-gray-300"
+                          }`}
+                        >
+                          {question.question_label}
+                          {question.is_required && (
+                            <span className="ml-1 text-red-300">*</span>
+                          )}
+                        </label>
+
+                        {question.question_type === "long_text" ? (
+                          <textarea
+                            value={
+                              typeof intakeAnswers[question.id] === "string"
+                                ? String(intakeAnswers[question.id])
+                                : ""
+                            }
+                            onChange={(event) =>
+                              setIntakeAnswers((current) => ({
+                                ...current,
+                                [question.id]: event.target.value,
+                              }))
+                            }
+                            className={`${inputClass} min-h-24`}
+                          />
+                        ) : question.question_type === "select" ? (
+                          <select
+                            value={
+                              typeof intakeAnswers[question.id] === "string"
+                                ? String(intakeAnswers[question.id])
+                                : ""
+                            }
+                            onChange={(event) =>
+                              setIntakeAnswers((current) => ({
+                                ...current,
+                                [question.id]: event.target.value,
+                              }))
+                            }
+                            className={inputClass}
+                          >
+                            <option value="">Choose an option</option>
+                            {question.options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        ) : question.question_type === "checkbox" ? (
+                          <label
+                            className={`mt-2 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                              isCleanTheme
+                                ? "border-slate-200 bg-white text-slate-700"
+                                : "border-white/10 bg-black/30 text-gray-300"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={intakeAnswers[question.id] === true}
+                              onChange={(event) =>
+                                setIntakeAnswers((current) => ({
+                                  ...current,
+                                  [question.id]: event.target.checked,
+                                }))
+                              }
+                              className="h-5 w-5 accent-emerald-400"
+                            />
+                            Yes
+                          </label>
+                        ) : (
+                          <input
+                            value={
+                              typeof intakeAnswers[question.id] === "string"
+                                ? String(intakeAnswers[question.id])
+                                : ""
+                            }
+                            onChange={(event) =>
+                              setIntakeAnswers((current) => ({
+                                ...current,
+                                [question.id]: event.target.value,
+                              }))
+                            }
+                            className={inputClass}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

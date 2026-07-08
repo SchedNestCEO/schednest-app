@@ -24,6 +24,24 @@ type BusinessHour = {
   close_time: string | null;
 };
 
+type ServiceOption = {
+  id: string;
+  name: string;
+};
+
+type BookingQuestion = {
+  id: string;
+  business_id: string;
+  owner_id: string;
+  service_id: string | null;
+  question_label: string;
+  question_type: "short_text" | "long_text" | "select" | "checkbox";
+  options: string[];
+  is_required: boolean;
+  is_active: boolean;
+  sort_order: number;
+};
+
 const defaultHours: BusinessHour[] = [
   {
     day_of_week: "Monday",
@@ -99,6 +117,21 @@ function formatTimeLabel(value: string | null) {
   return found?.label || value.slice(0, 5);
 }
 
+function parseQuestionOptions(value: string) {
+  return value
+    .split(",")
+    .map((option) => option.trim())
+    .filter(Boolean);
+}
+
+function normalizeQuestionOptions(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+
+  return [];
+}
+
 export default function BookingPageSettings() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -114,6 +147,21 @@ export default function BookingPageSettings() {
   const [isSavingHours, setIsSavingHours] = useState(false);
   const [isSavingBookingMode, setIsSavingBookingMode] = useState(false);
   const [message, setMessage] = useState("");
+
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [bookingQuestions, setBookingQuestions] = useState<BookingQuestion[]>(
+    []
+  );
+  const [questionLabel, setQuestionLabel] = useState("");
+  const [questionType, setQuestionType] =
+    useState<BookingQuestion["question_type"]>("short_text");
+  const [questionOptions, setQuestionOptions] = useState("");
+  const [questionServiceId, setQuestionServiceId] = useState("all");
+  const [questionRequired, setQuestionRequired] = useState(false);
+  const [isSavingQuestion, setIsSavingQuestion] = useState(false);
+  const [updatingQuestionId, setUpdatingQuestionId] = useState<string | null>(
+    null
+  );
 
   const cleanSlug = slug
     .toLowerCase()
@@ -188,6 +236,35 @@ export default function BookingPageSettings() {
       setHours(defaultHours);
     }
 
+    const { data: serviceData } = await supabase
+      .from("services")
+      .select("id, name")
+      .eq("business_id", safeProfile.id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    setServices((serviceData || []) as ServiceOption[]);
+
+    const { data: questionData, error: questionError } = await supabase
+      .from("booking_questions")
+      .select(
+        "id, business_id, owner_id, service_id, question_label, question_type, options, is_required, is_active, sort_order"
+      )
+      .eq("business_id", safeProfile.id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (questionError) {
+      setMessage(questionError.message);
+    } else {
+      setBookingQuestions(
+        ((questionData || []) as BookingQuestion[]).map((question) => ({
+          ...question,
+          options: normalizeQuestionOptions(question.options),
+        }))
+      );
+    }
+
     setIsLoading(false);
   }
 
@@ -247,6 +324,122 @@ export default function BookingPageSettings() {
 
     setMessage("Business hours saved.");
     setIsSavingHours(false);
+  }
+
+  function getServiceName(serviceId: string | null) {
+    if (!serviceId) return "All services";
+
+    return (
+      services.find((service) => service.id === serviceId)?.name ||
+      "Selected service"
+    );
+  }
+
+  async function saveBookingQuestion() {
+    if (!profile) return;
+
+    if (!questionLabel.trim()) {
+      setMessage("Question label is required.");
+      return;
+    }
+
+    const parsedOptions = parseQuestionOptions(questionOptions);
+
+    if (questionType === "select" && parsedOptions.length === 0) {
+      setMessage("Add at least one comma-separated option for select questions.");
+      return;
+    }
+
+    setIsSavingQuestion(true);
+    setMessage("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setMessage("Please sign in again before saving questions.");
+      setIsSavingQuestion(false);
+      return;
+    }
+
+    const { error } = await supabase.from("booking_questions").insert({
+      business_id: profile.id,
+      owner_id: user.id,
+      service_id: questionServiceId === "all" ? null : questionServiceId,
+      question_label: questionLabel.trim(),
+      question_type: questionType,
+      options: questionType === "select" ? parsedOptions : [],
+      is_required: questionRequired,
+      is_active: true,
+      sort_order: bookingQuestions.length,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setIsSavingQuestion(false);
+      return;
+    }
+
+    setQuestionLabel("");
+    setQuestionType("short_text");
+    setQuestionOptions("");
+    setQuestionServiceId("all");
+    setQuestionRequired(false);
+    setMessage("Booking question added.");
+    await loadBookingPageSettings();
+    setIsSavingQuestion(false);
+  }
+
+  async function toggleBookingQuestion(question: BookingQuestion) {
+    setUpdatingQuestionId(question.id);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("booking_questions")
+      .update({
+        is_active: !question.is_active,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", question.id)
+      .eq("business_id", question.business_id);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingQuestionId(null);
+      return;
+    }
+
+    setMessage(question.is_active ? "Question paused." : "Question reactivated.");
+    await loadBookingPageSettings();
+    setUpdatingQuestionId(null);
+  }
+
+  async function deleteBookingQuestion(question: BookingQuestion) {
+    const confirmed = window.confirm(
+      `Remove "${question.question_label}" from your intake questions? Existing booking answers will stay saved.`
+    );
+
+    if (!confirmed) return;
+
+    setUpdatingQuestionId(question.id);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("booking_questions")
+      .delete()
+      .eq("id", question.id)
+      .eq("business_id", question.business_id);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingQuestionId(null);
+      return;
+    }
+
+    setMessage("Question removed.");
+    await loadBookingPageSettings();
+    setUpdatingQuestionId(null);
   }
 
   async function copyBookingLink() {
@@ -540,6 +733,194 @@ export default function BookingPageSettings() {
           >
             {isSavingBookingMode ? "Saving..." : "Save Booking Mode"}
           </button>
+        </section>
+
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <p className="text-sm font-black text-emerald-300">
+            Intake Questions
+          </p>
+
+          <h2 className="mt-3 text-2xl font-black text-white">
+            Ask customers for the details you need.
+          </h2>
+
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-400">
+            Add questions for all services or only one service. Customers answer
+            them before sending a booking request.
+          </p>
+
+          <div className="mt-6 rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+            <div className="grid gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-300">
+                  Question
+                </label>
+                <input
+                  value={questionLabel}
+                  onChange={(event) => setQuestionLabel(event.target.value)}
+                  placeholder="Example: What is the service address?"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-300">
+                    Type
+                  </label>
+                  <select
+                    value={questionType}
+                    onChange={(event) =>
+                      setQuestionType(
+                        event.target.value as BookingQuestion["question_type"]
+                      )
+                    }
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  >
+                    <option value="short_text">Short answer</option>
+                    <option value="long_text">Long answer</option>
+                    <option value="select">Dropdown</option>
+                    <option value="checkbox">Checkbox</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-300">
+                    Applies to
+                  </label>
+                  <select
+                    value={questionServiceId}
+                    onChange={(event) =>
+                      setQuestionServiceId(event.target.value)
+                    }
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                  >
+                    <option value="all">All services</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={questionRequired}
+                    onChange={(event) =>
+                      setQuestionRequired(event.target.checked)
+                    }
+                    className="h-5 w-5 accent-emerald-400"
+                  />
+                  Required
+                </label>
+              </div>
+
+              {questionType === "select" && (
+                <div>
+                  <label className="text-sm font-medium text-gray-300">
+                    Dropdown options
+                  </label>
+                  <input
+                    value={questionOptions}
+                    onChange={(event) =>
+                      setQuestionOptions(event.target.value)
+                    }
+                    placeholder="Example: Small, Medium, Large"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    Separate options with commas.
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={saveBookingQuestion}
+                disabled={isSavingQuestion}
+                className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
+              >
+                {isSavingQuestion ? "Saving..." : "Add question"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {bookingQuestions.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-sm leading-6 text-gray-500">
+                No intake questions yet.
+              </div>
+            ) : (
+              bookingQuestions.map((question) => (
+                <div
+                  key={question.id}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-5"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm font-black text-white">
+                          {question.question_label}
+                        </p>
+
+                        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300">
+                          {question.question_type.replace("_", " ")}
+                        </span>
+
+                        {question.is_required && (
+                          <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-black text-yellow-200">
+                            Required
+                          </span>
+                        )}
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ${
+                            question.is_active
+                              ? "bg-emerald-400/10 text-emerald-300"
+                              : "bg-white/10 text-gray-400"
+                          }`}
+                        >
+                          {question.is_active ? "Active" : "Paused"}
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-xs text-gray-500">
+                        Applies to: {getServiceName(question.service_id)}
+                      </p>
+
+                      {question.options.length > 0 && (
+                        <p className="mt-2 text-xs text-gray-500">
+                          Options: {question.options.join(", ")}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleBookingQuestion(question)}
+                        disabled={updatingQuestionId === question.id}
+                        className="rounded-2xl border border-white/10 px-4 py-2 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {question.is_active ? "Pause" : "Reactivate"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteBookingQuestion(question)}
+                        disabled={updatingQuestionId === question.id}
+                        className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-2 text-xs font-black text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </section>
 
         {businessHoursEnabled ? (
