@@ -242,6 +242,12 @@ function getStatusLabel(status?: string | null) {
   return labels[status] || status;
 }
 
+function formatDuration(value: number | null) {
+  if (!value) return "Duration varies";
+
+  return `${value} min`;
+}
+
 function getStatusClass(status?: string | null) {
   const normalizedStatus = status || "pending";
 
@@ -1048,7 +1054,7 @@ export default function BookingsPage() {
                   <option value="">Select service</option>
                   {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} — {service.duration_minutes || 60} min
+                      {service.name} — {formatDuration(service.duration_minutes)}
                     </option>
                   ))}
                 </select>

@@ -215,6 +215,12 @@ function formatMoney(value: number | null) {
   }).format(value);
 }
 
+function formatDuration(value: number | null) {
+  if (!value) return "Duration varies";
+
+  return `${value} min`;
+}
+
 function hasActiveDiscount(service: PublicService) {
   return Boolean(
     service.discount_is_active &&
@@ -757,7 +763,7 @@ export default function PublicBookingPage() {
                 <p className={`mt-1 text-sm ${mutedTextClass}`}>
                   {formatMoney(confirmationSummary.servicePrice)}
                   {" · "}
-                  {confirmationSummary.serviceDuration || 60} min
+                  {formatDuration(confirmationSummary.serviceDuration)}
                 </p>
               </div>
 
@@ -970,7 +976,7 @@ export default function PublicBookingPage() {
                             )}
 
                             <p className={`mt-1 text-xs ${softTextClass}`}>
-                              {service.duration_minutes ?? 60} min
+                              {formatDuration(service.duration_minutes)}
                             </p>
 
                             {hasActiveDiscount(service) && (

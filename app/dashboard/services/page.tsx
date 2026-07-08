@@ -74,6 +74,12 @@ function formatMoney(value: number | null) {
   }).format(value);
 }
 
+function formatDuration(value: number | null) {
+  if (!value) return "Duration varies";
+
+  return `${value} min`;
+}
+
 function getString(row: AnyRow | null, keys: string[], fallback = "") {
   if (!row) return fallback;
 
@@ -185,6 +191,130 @@ function hasSavedDiscount(service: Service) {
   );
 }
 
+function cleanCapturedLine(value: string) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function extractCapturedPrice(value: string) {
+  const priceMatch = value.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+
+  return priceMatch?.[1] || "";
+}
+
+function extractCapturedDuration(value: string) {
+  const durationMatch = value.match(
+    /\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min)\b/i
+  );
+
+  if (!durationMatch) return "";
+
+  const amount = Number(durationMatch[1]);
+  const unit = durationMatch[2].toLowerCase();
+
+  if (Number.isNaN(amount)) return "";
+
+  if (unit.startsWith("hour") || unit.startsWith("hr")) {
+    return String(Math.round(amount * 60));
+  }
+
+  return String(Math.round(amount));
+}
+
+function extractCapturedDiscount(value: string) {
+  const percentMatch =
+    value.match(/\b(\d{1,3})\s*%\s*(?:off|discount|sale)?\b/i) ||
+    value.match(/\b(?:off|discount|sale)\s*(\d{1,3})\s*%\b/i);
+
+  if (percentMatch) {
+    return {
+      type: "percent" as const,
+      value: percentMatch[1],
+    };
+  }
+
+  const fixedMatch = value.match(
+    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:off|discount)\b/i
+  );
+
+  if (fixedMatch) {
+    return {
+      type: "fixed" as const,
+      value: fixedMatch[1],
+    };
+  }
+
+  return {
+    type: "none" as const,
+    value: "",
+  };
+}
+
+function extractCapturedPromoLabel(value: string) {
+  const lines = value
+    .split(/\n+/)
+    .map(cleanCapturedLine)
+    .filter(Boolean);
+
+  const promoLine = lines.find((line) =>
+    /\b(special|promo|promotion|sale|deal|discount|limited|summer|holiday|new client|first time)\b/i.test(
+      line
+    )
+  );
+
+  return promoLine?.slice(0, 60) || "";
+}
+
+function extractCapturedServiceName(value: string) {
+  const lines = value
+    .split(/\n+/)
+    .map(cleanCapturedLine)
+    .filter(Boolean);
+
+  const filteredLines = lines.filter((line) => {
+    const lowerLine = line.toLowerCase();
+
+    if (line.length < 3 || line.length > 80) return false;
+    if (/^\$?\d+(?:\.\d{1,2})?$/.test(line)) return false;
+    if (/\b(off|discount|sale|promo|call|text|dm|book now|link in bio)\b/i.test(line)) {
+      return false;
+    }
+    if (/\b(am|pm|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(line)) {
+      return false;
+    }
+    if (lowerLine.includes("@") || lowerLine.includes("http")) return false;
+
+    return true;
+  });
+
+  const lineWithPackage =
+    filteredLines.find((line) => /\b(package|service|session|detail|consult|consultation)\b/i.test(line)) ||
+    filteredLines[0];
+
+  if (!lineWithPackage) return "";
+
+  return lineWithPackage
+    .replace(/[-–—|•]+$/g, "")
+    .replace(/\$\s*\d+(?:\.\d{1,2})?/g, "")
+    .trim()
+    .slice(0, 80);
+}
+
+function buildCapturedServiceDescription(value: string) {
+  const lines = value
+    .split(/\n+/)
+    .map(cleanCapturedLine)
+    .filter(Boolean);
+
+  const cleanedLines = lines.filter((line) => {
+    if (/^\$?\d+(?:\.\d{1,2})?$/.test(line)) return false;
+    if (/^\d+\s*(min|mins|minutes|hr|hrs|hours)$/i.test(line)) return false;
+
+    return true;
+  });
+
+  return cleanedLines.join("\n").slice(0, 700);
+}
+
 export default function ServicesPage() {
   const supabase = useMemo(() => createClient(), []);
 
@@ -203,7 +333,7 @@ export default function ServicesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("60");
+  const [durationMinutes, setDurationMinutes] = useState("");
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
   const [newSampleImageUrl, setNewSampleImageUrl] = useState("");
@@ -211,6 +341,20 @@ export default function ServicesPage() {
   const [newShowSample, setNewShowSample] = useState(false);
   const [newPublishAt, setNewPublishAt] = useState("");
   const [newUnpublishAt, setNewUnpublishAt] = useState("");
+  const [newDiscountType, setNewDiscountType] = useState<
+    "none" | "percent" | "fixed"
+  >("none");
+  const [newDiscountValue, setNewDiscountValue] = useState("");
+  const [newDiscountLabel, setNewDiscountLabel] = useState("");
+
+  const [serviceCaptureText, setServiceCaptureText] = useState("");
+  const [serviceCaptureMessage, setServiceCaptureMessage] = useState("");
+  const [serviceCaptureImageFile, setServiceCaptureImageFile] =
+    useState<File | null>(null);
+  const [serviceCaptureImagePreviewUrl, setServiceCaptureImagePreviewUrl] =
+    useState("");
+  const [isReadingServiceCapture, setIsReadingServiceCapture] =
+    useState(false);
 
   const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdit>>(
     {}
@@ -273,6 +417,143 @@ export default function ServicesPage() {
     if (markerIndex === -1) return null;
 
     return decodeURIComponent(url.slice(markerIndex + marker.length).split("?")[0]);
+  }
+
+  function applyCapturedServiceDetails(rawText: string) {
+    if (!rawText.trim()) {
+      setServiceCaptureMessage("Paste service text or upload a screenshot first.");
+      return;
+    }
+
+    const capturedName = extractCapturedServiceName(rawText);
+    const capturedDescription = buildCapturedServiceDescription(rawText);
+    const capturedPrice = extractCapturedPrice(rawText);
+    const capturedDuration = extractCapturedDuration(rawText);
+    const capturedDiscount = extractCapturedDiscount(rawText);
+    const capturedPromoLabel = extractCapturedPromoLabel(rawText);
+
+    if (capturedName) {
+      setName(capturedName);
+    }
+
+    if (capturedDescription) {
+      setDescription(capturedDescription);
+    }
+
+    if (capturedPrice) {
+      setPrice(capturedPrice);
+    }
+
+    if (capturedDuration) {
+      setDurationMinutes(capturedDuration);
+    }
+
+    if (capturedDiscount.type !== "none") {
+      setNewDiscountType(capturedDiscount.type);
+      setNewDiscountValue(capturedDiscount.value);
+      setNewDiscountLabel(capturedPromoLabel || "Promotion");
+    } else if (capturedPromoLabel) {
+      setNewDiscountLabel(capturedPromoLabel);
+    }
+
+    setIsAddServiceOpen(true);
+
+    setServiceCaptureMessage(
+      [
+        capturedName ? "Name found." : "Review service name manually.",
+        capturedPrice ? "Price found." : "Review price manually.",
+        capturedDuration ? "Duration found." : "Review duration manually.",
+        capturedDiscount.type !== "none" ? "Promo found." : "No promo detected.",
+      ].join(" ")
+    );
+  }
+
+  function handleExtractServiceCaptureText() {
+    applyCapturedServiceDetails(serviceCaptureText);
+  }
+
+  function handleServiceCaptureImageChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0] || null;
+
+    setServiceCaptureImageFile(file);
+    setServiceCaptureMessage("");
+
+    if (serviceCaptureImagePreviewUrl) {
+      URL.revokeObjectURL(serviceCaptureImagePreviewUrl);
+    }
+
+    if (file) {
+      setServiceCaptureImagePreviewUrl(URL.createObjectURL(file));
+    } else {
+      setServiceCaptureImagePreviewUrl("");
+    }
+  }
+
+  async function readServiceCaptureScreenshot() {
+    if (!serviceCaptureImageFile) {
+      setServiceCaptureMessage("Upload a service screenshot first.");
+      return;
+    }
+
+    if (!serviceCaptureImageFile.type.startsWith("image/")) {
+      setServiceCaptureMessage("Please upload an image file.");
+      return;
+    }
+
+    if (serviceCaptureImageFile.size > 6 * 1024 * 1024) {
+      setServiceCaptureMessage("Screenshot must be 6MB or smaller.");
+      return;
+    }
+
+    setIsReadingServiceCapture(true);
+    setServiceCaptureMessage("Reading service screenshot...");
+
+    try {
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+
+      const result = await worker.recognize(serviceCaptureImageFile);
+      await worker.terminate();
+
+      const extractedText = result.data.text.trim();
+
+      if (!extractedText) {
+        setServiceCaptureMessage(
+          "I could not read text from that screenshot. Try a clearer crop or paste the caption manually."
+        );
+        setIsReadingServiceCapture(false);
+        return;
+      }
+
+      setServiceCaptureText(extractedText);
+      applyCapturedServiceDetails(extractedText);
+
+      setServiceCaptureMessage(
+        "Screenshot text captured. Review the service details before saving."
+      );
+    } catch (error) {
+      setServiceCaptureMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to read service screenshot right now."
+      );
+    }
+
+    setIsReadingServiceCapture(false);
+  }
+
+  function clearServiceCaptureAssistant() {
+    setServiceCaptureText("");
+    setServiceCaptureMessage("");
+    setServiceCaptureImageFile(null);
+
+    if (serviceCaptureImagePreviewUrl) {
+      URL.revokeObjectURL(serviceCaptureImagePreviewUrl);
+    }
+
+    setServiceCaptureImagePreviewUrl("");
   }
 
   function updateImageCaptionDraft(imageId: string, caption: string) {
@@ -620,6 +901,30 @@ export default function ServicesPage() {
       return;
     }
 
+    const parsedNewDiscountValue =
+      newDiscountType === "none" || !newDiscountValue.trim()
+        ? null
+        : Number(newDiscountValue);
+
+    if (
+      newDiscountType !== "none" &&
+      (parsedNewDiscountValue === null ||
+        Number.isNaN(parsedNewDiscountValue) ||
+        parsedNewDiscountValue <= 0)
+    ) {
+      setErrorMessage("Enter a valid discount amount.");
+      return;
+    }
+
+    if (
+      newDiscountType === "percent" &&
+      parsedNewDiscountValue !== null &&
+      parsedNewDiscountValue > 100
+    ) {
+      setErrorMessage("Percent discounts cannot be greater than 100%.");
+      return;
+    }
+
     setIsSaving(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -630,13 +935,14 @@ export default function ServicesPage() {
       name: name.trim(),
       description: description.trim() || null,
       price: price ? Number(price) : null,
-      duration_minutes: durationMinutes ? Number(durationMinutes) : 60,
+      duration_minutes: durationMinutes.trim() ? Number(durationMinutes) : null,
       is_active: true,
       publish_at: dateTimeLocalToIso(newPublishAt),
       unpublish_at: dateTimeLocalToIso(newUnpublishAt),
-      discount_type: "none",
-      discount_value: null,
-      discount_label: null,
+      discount_type: newDiscountType,
+      discount_value: parsedNewDiscountValue,
+      discount_label:
+        newDiscountType === "none" ? null : newDiscountLabel.trim() || null,
       discount_starts_at: null,
       discount_ends_at: null,
       sample_image_url: null,
@@ -653,12 +959,16 @@ export default function ServicesPage() {
     setName("");
     setDescription("");
     setPrice("");
-    setDurationMinutes("60");
+    setDurationMinutes("");
     setNewSampleImageUrl("");
     setNewSampleCaption("");
     setNewShowSample(false);
     setNewPublishAt("");
     setNewUnpublishAt("");
+    setNewDiscountType("none");
+    setNewDiscountValue("");
+    setNewDiscountLabel("");
+    clearServiceCaptureAssistant();
     setIsAddServiceOpen(false);
     setSuccessMessage("Service added.");
 
@@ -990,6 +1300,110 @@ export default function ServicesPage() {
             {shouldShowAddService && (
               <div className="border-t border-white/10 p-6">
                 <form onSubmit={handleAddService} className="grid gap-4">
+                  <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black uppercase tracking-[0.22em] text-emerald-300">
+                          Service Capture Assistant
+                        </p>
+
+                        <h3 className="mt-3 text-xl font-black text-white">
+                          Paste or upload a service promo.
+                        </h3>
+
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-300">
+                          Use an Instagram caption, flyer, menu screenshot, or
+                          promo post. SchedNest will pull out the likely service
+                          name, description, price, duration, and discount.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full bg-black/20 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+                        Review before saving
+                      </span>
+                    </div>
+
+                    <textarea
+                      value={serviceCaptureText}
+                      onChange={(event) =>
+                        setServiceCaptureText(event.target.value)
+                      }
+                      placeholder="Example: Summer Detail Package — $85 — exterior wash, interior vacuum, tire shine, 90 minutes. 20% off this week only."
+                      className="mt-4 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                    />
+
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-black text-white">
+                            Or upload a screenshot
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-gray-400">
+                            Use this for Instagram posts, flyers, story promos,
+                            or menu screenshots that cannot be copied.
+                          </p>
+                        </div>
+
+                        <label className="w-fit cursor-pointer rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-200 transition hover:bg-white/10">
+                          Choose screenshot
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleServiceCaptureImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      {serviceCaptureImagePreviewUrl && (
+                        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                          <img
+                            src={serviceCaptureImagePreviewUrl}
+                            alt="Service screenshot preview"
+                            className="max-h-80 w-full object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleExtractServiceCaptureText}
+                        className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+                      >
+                        Extract service details
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={readServiceCaptureScreenshot}
+                        disabled={
+                          !serviceCaptureImageFile || isReadingServiceCapture
+                        }
+                        className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-5 py-3 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isReadingServiceCapture
+                          ? "Reading screenshot..."
+                          : "Read screenshot"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={clearServiceCaptureAssistant}
+                        className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                      >
+                        Clear assistant
+                      </button>
+                    </div>
+
+                    {serviceCaptureMessage && (
+                      <p className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm leading-6 text-gray-300">
+                        {serviceCaptureMessage}
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="text-sm font-medium text-gray-300">
                       Service name
@@ -1032,7 +1446,7 @@ export default function ServicesPage() {
 
                     <div>
                       <label className="text-sm font-medium text-gray-300">
-                        Duration minutes
+                        Duration minutes <span className="font-normal text-gray-500">(optional)</span>
                       </label>
                       <input
                         value={durationMinutes}
@@ -1042,7 +1456,7 @@ export default function ServicesPage() {
                         type="number"
                         min="5"
                         step="5"
-                        placeholder="60"
+                        placeholder="Optional, example: 60"
                         className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                       />
                     </div>
@@ -1086,6 +1500,58 @@ export default function ServicesPage() {
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
                         />
                       </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          New service discount
+                        </label>
+                        <select
+                          value={newDiscountType}
+                          onChange={(event) =>
+                            setNewDiscountType(
+                              event.target.value as "none" | "percent" | "fixed"
+                            )
+                          }
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                        >
+                          <option value="none">No discount</option>
+                          <option value="percent">Percent off</option>
+                          <option value="fixed">Dollar amount off</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-300">
+                          Discount amount
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={newDiscountValue}
+                          onChange={(event) =>
+                            setNewDiscountValue(event.target.value)
+                          }
+                          placeholder="Example: 20"
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="text-sm font-medium text-gray-300">
+                        Promo label
+                      </label>
+                      <input
+                        value={newDiscountLabel}
+                        onChange={(event) =>
+                          setNewDiscountLabel(event.target.value)
+                        }
+                        placeholder="Example: Summer Special"
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                      />
                     </div>
                   </div>
 
@@ -1312,7 +1778,7 @@ export default function ServicesPage() {
                         </span>
 
                         <span className="rounded-full bg-white/5 px-3 py-1">
-                          {service.duration_minutes ?? 60} min
+                          {formatDuration(service.duration_minutes)}
                         </span>
 
                         <span className="rounded-full bg-white/5 px-3 py-1">
