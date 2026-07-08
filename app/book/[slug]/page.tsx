@@ -34,6 +34,7 @@ type PublicService = {
   name: string;
   description: string | null;
   price: number | null;
+  pricing_type: string | null;
   duration_minutes: number | null;
   sample_image_url: string | null;
   sample_caption: string | null;
@@ -69,6 +70,7 @@ type ConfirmationSummary = {
   businessName: string;
   serviceName: string;
   servicePrice: number | null;
+  servicePricingType: string | null;
   serviceDuration: number | null;
   bookingDate: string;
   bookingTime: string;
@@ -213,6 +215,36 @@ function formatMoney(value: number | null) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+function formatPriceFromType(
+  value: number | null,
+  pricingType: string | null | undefined
+) {
+  const type = pricingType || "fixed";
+
+  if (type === "quote") return "Quote required";
+  if (type === "varies") return "Price varies";
+
+  if (value === null || value === undefined) {
+    if (type === "hourly") return "Hourly rate not listed";
+    if (type === "starting_at") return "Starting price not listed";
+    return "Price not listed";
+  }
+
+  if (type === "hourly") return `${formatMoney(value)}/hr`;
+  if (type === "starting_at") return `Starting at ${formatMoney(value)}`;
+
+  return formatMoney(value);
+}
+
+function formatServicePrice(service: PublicService, useDiscount = false) {
+  const priceToShow =
+    useDiscount && hasActiveDiscount(service)
+      ? service.discounted_price
+      : service.price;
+
+  return formatPriceFromType(priceToShow, service.pricing_type);
 }
 
 function formatDuration(value: number | null) {
@@ -539,6 +571,7 @@ export default function PublicBookingPage() {
       businessName: pageData.business.business_name || "this business",
       serviceName: selectedService.name,
       servicePrice: getServiceDisplayPrice(selectedService),
+      servicePricingType: selectedService.pricing_type,
       serviceDuration: selectedService.duration_minutes,
       bookingDate,
       bookingTime,
@@ -761,7 +794,10 @@ export default function PublicBookingPage() {
                   {confirmationSummary.serviceName}
                 </p>
                 <p className={`mt-1 text-sm ${mutedTextClass}`}>
-                  {formatMoney(confirmationSummary.servicePrice)}
+                  {formatPriceFromType(
+                    confirmationSummary.servicePrice,
+                    confirmationSummary.servicePricingType
+                  )}
                   {" · "}
                   {formatDuration(confirmationSummary.serviceDuration)}
                 </p>
@@ -963,15 +999,15 @@ export default function PublicBookingPage() {
                             {hasActiveDiscount(service) ? (
                               <div>
                                 <p className={`text-sm font-black ${titleTextClass}`}>
-                                  {formatMoney(service.discounted_price)}
+                                  {formatServicePrice(service, true)}
                                 </p>
                                 <p className={`mt-1 text-xs line-through ${softTextClass}`}>
-                                  {formatMoney(service.price)}
+                                  {formatServicePrice(service)}
                                 </p>
                               </div>
                             ) : (
                               <p className={`text-sm font-black ${titleTextClass}`}>
-                                {formatMoney(service.price)}
+                                {formatServicePrice(service)}
                               </p>
                             )}
 

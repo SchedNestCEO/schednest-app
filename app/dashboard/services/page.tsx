@@ -19,6 +19,7 @@ type Service = {
   name: string;
   description: string | null;
   price: number | null;
+  pricing_type: string | null;
   duration_minutes: number | null;
   is_active: boolean | null;
   sample_image_url: string | null;
@@ -49,6 +50,8 @@ type ServiceSampleImage = {
 
 type AnyRow = Record<string, unknown>;
 
+type PricingType = "fixed" | "hourly" | "starting_at" | "quote" | "varies";
+
 type SampleEdit = {
   sample_image_url: string;
   sample_caption: string;
@@ -72,6 +75,31 @@ function formatMoney(value: number | null) {
     style: "currency",
     currency: "USD",
   }).format(value);
+}
+
+function formatPriceFromType(
+  value: number | null,
+  pricingType: string | null | undefined
+) {
+  const type = pricingType || "fixed";
+
+  if (type === "quote") return "Quote required";
+  if (type === "varies") return "Price varies";
+
+  if (value === null || value === undefined) {
+    if (type === "hourly") return "Hourly rate not listed";
+    if (type === "starting_at") return "Starting price not listed";
+    return "Price not listed";
+  }
+
+  if (type === "hourly") return `${formatMoney(value)}/hr`;
+  if (type === "starting_at") return `Starting at ${formatMoney(value)}`;
+
+  return formatMoney(value);
+}
+
+function formatServicePrice(service: Service) {
+  return formatPriceFromType(service.price, service.pricing_type);
 }
 
 function formatDuration(value: number | null) {
@@ -220,6 +248,28 @@ function extractCapturedDuration(value: string) {
   return String(Math.round(amount));
 }
 
+function extractCapturedPricingType(value: string): PricingType {
+  const lowerValue = value.toLowerCase();
+
+  if (/\b(per hour|hourly|\/hr|an hour|each hour)\b/.test(lowerValue)) {
+    return "hourly";
+  }
+
+  if (/\b(starting at|starts at|from\s+\$|prices start)\b/.test(lowerValue)) {
+    return "starting_at";
+  }
+
+  if (/\b(quote required|request quote|quote only|contact for price)\b/.test(lowerValue)) {
+    return "quote";
+  }
+
+  if (/\b(price varies|varies|depends)\b/.test(lowerValue)) {
+    return "varies";
+  }
+
+  return "fixed";
+}
+
 function extractCapturedDiscount(value: string) {
   const percentMatch =
     value.match(/\b(\d{1,3})\s*%\s*(?:off|discount|sale)?\b/i) ||
@@ -333,6 +383,8 @@ export default function ServicesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [newPricingType, setNewPricingType] =
+    useState<PricingType>("fixed");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
@@ -428,6 +480,7 @@ export default function ServicesPage() {
     const capturedName = extractCapturedServiceName(rawText);
     const capturedDescription = buildCapturedServiceDescription(rawText);
     const capturedPrice = extractCapturedPrice(rawText);
+    const capturedPricingType = extractCapturedPricingType(rawText);
     const capturedDuration = extractCapturedDuration(rawText);
     const capturedDiscount = extractCapturedDiscount(rawText);
     const capturedPromoLabel = extractCapturedPromoLabel(rawText);
@@ -440,7 +493,11 @@ export default function ServicesPage() {
       setDescription(capturedDescription);
     }
 
-    if (capturedPrice) {
+    setNewPricingType(capturedPricingType);
+
+    if (capturedPricingType === "quote" || capturedPricingType === "varies") {
+      setPrice("");
+    } else if (capturedPrice) {
       setPrice(capturedPrice);
     }
 
@@ -802,7 +859,7 @@ export default function ServicesPage() {
     const { data: serviceData, error: servicesError } = await supabase
       .from("services")
       .select(
-        "id, business_id, owner_id, name, description, price, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at, publish_at, unpublish_at, discount_type, discount_value, discount_label, discount_starts_at, discount_ends_at"
+        "id, business_id, owner_id, name, description, price, pricing_type, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at, publish_at, unpublish_at, discount_type, discount_value, discount_label, discount_starts_at, discount_ends_at"
       )
       .eq("business_id", safeProfile.id)
       .is("deleted_at", null)
@@ -925,6 +982,21 @@ export default function ServicesPage() {
       return;
     }
 
+    const parsedServicePrice =
+      newPricingType === "quote" || newPricingType === "varies" || !price.trim()
+        ? null
+        : Number(price);
+
+    if (
+      price.trim() &&
+      (Number.isNaN(parsedServicePrice) ||
+        parsedServicePrice === null ||
+        parsedServicePrice < 0)
+    ) {
+      setErrorMessage("Enter a valid price amount.");
+      return;
+    }
+
     setIsSaving(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -934,7 +1006,8 @@ export default function ServicesPage() {
       owner_id: businessProfile.owner_id,
       name: name.trim(),
       description: description.trim() || null,
-      price: price ? Number(price) : null,
+      price: parsedServicePrice,
+      pricing_type: newPricingType,
       duration_minutes: durationMinutes.trim() ? Number(durationMinutes) : null,
       is_active: true,
       publish_at: dateTimeLocalToIso(newPublishAt),
@@ -959,6 +1032,7 @@ export default function ServicesPage() {
     setName("");
     setDescription("");
     setPrice("");
+    setNewPricingType("fixed");
     setDurationMinutes("");
     setNewSampleImageUrl("");
     setNewSampleCaption("");
@@ -1428,10 +1502,34 @@ export default function ServicesPage() {
                     />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-3">
                     <div>
                       <label className="text-sm font-medium text-gray-300">
-                        Price
+                        Pricing type
+                      </label>
+                      <select
+                        value={newPricingType}
+                        onChange={(event) => {
+                          const nextType = event.target.value as PricingType;
+                          setNewPricingType(nextType);
+
+                          if (nextType === "quote" || nextType === "varies") {
+                            setPrice("");
+                          }
+                        }}
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                      >
+                        <option value="fixed">Fixed price</option>
+                        <option value="hourly">Per hour</option>
+                        <option value="starting_at">Starting at</option>
+                        <option value="quote">Quote required</option>
+                        <option value="varies">Price varies</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-300">
+                        Amount
                       </label>
                       <input
                         value={price}
@@ -1439,8 +1537,18 @@ export default function ServicesPage() {
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="25.00"
-                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                        disabled={
+                          newPricingType === "quote" ||
+                          newPricingType === "varies"
+                        }
+                        placeholder={
+                          newPricingType === "hourly"
+                            ? "Example: 85/hr"
+                            : newPricingType === "starting_at"
+                              ? "Example: 85"
+                              : "25.00"
+                        }
+                        className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </div>
 
@@ -1774,7 +1882,7 @@ export default function ServicesPage() {
 
                       <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-300">
                         <span className="rounded-full bg-white/5 px-3 py-1">
-                          {formatMoney(service.price)}
+                          {formatServicePrice(service)}
                         </span>
 
                         <span className="rounded-full bg-white/5 px-3 py-1">

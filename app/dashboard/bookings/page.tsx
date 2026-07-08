@@ -23,6 +23,7 @@ type Service = {
   id: string;
   name: string;
   price: number | null;
+  pricing_type: string | null;
   duration_minutes: number | null;
   is_active: boolean | null;
 };
@@ -225,6 +226,40 @@ function inferSource(value: string) {
   return "manual";
 }
 
+function formatMoney(value: number | null) {
+  if (value === null || value === undefined) return "Price not listed";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+}
+
+function formatPriceFromType(
+  value: number | null,
+  pricingType: string | null | undefined
+) {
+  const type = pricingType || "fixed";
+
+  if (type === "quote") return "Quote required";
+  if (type === "varies") return "Price varies";
+
+  if (value === null || value === undefined) {
+    if (type === "hourly") return "Hourly rate not listed";
+    if (type === "starting_at") return "Starting price not listed";
+    return "Price not listed";
+  }
+
+  if (type === "hourly") return `${formatMoney(value)}/hr`;
+  if (type === "starting_at") return `Starting at ${formatMoney(value)}`;
+
+  return formatMoney(value);
+}
+
+function getServicePriceLabel(service: Service) {
+  return formatPriceFromType(service.price, service.pricing_type);
+}
+
 function getStatusLabel(status?: string | null) {
   if (!status) return "Pending";
 
@@ -341,7 +376,7 @@ export default function BookingsPage() {
 
     const { data: serviceData, error: serviceError } = await supabase
       .from("services")
-      .select("id, name, price, duration_minutes, is_active")
+      .select("id, name, price, pricing_type, duration_minutes, is_active")
       .eq("business_id", profile.id)
       .order("created_at", { ascending: false });
 
@@ -1054,7 +1089,7 @@ export default function BookingsPage() {
                   <option value="">Select service</option>
                   {services.map((service) => (
                     <option key={service.id} value={service.id}>
-                      {service.name} — {formatDuration(service.duration_minutes)}
+                      {service.name} — {getServicePriceLabel(service)} — {formatDuration(service.duration_minutes)}
                     </option>
                   ))}
                 </select>
