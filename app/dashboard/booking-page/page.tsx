@@ -18,7 +18,7 @@ type BusinessProfile = {
 type BusinessHour = {
   id?: string;
   business_id?: string;
-  day_of_week: string;
+  day_of_week: number;
   is_open: boolean;
   open_time: string | null;
   close_time: string | null;
@@ -44,48 +44,62 @@ type BookingQuestion = {
 
 const defaultHours: BusinessHour[] = [
   {
-    day_of_week: "Monday",
+    day_of_week: 1,
     is_open: true,
     open_time: "09:00",
     close_time: "17:00",
   },
   {
-    day_of_week: "Tuesday",
+    day_of_week: 2,
     is_open: true,
     open_time: "09:00",
     close_time: "17:00",
   },
   {
-    day_of_week: "Wednesday",
+    day_of_week: 3,
     is_open: true,
     open_time: "09:00",
     close_time: "17:00",
   },
   {
-    day_of_week: "Thursday",
+    day_of_week: 4,
     is_open: true,
     open_time: "09:00",
     close_time: "17:00",
   },
   {
-    day_of_week: "Friday",
+    day_of_week: 5,
     is_open: true,
     open_time: "09:00",
     close_time: "17:00",
   },
   {
-    day_of_week: "Saturday",
+    day_of_week: 6,
     is_open: false,
     open_time: null,
     close_time: null,
   },
   {
-    day_of_week: "Sunday",
+    day_of_week: 0,
     is_open: false,
     open_time: null,
     close_time: null,
   },
 ];
+
+const dayLabels: Record<number, string> = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+};
+
+function getDayLabel(day: number) {
+  return dayLabels[day] || `Day ${day}`;
+}
 
 const timeOptions = Array.from({ length: 48 }, (_, index) => {
   const totalMinutes = index * 30;
@@ -450,7 +464,7 @@ export default function BookingPageSettings() {
   }
 
   function updateHour(
-    day: string,
+    day: number,
     field: "is_open" | "open_time" | "close_time",
     value: boolean | string
   ) {
@@ -947,7 +961,7 @@ export default function BookingPageSettings() {
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
                       <p className="font-black text-white">
-                        {item.day_of_week}
+                        {getDayLabel(item.day_of_week)}
                       </p>
 
                       <span
