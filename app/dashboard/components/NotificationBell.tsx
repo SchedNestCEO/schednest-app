@@ -57,6 +57,7 @@ export default function NotificationBell({
         "id, booking_id, event_type, recipient_type, recipient_email, subject, status, read_at, created_at"
       )
       .eq("event_type", REQUESTED_EVENT)
+      .eq("recipient_type", "owner")
       .ilike("subject", "New booking request%")
       .is("read_at", null)
       .order("created_at", { ascending: false })

@@ -230,7 +230,7 @@ status: "failed",
 errorMessage: "Missing RESEND_API_KEY.",
 });
 
-throw new Error("Missing RESEND_API_KEY.");
+return;
 }
 
 const resend = new Resend(resendApiKey);

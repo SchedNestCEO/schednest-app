@@ -10,6 +10,8 @@ type BusinessProfile = {
   owner_id: string;
   business_name: string | null;
   slug: string | null;
+  booking_time_mode: string | null;
+  business_hours_enabled: boolean | null;
 };
 
 type DashboardStats = {
@@ -130,7 +132,7 @@ export default function DashboardPage() {
 
     const { data: businessData, error: businessError } = await supabase
       .from("business_profiles")
-      .select("id, owner_id, business_name, slug")
+      .select("id, owner_id, business_name, slug, booking_time_mode, business_hours_enabled")
       .eq("owner_id", user.id)
       .maybeSingle();
 
@@ -190,7 +192,8 @@ export default function DashboardPage() {
       supabase
         .from("business_hours")
         .select("id", { count: "exact", head: true })
-        .eq("business_id", safeBusiness.id),
+        .eq("business_id", safeBusiness.id)
+        .eq("is_open", true),
 
       supabase
         .from("birdy_suggestions")
@@ -223,13 +226,21 @@ export default function DashboardPage() {
         .maybeSingle(),
     ]);
 
+    const businessHoursAreOptional =
+      safeBusiness.booking_time_mode === "flexible_requests" ||
+      safeBusiness.business_hours_enabled === false;
+
+    const businessHoursConfigured = businessHoursAreOptional
+      ? 1
+      : businessHoursResult.count || 0;
+
     setStats({
       todaysBookings: todaysBookingsResult.count || 0,
       pendingRequests: pendingRequestsResult.count || 0,
       customers: customersResult.count || 0,
       services: servicesResult.count || 0,
       activeServices: activeServicesResult.count || 0,
-      businessHours: businessHoursResult.count || 0,
+      businessHours: businessHoursConfigured,
       birdySuggestions: birdySuggestionsCountResult.count || 0,
       unreadNotifications: unreadNotificationsResult.count || 0,
     });
