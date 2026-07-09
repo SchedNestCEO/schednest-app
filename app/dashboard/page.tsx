@@ -106,6 +106,8 @@ export default function DashboardPage() {
     []
   );
   const [copyMessage, setCopyMessage] = useState("");
+  const [isSetupGuideOpen, setIsSetupGuideOpen] = useState(false);
+  const [hasCheckedSetupGuide, setHasCheckedSetupGuide] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     todaysBookings: 0,
     pendingRequests: 0,
@@ -273,6 +275,20 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+  function closeSetupGuide({ dismiss = false }: { dismiss?: boolean } = {}) {
+    if (dismiss) {
+      window.localStorage.setItem("schednest-setup-guide-dismissed", "true");
+    }
+
+    setIsSetupGuideOpen(false);
+  }
+
+  function reopenSetupGuide() {
+    window.localStorage.removeItem("schednest-setup-guide-dismissed");
+    setIsSetupGuideOpen(true);
+  }
+
   const bookingPageHref = business?.slug
     ? `/book/${business.slug}`
     : "/dashboard/booking-page";
@@ -321,6 +337,21 @@ export default function DashboardPage() {
     setupItems.length
   );
   const nextSetupItem = setupItems.find((item) => !item.isComplete);
+  const currentSetupStepIndex = setupItems.findIndex((item) => !item.isComplete);
+  const isSetupComplete = completedSetupItems.length === setupItems.length;
+  useEffect(() => {
+    if (isLoading || hasCheckedSetupGuide) return;
+
+    const dismissedSetupGuide =
+      window.localStorage.getItem("schednest-setup-guide-dismissed") === "true";
+
+    if (!isSetupComplete && !dismissedSetupGuide) {
+      setIsSetupGuideOpen(true);
+    }
+
+    setHasCheckedSetupGuide(true);
+  }, [isLoading, isSetupComplete, hasCheckedSetupGuide]);
+
 
   const needsAttentionItems = [
     {
@@ -393,6 +424,146 @@ export default function DashboardPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
+        {isSetupGuideOpen && !isSetupComplete && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md">
+            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-emerald-400/20 bg-[#07100d] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.75)] sm:p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                    Setup Guide
+                  </p>
+
+                  <h2 className="mt-3 text-3xl font-black text-white">
+                    Let’s set up your business.
+                  </h2>
+
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400">
+                    Follow these steps in order so your booking page is ready
+                    for real customers. SchedNest will highlight the next thing
+                    that needs your attention.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => closeSetupGuide()}
+                  className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-black text-white">
+                      Setup progress
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {completedSetupItems.length} of {setupItems.length} steps
+                      complete.
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-emerald-400 px-3 py-1 text-sm font-black text-black">
+                    {setupPercent}%
+                  </span>
+                </div>
+
+                <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-emerald-400 transition-all"
+                    style={{ width: `${setupPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-3">
+                {setupItems.map((item, index) => {
+                  const isCurrentStep =
+                    !item.isComplete && index === currentSetupStepIndex;
+
+                  return (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      onClick={() => closeSetupGuide()}
+                      className={`rounded-2xl border p-4 transition ${
+                        item.isComplete
+                          ? "border-emerald-400/20 bg-emerald-400/10"
+                          : isCurrentStep
+                            ? "border-yellow-300/40 bg-yellow-300/10 shadow-[0_0_35px_rgba(250,204,21,0.08)]"
+                            : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex gap-3">
+                          <div
+                            className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${
+                              item.isComplete
+                                ? "bg-emerald-400 text-black"
+                                : isCurrentStep
+                                  ? "bg-yellow-300 text-black"
+                                  : "bg-white/10 text-gray-300"
+                            }`}
+                          >
+                            {item.isComplete ? "✓" : index + 1}
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-black text-white">
+                              {item.title}
+                            </p>
+
+                            <p className="mt-2 text-xs leading-5 text-gray-400">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
+                            item.isComplete
+                              ? "bg-emerald-400 text-black"
+                              : isCurrentStep
+                                ? "bg-yellow-300 text-black"
+                                : "bg-white/10 text-gray-300"
+                          }`}
+                        >
+                          {item.isComplete
+                            ? "Done"
+                            : isCurrentStep
+                              ? "Start here"
+                              : "Upcoming"}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+                {nextSetupItem && (
+                  <Link
+                    href={nextSetupItem.href}
+                    onClick={() => closeSetupGuide()}
+                    className="rounded-2xl bg-emerald-400 px-5 py-4 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                  >
+                    Continue: {nextSetupItem.actionLabel}
+                  </Link>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => closeSetupGuide({ dismiss: true })}
+                  className="rounded-2xl border border-white/10 px-5 py-4 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  Don’t show again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
           <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-6 lg:p-8">
@@ -427,6 +598,16 @@ export default function DashboardPage() {
                 >
                   {mainAction.label}
                 </Link>
+
+                {!isSetupComplete && (
+                  <button
+                    type="button"
+                    onClick={reopenSetupGuide}
+                    className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-300 transition hover:bg-emerald-400/15"
+                  >
+                    Open setup guide
+                  </button>
+                )}
 
                 <button
                   type="button"
