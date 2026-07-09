@@ -97,6 +97,24 @@ const dayLabels: Record<number, string> = {
   6: "Saturday",
 };
 
+function normalizeDayOfWeek(value: unknown) {
+  if (typeof value === "number") return value;
+
+  if (typeof value === "string") {
+    const cleanValue = value.toLowerCase().trim();
+
+    if (cleanValue === "sunday" || cleanValue === "sun" || cleanValue === "0") return 0;
+    if (cleanValue === "monday" || cleanValue === "mon" || cleanValue === "1") return 1;
+    if (cleanValue === "tuesday" || cleanValue === "tue" || cleanValue === "2") return 2;
+    if (cleanValue === "wednesday" || cleanValue === "wed" || cleanValue === "3") return 3;
+    if (cleanValue === "thursday" || cleanValue === "thu" || cleanValue === "4") return 4;
+    if (cleanValue === "friday" || cleanValue === "fri" || cleanValue === "5") return 5;
+    if (cleanValue === "saturday" || cleanValue === "sat" || cleanValue === "6") return 6;
+  }
+
+  return null;
+}
+
 function getDayLabel(day: number) {
   return dayLabels[day] || `Day ${day}`;
 }
@@ -233,13 +251,14 @@ export default function BookingPageSettings() {
     if (!hoursError && existingHours && existingHours.length > 0) {
       const orderedHours = defaultHours.map((defaultDay) => {
         const found = existingHours.find(
-          (item) => item.day_of_week === defaultDay.day_of_week
+          (item) => normalizeDayOfWeek(item.day_of_week) === defaultDay.day_of_week
         );
 
         if (!found) return defaultDay;
 
         return {
           ...found,
+          day_of_week: defaultDay.day_of_week,
           open_time: normalizeTimeValue(found.open_time),
           close_time: normalizeTimeValue(found.close_time),
         };
@@ -322,8 +341,8 @@ export default function BookingPageSettings() {
       business_id: profile.id,
       day_of_week: item.day_of_week,
       is_open: item.is_open,
-      open_time: item.is_open ? item.open_time : null,
-      close_time: item.is_open ? item.close_time : null,
+      open_time: item.is_open ? item.open_time || "09:00" : null,
+      close_time: item.is_open ? item.close_time || "17:00" : null,
     }));
 
     const { error } = await supabase.from("business_hours").upsert(rows, {
