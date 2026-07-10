@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { createClient } from "../../lib/supabase/client";
+import { useT } from "../../lib/i18n/client";
 
 type BusinessProfile = {
   id: string;
@@ -32,6 +33,15 @@ type BookingRequest = {
   customer_email: string | null;
   notes: string | null;
   intake_answers: Record<string, string | boolean> | null;
+  deposit_required: boolean | null;
+  deposit_collection_method: string | null;
+  deposit_status: string | null;
+  deposit_amount: number | null;
+  deposit_policy: string | null;
+  manual_deposit_instructions: string | null;
+  deposit_policy_accepted: boolean | null;
+  deposit_policy_accepted_at: string | null;
+  deposit_paid_at: string | null;
   created_at: string;
 };
 
@@ -49,6 +59,17 @@ function getDateInputValue(value: string) {
   return `${year}-${month}-${day}`;
 }
 
+
+function formatDepositStatus(value: string | null | undefined) {
+  if (!value || value === "not_required") return "Not required";
+
+  return value
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 function getTimeInputValue(value: string) {
   const date = new Date(value);
   const hour = String(date.getHours()).padStart(2, "0");
@@ -59,6 +80,7 @@ function getTimeInputValue(value: string) {
 
 export default function BookingRequestsPage() {
   const supabase = useMemo(() => createClient(), []);
+  const t = useT();
 
   const [businessProfile, setBusinessProfile] =
     useState<BusinessProfile | null>(null);
@@ -124,10 +146,11 @@ export default function BookingRequestsPage() {
     const { data: requestData, error: requestError } = await supabase
       .from("bookings")
       .select(
-        "id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes, intake_answers, created_at"
+        "id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes, intake_answers, deposit_required, deposit_collection_method, deposit_status, deposit_amount, deposit_policy, manual_deposit_instructions, deposit_policy_accepted, deposit_policy_accepted_at, deposit_paid_at, created_at"
       )
       .eq("business_id", profile.id)
-      .eq("status", "pending")
+      .in("status", ["pending", "confirmed"])
+      .or("status.eq.pending,deposit_status.eq.pending_payment")
       .order("created_at", { ascending: false });
 
     if (requestError) {
@@ -154,6 +177,42 @@ export default function BookingRequestsPage() {
 
     setConfirmationDate(getDateInputValue(selectedRequest.start_time));
     setConfirmationTime(getTimeInputValue(selectedRequest.start_time));
+  }
+
+
+  async function updateDepositStatus(
+    request: BookingRequest,
+    nextStatus: "paid" | "waived"
+  ) {
+    setIsUpdating(request.id);
+    setErrorMessage("");
+    setMessage("");
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({
+        deposit_status: nextStatus,
+        deposit_paid_at:
+          nextStatus === "paid" ? new Date().toISOString() : request.deposit_paid_at,
+      })
+      .eq("id", request.id)
+      .eq("business_id", request.business_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsUpdating(null);
+      return;
+    }
+
+    setMessage(
+      nextStatus === "paid"
+        ? t("deposit.paidMessage", "Deposit marked as paid.")
+        : t("deposit.waivedMessage", "Deposit waived.")
+    );
+
+    setSelectedRequest(null);
+    await loadRequests({ preserveMessage: true });
+    setIsUpdating(null);
   }
 
   async function updateRequestStatus(
@@ -211,6 +270,19 @@ export default function BookingRequestsPage() {
         setIsUpdating(null);
         return;
       }
+    }
+
+    if (newStatus === "confirmed" && request?.deposit_required) {
+      await supabase
+        .from("bookings")
+        .update({
+          deposit_status:
+            request.deposit_status === "paid" || request.deposit_status === "waived"
+              ? request.deposit_status
+              : "pending_payment",
+        })
+        .eq("id", bookingId)
+        .eq("business_id", request.business_id);
     }
 
     const { error } = await supabase.rpc("approve_booking_request", {
@@ -454,6 +526,12 @@ export default function BookingRequestsPage() {
                         Intake included
                       </span>
                     )}
+
+                    {request.deposit_required && (
+                      <span className="rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-200">
+                        {t("deposit.shortTitle", "Deposit")}: {formatDepositStatus(request.deposit_status)}
+                      </span>
+                    )}
                   </div>
 
                   <p className="mt-3 text-sm font-semibold text-gray-200">
@@ -500,23 +578,27 @@ export default function BookingRequestsPage() {
                     View details
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => updateRequestStatus(request.id, "confirmed")}
-                    disabled={isUpdating === request.id}
-                    className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isUpdating === request.id ? "Updating..." : "Approve"}
-                  </button>
+                  {request.status === "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => updateRequestStatus(request.id, "confirmed")}
+                        disabled={isUpdating === request.id}
+                        className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isUpdating === request.id ? "Updating..." : "Approve"}
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() => updateRequestStatus(request.id, "cancelled")}
-                    disabled={isUpdating === request.id}
-                    className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Decline
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() => updateRequestStatus(request.id, "cancelled")}
+                        disabled={isUpdating === request.id}
+                        className="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -739,6 +821,79 @@ export default function BookingRequestsPage() {
                   </div>
                 </div>
 
+                {selectedRequest.deposit_required && (
+                  <div className="rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-black text-yellow-200">
+                          {t("deposit.title", "Deposits & CBWP")}
+                        </p>
+
+                        <p className="mt-2 text-sm leading-6 text-gray-300">
+                          {selectedRequest.deposit_amount
+                            ? `${formatMoney(selectedRequest.deposit_amount)} · ${formatDepositStatus(selectedRequest.deposit_status)}`
+                            : formatDepositStatus(selectedRequest.deposit_status)}
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full border border-yellow-400/20 bg-black/20 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-yellow-100">
+                        {selectedRequest.deposit_policy_accepted
+                          ? t("deposit.accepted", "Policy accepted")
+                          : t("deposit.notAccepted", "Policy not accepted")}
+                      </span>
+                    </div>
+
+                    {selectedRequest.deposit_policy && (
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                          {t("deposit.businessPolicy", "Business deposit policy")}
+                        </p>
+                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-300">
+                          {selectedRequest.deposit_policy}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedRequest.manual_deposit_instructions && (
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                          {t("deposit.manualInstructions", "Manual deposit instructions")}
+                        </p>
+                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-300">
+                          {selectedRequest.manual_deposit_instructions}
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="mt-4 text-xs leading-5 text-gray-400">
+                      {t(
+                        "deposit.manualNotice",
+                        "SchedNest cannot verify manual payments automatically. The business must mark the deposit as received."
+                      )}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateDepositStatus(selectedRequest, "paid")}
+                        disabled={isUpdating === selectedRequest.id}
+                        className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-xs font-black text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {t("deposit.markPaid", "Mark deposit paid")}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => updateDepositStatus(selectedRequest, "waived")}
+                        disabled={isUpdating === selectedRequest.id}
+                        className="rounded-2xl border border-white/10 px-4 py-3 text-xs font-black text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {t("deposit.waive", "Waive deposit")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5">
                   <p className="text-sm font-black text-emerald-300">
                     Customer Note
@@ -783,36 +938,51 @@ export default function BookingRequestsPage() {
 
               <div className="sticky bottom-0 mt-6 border-t border-white/10 bg-[#07100d] py-5">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateRequestStatus(selectedRequest.id, "confirmed", {
-                        confirmedDate: confirmationDate,
-                        confirmedTime: confirmationTime,
-                      })
-                    }
-                    disabled={isUpdating === selectedRequest.id}
-                    className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isUpdating === selectedRequest.id
-                      ? "Approving..."
-                      : isConfirmingDifferentTime
-                        ? "Approve updated time"
-                        : "Approve & notify"}
-                  </button>
+                  {selectedRequest.status === "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateRequestStatus(selectedRequest.id, "confirmed", {
+                            confirmedDate: confirmationDate,
+                            confirmedTime: confirmationTime,
+                          })
+                        }
+                        disabled={isUpdating === selectedRequest.id}
+                        className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isUpdating === selectedRequest.id
+                          ? "Approving..."
+                          : isConfirmingDifferentTime
+                            ? "Approve updated time"
+                            : "Approve & notify"}
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateRequestStatus(selectedRequest.id, "cancelled")
-                    }
-                    disabled={isUpdating === selectedRequest.id}
-                    className="rounded-2xl border border-red-400/30 bg-red-400/10 px-5 py-4 text-sm font-black text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isUpdating === selectedRequest.id
-                      ? "Declining..."
-                      : "Decline & notify"}
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateRequestStatus(selectedRequest.id, "cancelled")
+                        }
+                        disabled={isUpdating === selectedRequest.id}
+                        className="rounded-2xl border border-red-400/30 bg-red-400/10 px-5 py-4 text-sm font-black text-red-200 transition hover:bg-red-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isUpdating === selectedRequest.id
+                          ? "Declining..."
+                          : "Decline & notify"}
+                      </button>
+                    </>
+                  )}
+
+                  {selectedRequest.status !== "pending" && selectedRequest.deposit_status === "pending_payment" && (
+                    <button
+                      type="button"
+                      onClick={() => updateDepositStatus(selectedRequest, "paid")}
+                      disabled={isUpdating === selectedRequest.id}
+                      className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+                    >
+                      {t("deposit.markPaid", "Mark deposit paid")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import { useT } from "../../lib/i18n/client";
 
 type BookingTimeMode = "fixed_hours" | "flexible_requests";
 
@@ -49,6 +50,12 @@ type PublicService = {
   discount_ends_at: string | null;
   discount_is_active: boolean | null;
   discounted_price: number | null;
+  deposit_required: boolean | null;
+  deposit_collection_method: string | null;
+  deposit_type: string | null;
+  deposit_amount: number | null;
+  deposit_policy: string | null;
+  manual_deposit_instructions: string | null;
 };
 
 type PublicHour = {
@@ -89,6 +96,10 @@ type ConfirmationSummary = {
   bookingTime: string;
   notes: string;
   isFlexibleRequest: boolean;
+  depositRequired: boolean;
+  depositAmount: number | null;
+  depositPolicy: string | null;
+  manualDepositInstructions: string | null;
 };
 
 const days = [
@@ -260,6 +271,25 @@ function formatServicePrice(service: PublicService, useDiscount = false) {
   return formatPriceFromType(priceToShow, service.pricing_type);
 }
 
+
+function getServiceDepositAmount(service: PublicService | null) {
+  if (!service?.deposit_required) return null;
+
+  if (service.deposit_type === "fixed") {
+    return service.deposit_amount || null;
+  }
+
+  if (
+    service.deposit_type === "percent" &&
+    service.deposit_amount &&
+    service.price
+  ) {
+    return Math.round(service.price * service.deposit_amount) / 100;
+  }
+
+  return service.deposit_amount || null;
+}
+
 function formatDuration(value: number | null) {
   if (!value) return "Duration varies";
 
@@ -329,6 +359,7 @@ export default function PublicBookingPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
   const supabase = useMemo(() => createClient(), []);
+  const t = useT();
 
   const [pageData, setPageData] = useState<PublicBookingPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -347,6 +378,7 @@ export default function PublicBookingPage() {
   const [intakeAnswers, setIntakeAnswers] = useState<
     Record<string, string | boolean>
   >({});
+  const [depositPolicyAccepted, setDepositPolicyAccepted] = useState(false);
 
   const selectedService = useMemo(() => {
     if (!pageData) return null;
@@ -495,6 +527,36 @@ export default function PublicBookingPage() {
 
     const typedData = data as PublicBookingPageData;
 
+    const { data: depositData } = await supabase.rpc(
+      "get_public_service_deposits",
+      {
+        p_business_id: typedData.business.id,
+      }
+    );
+
+    const depositRows = Array.isArray(depositData) ? depositData : [];
+    const depositByServiceId = new Map(
+      depositRows.map((row: any) => [row.id, row])
+    );
+
+    const servicesWithDeposits = typedData.services.map((service) => {
+      const deposit = depositByServiceId.get(service.id);
+
+      return {
+        ...service,
+        deposit_required: deposit?.deposit_required || false,
+        deposit_collection_method: deposit?.deposit_collection_method || "manual",
+        deposit_type: deposit?.deposit_type || "none",
+        deposit_amount:
+          deposit?.deposit_amount === null || deposit?.deposit_amount === undefined
+            ? null
+            : Number(deposit.deposit_amount),
+        deposit_policy: deposit?.deposit_policy || null,
+        manual_deposit_instructions:
+          deposit?.manual_deposit_instructions || null,
+      };
+    });
+
     const { data: questionData } = await supabase
       .from("booking_questions")
       .select(
@@ -514,11 +576,12 @@ export default function PublicBookingPage() {
 
     setPageData({
       ...typedData,
+      services: servicesWithDeposits,
       booking_questions: safeQuestions,
     });
 
-    if (typedData.services.length > 0) {
-      setSelectedServiceId(typedData.services[0].id);
+    if (servicesWithDeposits.length > 0) {
+      setSelectedServiceId(servicesWithDeposits[0].id);
     }
 
     setIsLoading(false);
@@ -534,6 +597,7 @@ export default function PublicBookingPage() {
     setBookingTime("");
     setNotes("");
     setIntakeAnswers({});
+    setDepositPolicyAccepted(false);
   }
 
   async function submitBooking(event: React.FormEvent<HTMLFormElement>) {
@@ -564,6 +628,16 @@ export default function PublicBookingPage() {
         isFlexibleRequest
           ? "Please choose your preferred date and time."
           : "Please choose an available date and time."
+      );
+      return;
+    }
+
+    if (selectedService.deposit_required && !depositPolicyAccepted) {
+      setErrorMessage(
+        t(
+          "deposit.customerMustAgree",
+          "Please agree to the business deposit policy before sending your request."
+        )
       );
       return;
     }
@@ -639,6 +713,13 @@ export default function PublicBookingPage() {
     const bookingResult = data as { id?: string } | null;
 
     if (bookingResult?.id) {
+      await supabase.rpc("apply_public_booking_deposit_snapshot", {
+        p_booking_id: bookingResult.id,
+        p_deposit_policy_accepted: selectedService.deposit_required
+          ? depositPolicyAccepted
+          : false,
+      });
+
       await fetch("/api/booking-notifications", {
         method: "POST",
         headers: {
@@ -663,6 +744,10 @@ export default function PublicBookingPage() {
       bookingTime,
       notes: notes.trim(),
       isFlexibleRequest,
+      depositRequired: selectedService.deposit_required === true,
+      depositAmount: getServiceDepositAmount(selectedService),
+      depositPolicy: selectedService.deposit_policy,
+      manualDepositInstructions: selectedService.manual_deposit_instructions,
     });
 
     setCustomerName("");
@@ -910,6 +995,39 @@ export default function PublicBookingPage() {
               </div>
             </div>
 
+            {confirmationSummary.depositRequired && (
+              <div
+                className={`mt-4 rounded-2xl border p-5 ${
+                  isCleanTheme
+                    ? "border-yellow-200 bg-white"
+                    : "border-yellow-400/20 bg-black/20"
+                }`}
+              >
+                <p className={`text-sm font-black ${titleTextClass}`}>
+                  {t("deposit.pending", "Deposit pending")}
+                </p>
+                <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                  {confirmationSummary.depositAmount
+                    ? `${formatMoney(confirmationSummary.depositAmount)} ${
+                        t("deposit.shortTitle", "Deposit").toLowerCase()
+                      }`
+                    : t("deposit.required", "Deposit required")}
+                </p>
+
+                {confirmationSummary.depositPolicy && (
+                  <p className={`mt-3 whitespace-pre-line text-sm leading-6 ${mutedTextClass}`}>
+                    {confirmationSummary.depositPolicy}
+                  </p>
+                )}
+
+                {confirmationSummary.manualDepositInstructions && (
+                  <p className={`mt-3 whitespace-pre-line text-sm leading-6 ${mutedTextClass}`}>
+                    {confirmationSummary.manualDepositInstructions}
+                  </p>
+                )}
+              </div>
+            )}
+
             {confirmationSummary.notes && (
               <div
                 className={`mt-4 rounded-2xl border p-5 ${
@@ -1061,6 +1179,7 @@ export default function PublicBookingPage() {
                           setErrorMessage("");
                           setConfirmationSummary(null);
                           setIntakeAnswers({});
+                          setDepositPolicyAccepted(false);
                         }}
                         className={`rounded-2xl border p-4 text-left transition ${
                           isSelected
@@ -1107,6 +1226,13 @@ export default function PublicBookingPage() {
                                 {service.discount_label || "Promotion"}
                               </p>
                             )}
+
+                            {service.deposit_required && (
+                              <p className="mt-2 rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
+                                {t("deposit.required", "Deposit required")}
+                              </p>
+                            )}
+
                           </div>
                         </div>
 
@@ -1446,6 +1572,88 @@ export default function PublicBookingPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {selectedService?.deposit_required && (
+                <div
+                  className={`rounded-2xl border p-5 ${
+                    isCleanTheme
+                      ? "border-yellow-200 bg-yellow-50"
+                      : "border-yellow-400/20 bg-yellow-400/10"
+                  }`}
+                >
+                  <p className={`text-sm font-black ${titleTextClass}`}>
+                    {t("deposit.required", "Deposit required")}
+                  </p>
+
+                  <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                    {getServiceDepositAmount(selectedService)
+                      ? `${formatMoney(getServiceDepositAmount(selectedService))} ${
+                          selectedService.deposit_collection_method === "manual"
+                            ? t("deposit.manual", "Manual payment")
+                            : t("deposit.stripe", "Stripe checkout")
+                        }`
+                      : t("deposit.required", "Deposit required")}
+                  </p>
+
+                  {selectedService.deposit_policy && (
+                    <div
+                      className={`mt-4 rounded-2xl border p-4 ${
+                        isCleanTheme
+                          ? "border-yellow-200 bg-white"
+                          : "border-white/10 bg-black/20"
+                      }`}
+                    >
+                      <p className={`text-xs font-black uppercase tracking-[0.2em] ${softTextClass}`}>
+                        {t("deposit.businessPolicy", "Business deposit policy")}
+                      </p>
+                      <p className={`mt-2 whitespace-pre-line text-sm leading-6 ${mutedTextClass}`}>
+                        {selectedService.deposit_policy}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedService.deposit_collection_method === "manual" &&
+                    selectedService.manual_deposit_instructions && (
+                      <div
+                        className={`mt-4 rounded-2xl border p-4 ${
+                          isCleanTheme
+                            ? "border-yellow-200 bg-white"
+                            : "border-white/10 bg-black/20"
+                        }`}
+                      >
+                        <p className={`text-xs font-black uppercase tracking-[0.2em] ${softTextClass}`}>
+                          {t("deposit.manualInstructions", "Manual deposit instructions")}
+                        </p>
+                        <p className={`mt-2 whitespace-pre-line text-sm leading-6 ${mutedTextClass}`}>
+                          {selectedService.manual_deposit_instructions}
+                        </p>
+                      </div>
+                    )}
+
+                  <label
+                    className={`mt-4 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
+                      isCleanTheme
+                        ? "border-yellow-200 bg-white text-slate-700"
+                        : "border-white/10 bg-black/20 text-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={depositPolicyAccepted}
+                      onChange={(event) =>
+                        setDepositPolicyAccepted(event.target.checked)
+                      }
+                      className="mt-0.5 h-5 w-5 accent-emerald-400"
+                    />
+                    <span>
+                      {t(
+                        "deposit.customerAgreement",
+                        "I have read and agree to this business's deposit policy."
+                      )}
+                    </span>
+                  </label>
                 </div>
               )}
 
