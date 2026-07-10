@@ -1606,7 +1606,7 @@ export default function PublicBookingPage() {
                       }`}
                     >
                       <p className={`text-xs font-black uppercase tracking-[0.2em] ${softTextClass}`}>
-                        {t("deposit.businessPolicy", "Business deposit policy")}
+                        {t("deposit.businessPolicy", "Business-written deposit policy")}
                       </p>
                       <p className={`mt-2 whitespace-pre-line text-sm leading-6 ${mutedTextClass}`}>
                         {selectedService.deposit_policy}

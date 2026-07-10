@@ -1807,13 +1807,13 @@ export default function ServicesPage() {
 
                   <div className="rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-5">
                     <p className="text-sm font-black text-yellow-200">
-                      {t("deposit.title", "Deposits & CBWP")}
+                      {t("deposit.title", "Deposits & business policy")}
                     </p>
 
                     <p className="mt-2 text-xs leading-5 text-gray-300">
                       {t(
                         "deposit.policyHelper",
-                        "Write your own deposit rules. SchedNest shows this to the customer before they submit."
+                        "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest."
                       )}
                     </p>
 
@@ -1905,7 +1905,7 @@ export default function ServicesPage() {
 
                         <div>
                           <label className="text-sm font-medium text-gray-300">
-                            {t("deposit.policy", "CBWP: Custom Business-Written Policy")}
+                            {t("deposit.policy", "Custom deposit policy")}
                           </label>
                           <textarea
                             value={newDepositPolicy}
@@ -2395,13 +2395,13 @@ export default function ServicesPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-black text-yellow-200">
-                          {t("deposit.title", "Deposits & CBWP")}
+                          {t("deposit.title", "Deposits & business policy")}
                         </p>
 
                         <p className="mt-2 text-xs leading-5 text-gray-300">
                           {t(
                             "deposit.policyHelper",
-                            "Write your own deposit rules. SchedNest shows this to the customer before they submit."
+                            "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest."
                           )}
                         </p>
                       </div>
@@ -2513,7 +2513,7 @@ export default function ServicesPage() {
 
                         <div>
                           <label className="text-sm font-medium text-gray-300">
-                            {t("deposit.policy", "CBWP: Custom Business-Written Policy")}
+                            {t("deposit.policy", "Custom deposit policy")}
                           </label>
                           <textarea
                             value={serviceSettingsEdits[service.id]?.deposit_policy || ""}

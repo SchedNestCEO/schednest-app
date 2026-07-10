@@ -826,7 +826,7 @@ export default function BookingRequestsPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-black text-yellow-200">
-                          {t("deposit.title", "Deposits & CBWP")}
+                          {t("deposit.title", "Deposits & business policy")}
                         </p>
 
                         <p className="mt-2 text-sm leading-6 text-gray-300">
@@ -846,7 +846,7 @@ export default function BookingRequestsPage() {
                     {selectedRequest.deposit_policy && (
                       <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                          {t("deposit.businessPolicy", "Business deposit policy")}
+                          {t("deposit.businessPolicy", "Business-written deposit policy")}
                         </p>
                         <p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-300">
                           {selectedRequest.deposit_policy}
