@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { useT } from "../../lib/i18n/client";
 
 type BookingTimeMode = "fixed_hours" | "flexible_requests";
@@ -526,36 +527,66 @@ export default function PublicBookingPage() {
     }
 
     const typedData = data as PublicBookingPageData;
+    const baseServices = Array.isArray(typedData.services)
+      ? typedData.services
+      : [];
 
-    const { data: depositData } = await supabase.rpc(
+    let servicesWithDeposits: PublicService[] = baseServices.map((service) => ({
+      ...service,
+      deposit_required: service.deposit_required || false,
+      deposit_collection_method: service.deposit_collection_method || "manual",
+      deposit_type: service.deposit_type || "none",
+      deposit_amount:
+        service.deposit_amount === null || service.deposit_amount === undefined
+          ? null
+          : Number(service.deposit_amount),
+      deposit_policy: service.deposit_policy || null,
+      manual_deposit_instructions:
+        service.manual_deposit_instructions || null,
+    }));
+
+    const { data: depositData, error: depositError } = await supabase.rpc(
       "get_public_service_deposits",
       {
         p_business_id: typedData.business.id,
       }
     );
 
-    const depositRows = Array.isArray(depositData) ? depositData : [];
-    const depositByServiceId = new Map(
-      depositRows.map((row: any) => [row.id, row])
-    );
+    if (!depositError && Array.isArray(depositData)) {
+      const depositByServiceId = new Map(
+        depositData.map((row: Record<string, any>) => [row.id, row])
+      );
 
-    const servicesWithDeposits = typedData.services.map((service) => {
-      const deposit = depositByServiceId.get(service.id);
+      servicesWithDeposits = baseServices.map((service) => {
+        const deposit = depositByServiceId.get(service.id);
 
-      return {
-        ...service,
-        deposit_required: deposit?.deposit_required || false,
-        deposit_collection_method: deposit?.deposit_collection_method || "manual",
-        deposit_type: deposit?.deposit_type || "none",
-        deposit_amount:
-          deposit?.deposit_amount === null || deposit?.deposit_amount === undefined
-            ? null
-            : Number(deposit.deposit_amount),
-        deposit_policy: deposit?.deposit_policy || null,
-        manual_deposit_instructions:
-          deposit?.manual_deposit_instructions || null,
-      };
-    });
+        return {
+          ...service,
+          deposit_required: deposit?.deposit_required || service.deposit_required || false,
+          deposit_collection_method:
+            deposit?.deposit_collection_method ||
+            service.deposit_collection_method ||
+            "manual",
+          deposit_type: deposit?.deposit_type || service.deposit_type || "none",
+          deposit_amount:
+            deposit?.deposit_amount === null ||
+            deposit?.deposit_amount === undefined
+              ? service.deposit_amount === null ||
+                service.deposit_amount === undefined
+                ? null
+                : Number(service.deposit_amount)
+              : Number(deposit.deposit_amount),
+          deposit_policy:
+            deposit?.deposit_policy || service.deposit_policy || null,
+          manual_deposit_instructions:
+            deposit?.manual_deposit_instructions ||
+            service.manual_deposit_instructions ||
+            null,
+        };
+      });
+    } else if (depositError) {
+      console.warn("Deposit settings could not load:", depositError.message);
+    }
 
     const { data: questionData } = await supabase
       .from("booking_questions")
@@ -577,15 +608,21 @@ export default function PublicBookingPage() {
     setPageData({
       ...typedData,
       services: servicesWithDeposits,
+      business_hours: Array.isArray(typedData.business_hours)
+        ? typedData.business_hours
+        : [],
       booking_questions: safeQuestions,
     });
 
     if (servicesWithDeposits.length > 0) {
       setSelectedServiceId(servicesWithDeposits[0].id);
+    } else {
+      setSelectedServiceId("");
     }
 
     setIsLoading(false);
   }
+
 
   function resetFormForAnotherRequest() {
     setConfirmationSummary(null);
@@ -803,6 +840,19 @@ export default function PublicBookingPage() {
   return (
     <main className={pageClass}>
       <div className="mx-auto max-w-6xl space-y-6">
+        {/* Public booking language switcher */}
+        <div className="flex justify-end">
+          <div
+            className={`rounded-2xl border p-2 ${
+              isCleanTheme
+                ? "border-slate-200 bg-white"
+                : "border-white/10 bg-white/[0.04]"
+            }`}
+          >
+            <LanguageSwitcher />
+          </div>
+        </div>
+
         <section className={heroCardClass}>
           <div
             className="h-2 w-24 rounded-full"
