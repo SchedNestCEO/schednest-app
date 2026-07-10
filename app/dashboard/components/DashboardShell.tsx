@@ -5,6 +5,8 @@ import { ReactNode, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import NotificationBell from "./NotificationBell";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
+import { useT } from "../../lib/i18n/client";
 
 type DashboardShellProps = {
   children: ReactNode;
@@ -71,12 +73,26 @@ const navItems: NavItem[] = [
   },
 ];
 
+const navLabelKeys: Record<string, string> = {
+  "/dashboard": "nav.dashboard",
+  "/dashboard/profile": "nav.profile",
+  "/dashboard/bookings": "nav.bookings",
+  "/dashboard/requests": "nav.requests",
+  "/dashboard/customers": "nav.customers",
+  "/dashboard/services": "nav.services",
+  "/dashboard/booking-page": "nav.bookingPage",
+  "/dashboard/settings": "nav.settings",
+  "/dashboard/birdy": "nav.birdy",
+  "/dashboard/subscriptions": "nav.subscriptions",
+};
+
 const ADMIN_EMAIL = "hello@schednest.com";
 
 export default function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const t = useT();
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isSchedNestAdmin, setIsSchedNestAdmin] = useState(false);
@@ -205,7 +221,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                     </p>
 
                     <h1 className="mt-2 text-2xl font-black text-white">
-                      SchedNest Founder
+                      {t("brand.founder", "SchedNest Founder")}
                     </h1>
                   </>
                 )}
@@ -238,7 +254,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                <p className="text-xs font-bold text-gray-500">Signed in as</p>
+                <p className="text-xs font-bold text-gray-500">{t("common.signedInAs", "Signed in as")}</p>
 
                 <p className="mt-1 break-words text-sm font-black text-white">
                   {userEmail || "Loading..."}
@@ -267,21 +283,25 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 isSidebarCollapsed ? "justify-center" : ""
               }`}
             >
-              {visibleNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  title={item.label}
-                  aria-label={item.label}
-                  className={
-                    isSidebarCollapsed
-                      ? getCollapsedNavLinkClass(item.href)
-                      : getNavLinkClass(item.href)
-                  }
-                >
-                  {isSidebarCollapsed ? item.shortLabel : item.label}
-                </Link>
-              ))}
+              {visibleNavItems.map((item) => {
+                const itemLabel = t(navLabelKeys[item.href] || item.label, item.label);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={itemLabel}
+                    aria-label={itemLabel}
+                    className={
+                      isSidebarCollapsed
+                        ? getCollapsedNavLinkClass(item.href)
+                        : getNavLinkClass(item.href)
+                    }
+                  >
+                    {isSidebarCollapsed ? item.shortLabel : itemLabel}
+                  </Link>
+                );
+              })}
             </nav>
 
             <button
@@ -294,7 +314,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                   : "mt-8 w-full rounded-2xl border border-white/10 px-4 py-3 text-left text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
               }
             >
-              {isSidebarCollapsed ? "↩" : "Log out"}
+              {isSidebarCollapsed ? "↩" : t("common.logout", "Log out")}
             </button>
           </div>
         </aside>
@@ -306,10 +326,11 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">
                   SchedNest
                 </p>
-                <p className="text-lg font-black text-white">Dashboard</p>
+                <p className="text-lg font-black text-white">{t("nav.dashboard", "Dashboard")}</p>
               </Link>
 
               <div className="flex items-center gap-2">
+                <LanguageSwitcher />
                 <NotificationBell variant="mobile" />
 
                 <button
@@ -359,7 +380,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                       href={item.href}
                       className={getNavLinkClass(item.href)}
                     >
-                      {item.label}
+                      {t(navLabelKeys[item.href] || item.label, item.label)}
                     </Link>
                   ))}
 
@@ -376,7 +397,8 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           </header>
 
           <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-            <div className="relative z-40 mb-6 hidden justify-end lg:flex">
+            <div className="relative z-40 mb-6 hidden justify-end gap-3 lg:flex">
+              <LanguageSwitcher />
               <NotificationBell variant="top" />
             </div>
 

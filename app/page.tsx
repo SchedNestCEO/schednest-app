@@ -1,23 +1,35 @@
+"use client";
+
 import Link from "next/link";
+import LanguageSwitcher from "./components/LanguageSwitcher";
+import { useT } from "./lib/i18n/client";
 
 const features = [
   {
+    titleKey: "features.publicBooking.title",
     title: "Public booking page",
+    descriptionKey: "features.publicBooking.description",
     description:
       "Give customers a simple link where they can request appointments without back-and-forth messages.",
   },
   {
+    titleKey: "features.requests.title",
     title: "Requests and approvals",
+    descriptionKey: "features.requests.description",
     description:
       "Keep every booking request organized as pending, approved, or declined from your owner dashboard.",
   },
   {
+    titleKey: "features.customers.title",
     title: "Customer list",
+    descriptionKey: "features.customers.description",
     description:
       "Automatically build a customer list as people request appointments through your booking page.",
   },
   {
+    titleKey: "features.notifications.title",
     title: "Notifications",
+    descriptionKey: "features.notifications.description",
     description:
       "Send confirmation updates and keep owners aware of new booking activity.",
   },
@@ -75,25 +87,33 @@ const pricingPlans = [
 const steps = [
   {
     number: "01",
+    titleKey: "steps.setup.title",
     title: "Set up your business",
+    descriptionKey: "steps.setup.description",
     description:
       "Add your business name, services, public booking link, and weekly availability.",
   },
   {
     number: "02",
+    titleKey: "steps.share.title",
     title: "Share your booking page",
+    descriptionKey: "steps.share.description",
     description:
       "Send customers one clean link so they can request an appointment anytime.",
   },
   {
     number: "03",
+    titleKey: "steps.approve.title",
     title: "Approve and grow",
+    descriptionKey: "steps.approve.description",
     description:
       "Manage requests, organize customers, and turn scattered bookings into a real system.",
   },
 ];
 
 export default function Home() {
+  const t = useT();
+
   return (
     <main className="min-h-screen bg-[#050807] text-white">
       <section className="relative overflow-hidden px-6 py-6">
@@ -112,24 +132,25 @@ export default function Home() {
                   SchedNest
                 </p>
                 <p className="text-xs text-gray-500">
-                  From first client to full company
+                  {t("brand.tagline", "From first client to full company")}
                 </p>
               </div>
             </Link>
 
             <div className="hidden items-center gap-3 sm:flex">
+              <LanguageSwitcher />
               <Link
                 href="/login"
                 className="rounded-2xl px-4 py-2 text-sm font-bold text-gray-300 transition hover:bg-white/10 hover:text-white"
               >
-                Log in
+                {t("common.login", "Log in")}
               </Link>
 
               <Link
                 href="/signup"
                 className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300"
               >
-                Get started
+                {t("common.getStarted", "Get started")}
               </Link>
             </div>
 
@@ -137,18 +158,18 @@ export default function Home() {
               href="/signup"
               className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300 sm:hidden"
             >
-              Start
+              {t("common.start", "Start")}
             </Link>
           </nav>
 
           <div className="grid gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
             <div>
               <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-200">
-                Start simple. Stay organized. Grow with SchedNest.
+                {t("common.start", "Start")} simple. Stay organized. Grow with SchedNest.
               </div>
 
               <h1 className="mt-8 max-w-5xl text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-                Organize your bookings from first client to full company.
+                {t("home.heroTitle", "Organize your bookings from first client to full company.")}
               </h1>
 
               <p className="mt-7 max-w-2xl text-lg leading-8 text-gray-400">
@@ -162,14 +183,14 @@ export default function Home() {
                   href="/signup"
                   className="rounded-2xl bg-emerald-400 px-6 py-4 text-center text-sm font-black text-black transition hover:bg-emerald-300"
                 >
-                  Start your business dashboard
+                  {t("common.start", "Start")} your business dashboard
                 </Link>
 
                 <Link
                   href="/login"
                   className="rounded-2xl border border-white/10 px-6 py-4 text-center text-sm font-bold text-white transition hover:bg-white/10"
                 >
-                  Log in
+                  {t("common.login", "Log in")}
                 </Link>
               </div>
 
@@ -184,43 +205,43 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">
-                      Today
+                      {t("home.today", "Today")}
                     </p>
                     <h2 className="mt-2 text-2xl font-black">
-                      Booking activity
+                      {t("home.bookingActivity", "Booking activity")}
                     </h2>
                   </div>
 
                   <div className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
-                    Live
+                    {t("home.live", "Live")}
                   </div>
                 </div>
 
                 <div className="mt-6 grid gap-3">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                     <p className="text-sm font-bold text-white">
-                      New request received
+                      {t("home.newRequest", "New request received")}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                      Customer is waiting for approval.
+                      {t("home.customerWaiting", "Customer is waiting for approval.")}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                     <p className="text-sm font-bold text-white">
-                      Appointment approved
+                      {t("home.appointmentApproved", "Appointment approved")}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                      Customer confirmation is ready.
+                      {t("home.confirmationReady", "Customer confirmation is ready.")}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                     <p className="text-sm font-bold text-white">
-                      Customer saved
+                      {t("home.customerSaved", "Customer saved")}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                      Your client list grows automatically.
+                      {t("home.clientListGrows", "Your client list grows automatically.")}
                     </p>
                   </div>
                 </div>
@@ -229,17 +250,17 @@ export default function Home() {
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <p className="text-2xl font-black text-white">3</p>
-                  <p className="mt-1 text-xs text-gray-500">Requests</p>
+                  <p className="mt-1 text-xs text-gray-500">{t("home.requests", "Requests")}</p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <p className="text-2xl font-black text-white">12</p>
-                  <p className="mt-1 text-xs text-gray-500">Customers</p>
+                  <p className="mt-1 text-xs text-gray-500">{t("home.customers", "Customers")}</p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <p className="text-2xl font-black text-white">5</p>
-                  <p className="mt-1 text-xs text-gray-500">Services</p>
+                  <p className="mt-1 text-xs text-gray-500">{t("home.services", "Services")}</p>
                 </div>
               </div>
             </div>
@@ -250,7 +271,7 @@ export default function Home() {
       <section className="border-y border-white/10 bg-white/[0.03] px-6 py-14">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-            Mission
+            {t("home.mission", "Mission")}
           </p>
 
           <h2 className="mt-5 max-w-5xl text-3xl font-black leading-tight sm:text-5xl">
@@ -264,11 +285,11 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-              Why SchedNest
+              {t("home.why", "Why SchedNest")}
             </p>
 
             <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
-              Move from hustle to structure.
+              {t("home.hustleToStructure", "Move from hustle to structure.")}
             </h2>
 
             <p className="mt-5 text-lg leading-8 text-gray-400">
@@ -285,10 +306,10 @@ export default function Home() {
                 className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:border-emerald-400/30 hover:bg-emerald-400/5"
               >
                 <h3 className="text-xl font-black text-white">
-                  {feature.title}
+                  {t(feature.titleKey, feature.title)}
                 </h3>
                 <p className="mt-4 text-sm leading-6 text-gray-400">
-                  {feature.description}
+                  {t(feature.descriptionKey, feature.description)}
                 </p>
               </div>
             ))}
@@ -300,11 +321,11 @@ export default function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-              Founder Beta Pricing
+              {t("home.pricing", "Founder Beta Pricing")}
             </p>
 
             <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
-              Available for the first 25 paid businesses that join.
+              {t("home.pricingTitle", "Available for the first 25 paid businesses that join.")}
             </h2>
 
             <p className="mt-5 text-lg leading-8 text-gray-400">
@@ -378,7 +399,7 @@ export default function Home() {
                       : "border border-white/10 text-white hover:bg-white/10"
                   }`}
                 >
-                  Start with {plan.name}
+                  {t("common.start", "Start")} with {plan.name}
                 </Link>
               </div>
             ))}
@@ -398,11 +419,11 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
-              Vision
+              {t("home.vision", "Vision")}
             </p>
 
             <h2 className="mt-5 text-4xl font-black leading-tight">
-              The business operating system for service providers.
+              {t("home.visionTitle", "The business operating system for service providers.")}
             </h2>
 
             <p className="mt-5 text-base leading-8 text-gray-400">
@@ -423,10 +444,10 @@ export default function Home() {
                   {step.number}
                 </p>
                 <h3 className="mt-2 text-xl font-black text-white">
-                  {step.title}
+                  {t(step.titleKey, step.title)}
                 </h3>
                 <p className="mt-3 text-sm leading-6 text-gray-400">
-                  {step.description}
+                  {t(step.descriptionKey, step.description)}
                 </p>
               </div>
             ))}
@@ -437,11 +458,11 @@ export default function Home() {
       <section className="px-6 pb-24">
         <div className="mx-auto max-w-7xl rounded-[2.5rem] border border-emerald-400/20 bg-emerald-400/10 p-8 text-center sm:p-12">
           <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-200">
-            From first client to full company
+            {t("brand.tagline", "From first client to full company")}
           </p>
 
           <h2 className="mx-auto mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl">
-            Start simple today. Build the system your business will grow into.
+            {t("common.start", "Start")} simple today. Build the system your business will grow into.
           </h2>
 
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -449,14 +470,14 @@ export default function Home() {
               href="/signup"
               className="rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-black text-black transition hover:bg-emerald-300"
             >
-              Get started
+              {t("common.getStarted", "Get started")}
             </Link>
 
             <Link
               href="/login"
               className="rounded-2xl border border-white/10 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10"
             >
-              Log in
+              {t("common.login", "Log in")}
             </Link>
           </div>
         </div>
@@ -464,20 +485,20 @@ export default function Home() {
 
       <footer className="border-t border-white/10 px-6 py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 SchedNest. All rights reserved.</p>
+          <p>© 2026 SchedNest. {t("home.rights", "All rights reserved.")}</p>
 
           <div className="flex flex-wrap gap-4">
             <Link href="/privacy" className="hover:text-white">
-              Privacy
+              {t("common.privacy", "Privacy")}
             </Link>
             <Link href="/terms" className="hover:text-white">
-              Terms
+              {t("common.terms", "Terms")}
             </Link>
             <Link href="/security" className="hover:text-white">
-              Security
+              {t("common.security", "Security")}
             </Link>
             <Link href="/contact" className="hover:text-white">
-              Contact
+              {t("common.contact", "Contact")}
             </Link>
           </div>
         </div>
