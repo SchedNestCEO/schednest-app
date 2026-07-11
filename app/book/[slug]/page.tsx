@@ -1535,7 +1535,7 @@ export default function PublicBookingPage() {
                 <input
                   value={customerName}
                   onChange={(event) => setCustomerName(event.target.value)}
-                  placeholder="{copy.fullName}"
+                  placeholder={copy.fullName}
                   className={inputClass}
                 />
               </div>
@@ -1548,7 +1548,7 @@ export default function PublicBookingPage() {
                   <input
                     value={customerPhone}
                     onChange={(event) => setCustomerPhone(event.target.value)}
-                    placeholder="{copy.phonePlaceholder}"
+                    placeholder={copy.phonePlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -1561,7 +1561,7 @@ export default function PublicBookingPage() {
                     value={customerEmail}
                     onChange={(event) => setCustomerEmail(event.target.value)}
                     type="email"
-                    placeholder="{copy.emailPlaceholder}"
+                    placeholder={copy.emailPlaceholder}
                     className={inputClass}
                   />
                 </div>
@@ -1889,7 +1889,7 @@ export default function PublicBookingPage() {
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="{copy.notesPlaceholder}"
+                  placeholder={copy.notesPlaceholder}
                   className={`${inputClass} min-h-24`}
                 />
               </div>
