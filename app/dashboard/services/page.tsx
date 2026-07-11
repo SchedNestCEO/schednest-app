@@ -988,37 +988,22 @@ export default function ServicesPage() {
   }
 
   async function saveManualPaymentSettings() {
-    const profileForPayments = await getBusinessProfileForManualPayments();
-
-    if (!profileForPayments) {
-      return;
-    }
-
     setIsSavingManualPayments(true);
     setErrorMessage("");
     setSuccessMessage("");
 
-    const { error } = await supabase
-      .from("business_profiles")
-      .update({
-        manual_payments_enabled: manualPaymentSettings.manual_payments_enabled,
-        manual_payment_zelle:
-          manualPaymentSettings.manual_payment_zelle.trim() || null,
-        manual_payment_cash_app:
-          manualPaymentSettings.manual_payment_cash_app.trim() || null,
-        manual_payment_venmo:
-          manualPaymentSettings.manual_payment_venmo.trim() || null,
-        manual_payment_paypal:
-          manualPaymentSettings.manual_payment_paypal.trim() || null,
-        manual_payment_other:
-          manualPaymentSettings.manual_payment_other.trim() || null,
-        manual_payment_qr_url:
-          manualPaymentSettings.manual_payment_qr_url.trim() || null,
-        manual_payment_qr_caption:
-          manualPaymentSettings.manual_payment_qr_caption.trim() || null,
-      })
-      .eq("id", profileForPayments.id)
-      .eq("owner_id", profileForPayments.owner_id);
+    const { data, error } = await supabase.rpc("save_manual_payment_methods", {
+      p_business_id: businessProfile?.id || null,
+      p_manual_payments_enabled:
+        manualPaymentSettings.manual_payments_enabled,
+      p_zelle: manualPaymentSettings.manual_payment_zelle,
+      p_cash_app: manualPaymentSettings.manual_payment_cash_app,
+      p_venmo: manualPaymentSettings.manual_payment_venmo,
+      p_paypal: manualPaymentSettings.manual_payment_paypal,
+      p_other: manualPaymentSettings.manual_payment_other,
+      p_qr_url: manualPaymentSettings.manual_payment_qr_url,
+      p_qr_caption: manualPaymentSettings.manual_payment_qr_caption,
+    });
 
     if (error) {
       setErrorMessage(error.message);
@@ -1026,30 +1011,28 @@ export default function ServicesPage() {
       return;
     }
 
-    setBusinessProfile({
-      ...profileForPayments,
-      manual_payments_enabled: manualPaymentSettings.manual_payments_enabled,
-      manual_payment_zelle:
-        manualPaymentSettings.manual_payment_zelle.trim() || null,
-      manual_payment_cash_app:
-        manualPaymentSettings.manual_payment_cash_app.trim() || null,
-      manual_payment_venmo:
-        manualPaymentSettings.manual_payment_venmo.trim() || null,
-      manual_payment_paypal:
-        manualPaymentSettings.manual_payment_paypal.trim() || null,
-      manual_payment_other:
-        manualPaymentSettings.manual_payment_other.trim() || null,
-      manual_payment_qr_url:
-        manualPaymentSettings.manual_payment_qr_url.trim() || null,
-      manual_payment_qr_caption:
-        manualPaymentSettings.manual_payment_qr_caption.trim() || null,
-    });
+    const savedProfile = data as BusinessProfile | null;
+
+    if (savedProfile) {
+      setBusinessProfile(savedProfile);
+      setManualPaymentSettings({
+        manual_payments_enabled:
+          savedProfile.manual_payments_enabled !== false,
+        manual_payment_zelle: savedProfile.manual_payment_zelle || "",
+        manual_payment_cash_app: savedProfile.manual_payment_cash_app || "",
+        manual_payment_venmo: savedProfile.manual_payment_venmo || "",
+        manual_payment_paypal: savedProfile.manual_payment_paypal || "",
+        manual_payment_other: savedProfile.manual_payment_other || "",
+        manual_payment_qr_url: savedProfile.manual_payment_qr_url || "",
+        manual_payment_qr_caption:
+          savedProfile.manual_payment_qr_caption || "",
+      });
+    }
 
     setSuccessMessage(
       t("manualPayments.saved", "Manual payment methods saved.")
     );
 
-    await loadServices();
     setIsSavingManualPayments(false);
   }
 
