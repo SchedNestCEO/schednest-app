@@ -873,6 +873,38 @@ export default function ServicesPage() {
     setDeletingImageId(null);
   }
 
+  async function getBusinessProfileForManualPayments() {
+    if (businessProfile) return businessProfile;
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setErrorMessage("Unable to load user session. Please sign in again.");
+      return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("business_profiles")
+      .select(
+        "id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption"
+      )
+      .eq("owner_id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      setErrorMessage("Business profile not found. Refresh and try again.");
+      return null;
+    }
+
+    const safeProfile = profile as BusinessProfile;
+    setBusinessProfile(safeProfile);
+
+    return safeProfile;
+  }
+
   function updateManualPaymentSetting(
     field: keyof ManualPaymentSettings,
     value: string | boolean
@@ -891,8 +923,9 @@ export default function ServicesPage() {
 
     if (!file) return;
 
-    if (!businessProfile) {
-      setErrorMessage("Business profile not loaded yet.");
+    const profileForPayments = await getBusinessProfileForManualPayments();
+
+    if (!profileForPayments) {
       return;
     }
 
@@ -926,7 +959,7 @@ export default function ServicesPage() {
       .replace(/[^a-z0-9.-]/g, "-")
       .replace(/-+/g, "-");
 
-    const filePath = `${user.id}/${businessProfile.id}/${Date.now()}-${safeFileName}`;
+    const filePath = `${user.id}/${profileForPayments.id}/${Date.now()}-${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("payment-qr-codes")
@@ -955,8 +988,9 @@ export default function ServicesPage() {
   }
 
   async function saveManualPaymentSettings() {
-    if (!businessProfile) {
-      setErrorMessage("Business profile not loaded yet.");
+    const profileForPayments = await getBusinessProfileForManualPayments();
+
+    if (!profileForPayments) {
       return;
     }
 
@@ -983,14 +1017,33 @@ export default function ServicesPage() {
         manual_payment_qr_caption:
           manualPaymentSettings.manual_payment_qr_caption.trim() || null,
       })
-      .eq("id", businessProfile.id)
-      .eq("owner_id", businessProfile.owner_id);
+      .eq("id", profileForPayments.id)
+      .eq("owner_id", profileForPayments.owner_id);
 
     if (error) {
       setErrorMessage(error.message);
       setIsSavingManualPayments(false);
       return;
     }
+
+    setBusinessProfile({
+      ...profileForPayments,
+      manual_payments_enabled: manualPaymentSettings.manual_payments_enabled,
+      manual_payment_zelle:
+        manualPaymentSettings.manual_payment_zelle.trim() || null,
+      manual_payment_cash_app:
+        manualPaymentSettings.manual_payment_cash_app.trim() || null,
+      manual_payment_venmo:
+        manualPaymentSettings.manual_payment_venmo.trim() || null,
+      manual_payment_paypal:
+        manualPaymentSettings.manual_payment_paypal.trim() || null,
+      manual_payment_other:
+        manualPaymentSettings.manual_payment_other.trim() || null,
+      manual_payment_qr_url:
+        manualPaymentSettings.manual_payment_qr_url.trim() || null,
+      manual_payment_qr_caption:
+        manualPaymentSettings.manual_payment_qr_caption.trim() || null,
+    });
 
     setSuccessMessage(
       t("manualPayments.saved", "Manual payment methods saved.")
@@ -1848,7 +1901,7 @@ export default function ServicesPage() {
               <button
                 type="button"
                 onClick={saveManualPaymentSettings}
-                disabled={isSavingManualPayments}
+                disabled={isSavingManualPayments || isLoading}
                 className="mt-4 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSavingManualPayments
