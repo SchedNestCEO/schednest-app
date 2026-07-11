@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
@@ -535,6 +535,7 @@ export default function PublicBookingPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
   const supabase = useMemo(() => createClient(), []);
+  const bookingDateInputRef = useRef<HTMLInputElement | null>(null);
   const t = useT();
   const { language } = useLanguage();
   const copy = publicBookingCopy[language];
@@ -800,6 +801,20 @@ export default function PublicBookingPage() {
     setIsLoading(false);
   }
 
+
+  function openBookingDatePicker() {
+    const dateInput = bookingDateInputRef.current;
+
+    if (!dateInput) return;
+
+    dateInput.focus();
+
+    const pickerInput = dateInput as HTMLInputElement & {
+      showPicker?: () => void;
+    };
+
+    pickerInput.showPicker?.();
+  }
 
   function resetFormForAnotherRequest() {
     setConfirmationSummary(null);
@@ -1549,7 +1564,7 @@ export default function PublicBookingPage() {
                     value={customerPhone}
                     onChange={(event) => setCustomerPhone(event.target.value)}
                     placeholder={copy.phonePlaceholder}
-                    className={inputClass}
+                    className={`${inputClass} cursor-pointer`}
                   />
                 </div>
 
@@ -1568,11 +1583,23 @@ export default function PublicBookingPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={openBookingDatePicker}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openBookingDatePicker();
+                    }
+                  }}
+                  className="cursor-pointer"
+                >
+                  <label className={`cursor-pointer text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
                     {isFlexibleRequest ? copy.preferredDate : copy.date}
                   </label>
                   <input
+                    ref={bookingDateInputRef}
                     value={bookingDate}
                     onChange={(event) => {
                       setBookingDate(event.target.value);
