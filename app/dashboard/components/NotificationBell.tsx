@@ -21,6 +21,7 @@ type BookingNotification = {
 };
 
 type BookingStatusById = Record<string, string>;
+type BookingStartTimesById = Record<string, string | null>;
 
 const REQUESTED_EVENT = "booking.requested";
 
@@ -34,6 +35,8 @@ export default function NotificationBell({
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState<BookingNotification[]>([]);
   const [bookingStatuses, setBookingStatuses] = useState<BookingStatusById>({});
+  const [bookingStartTimes, setBookingStartTimes] =
+    useState<BookingStartTimesById>({});
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -84,20 +87,27 @@ export default function NotificationBell({
     if (bookingIds.length > 0) {
       const { data: bookingsData } = await supabase
         .from("bookings")
-        .select("id, status")
+        .select("id, status, start_time")
         .in("id", bookingIds);
 
       const nextStatuses: BookingStatusById = {};
+      const nextStartTimes: BookingStartTimesById = {};
 
       for (const booking of bookingsData || []) {
         if (booking.id && booking.status) {
           nextStatuses[booking.id] = booking.status;
         }
+
+        if (booking.id) {
+          nextStartTimes[booking.id] = booking.start_time || null;
+        }
       }
 
       setBookingStatuses(nextStatuses);
+      setBookingStartTimes(nextStartTimes);
     } else {
       setBookingStatuses({});
+      setBookingStartTimes({});
     }
 
     setIsLoading(false);
@@ -264,6 +274,23 @@ export default function NotificationBell({
     return `${differenceInDays}d ago`;
   }
 
+  function getBookingDateTimeLabel(dateString?: string | null) {
+    if (!dateString) return "";
+
+    const bookingDate = new Date(dateString);
+
+    if (Number.isNaN(bookingDate.getTime())) return "";
+
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(bookingDate);
+  }
+
   function getStatusLabel(status?: string | null) {
     if (!status) return "Pending";
 
@@ -386,6 +413,11 @@ export default function NotificationBell({
                   : null;
 
                 const isManageable = canManageRequest(notification);
+                const bookingStartTime = notification.booking_id
+                  ? bookingStartTimes[notification.booking_id]
+                  : null;
+                const bookingDateTimeLabel =
+                  getBookingDateTimeLabel(bookingStartTime);
 
                 return (
                   <div
@@ -400,6 +432,12 @@ export default function NotificationBell({
                         <p className="mt-1 text-xs text-gray-500">
                           {getTimeLabel(notification.created_at)}
                         </p>
+
+                        {bookingDateTimeLabel && (
+                          <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-black text-emerald-200">
+                            Appointment: {bookingDateTimeLabel}
+                          </p>
+                        )}
                       </div>
 
                       {notification.event_type === REQUESTED_EVENT && (
