@@ -749,6 +749,29 @@ export default function PublicBookingPage() {
     }
 
     const typedData = data as PublicBookingPageData;
+
+    const { data: manualPaymentData, error: manualPaymentError } =
+      await supabase.rpc("get_public_manual_payment_methods", {
+        p_business_id: typedData.business.id,
+      });
+
+    const businessWithManualPayments =
+      !manualPaymentError &&
+      manualPaymentData &&
+      typeof manualPaymentData === "object"
+        ? {
+            ...typedData.business,
+            ...(manualPaymentData as Partial<PublicBusiness>),
+          }
+        : typedData.business;
+
+    if (manualPaymentError) {
+      console.warn(
+        "Manual payment methods could not load:",
+        manualPaymentError.message
+      );
+    }
+
     const baseServices = Array.isArray(typedData.services)
       ? typedData.services
       : [];
@@ -829,6 +852,7 @@ export default function PublicBookingPage() {
 
     setPageData({
       ...typedData,
+      business: businessWithManualPayments,
       services: servicesWithDeposits,
       business_hours: Array.isArray(typedData.business_hours)
         ? typedData.business_hours
