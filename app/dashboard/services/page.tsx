@@ -11,6 +11,14 @@ type BusinessProfile = {
   owner_id: string;
   business_name: string | null;
   slug: string | null;
+  manual_payments_enabled: boolean | null;
+  manual_payment_zelle: string | null;
+  manual_payment_cash_app: string | null;
+  manual_payment_venmo: string | null;
+  manual_payment_paypal: string | null;
+  manual_payment_other: string | null;
+  manual_payment_qr_url: string | null;
+  manual_payment_qr_caption: string | null;
 };
 
 type Service = {
@@ -79,6 +87,17 @@ type ServiceSettingsEdit = {
   deposit_amount: string;
   deposit_policy: string;
   manual_deposit_instructions: string;
+};
+
+type ManualPaymentSettings = {
+  manual_payments_enabled: boolean;
+  manual_payment_zelle: string;
+  manual_payment_cash_app: string;
+  manual_payment_venmo: string;
+  manual_payment_paypal: string;
+  manual_payment_other: string;
+  manual_payment_qr_url: string;
+  manual_payment_qr_caption: string;
 };
 
 function formatMoney(value: number | null) {
@@ -408,6 +427,19 @@ export default function ServicesPage() {
   const [savingSampleId, setSavingSampleId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [manualPaymentSettings, setManualPaymentSettings] =
+    useState<ManualPaymentSettings>({
+      manual_payments_enabled: true,
+      manual_payment_zelle: "",
+      manual_payment_cash_app: "",
+      manual_payment_venmo: "",
+      manual_payment_paypal: "",
+      manual_payment_other: "",
+      manual_payment_qr_url: "",
+      manual_payment_qr_caption: "",
+    });
+  const [isSavingManualPayments, setIsSavingManualPayments] = useState(false);
+  const [isUploadingPaymentQr, setIsUploadingPaymentQr] = useState(false);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -841,6 +873,133 @@ export default function ServicesPage() {
     setDeletingImageId(null);
   }
 
+  function updateManualPaymentSetting(
+    field: keyof ManualPaymentSettings,
+    value: string | boolean
+  ) {
+    setManualPaymentSettings((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  async function handleUploadPaymentQr(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!businessProfile) {
+      setErrorMessage("Business profile not loaded yet.");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Please upload an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage("QR code image must be 5MB or smaller.");
+      return;
+    }
+
+    setIsUploadingPaymentQr(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setErrorMessage("Please sign in again before uploading.");
+      setIsUploadingPaymentQr(false);
+      return;
+    }
+
+    const safeFileName = file.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]/g, "-")
+      .replace(/-+/g, "-");
+
+    const filePath = `${user.id}/${businessProfile.id}/${Date.now()}-${safeFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("payment-qr-codes")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      setErrorMessage(uploadError.message);
+      setIsUploadingPaymentQr(false);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("payment-qr-codes")
+      .getPublicUrl(filePath);
+
+    setManualPaymentSettings((current) => ({
+      ...current,
+      manual_payment_qr_url: publicUrlData.publicUrl,
+    }));
+
+    setSuccessMessage(t("manualPayments.uploaded", "Payment QR code uploaded."));
+    setIsUploadingPaymentQr(false);
+  }
+
+  async function saveManualPaymentSettings() {
+    if (!businessProfile) {
+      setErrorMessage("Business profile not loaded yet.");
+      return;
+    }
+
+    setIsSavingManualPayments(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const { error } = await supabase
+      .from("business_profiles")
+      .update({
+        manual_payments_enabled: manualPaymentSettings.manual_payments_enabled,
+        manual_payment_zelle:
+          manualPaymentSettings.manual_payment_zelle.trim() || null,
+        manual_payment_cash_app:
+          manualPaymentSettings.manual_payment_cash_app.trim() || null,
+        manual_payment_venmo:
+          manualPaymentSettings.manual_payment_venmo.trim() || null,
+        manual_payment_paypal:
+          manualPaymentSettings.manual_payment_paypal.trim() || null,
+        manual_payment_other:
+          manualPaymentSettings.manual_payment_other.trim() || null,
+        manual_payment_qr_url:
+          manualPaymentSettings.manual_payment_qr_url.trim() || null,
+        manual_payment_qr_caption:
+          manualPaymentSettings.manual_payment_qr_caption.trim() || null,
+      })
+      .eq("id", businessProfile.id)
+      .eq("owner_id", businessProfile.owner_id);
+
+    if (error) {
+      setErrorMessage(error.message);
+      setIsSavingManualPayments(false);
+      return;
+    }
+
+    setSuccessMessage(
+      t("manualPayments.saved", "Manual payment methods saved.")
+    );
+
+    await loadServices();
+    setIsSavingManualPayments(false);
+  }
+
   async function loadServices() {
     setIsLoading(true);
     setErrorMessage("");
@@ -858,7 +1017,7 @@ export default function ServicesPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("business_profiles")
-      .select("id, owner_id, business_name, slug")
+      .select("id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
       .eq("owner_id", user.id)
       .single();
 
@@ -870,6 +1029,16 @@ export default function ServicesPage() {
 
     const safeProfile = profile as BusinessProfile;
     setBusinessProfile(safeProfile);
+    setManualPaymentSettings({
+      manual_payments_enabled: safeProfile.manual_payments_enabled !== false,
+      manual_payment_zelle: safeProfile.manual_payment_zelle || "",
+      manual_payment_cash_app: safeProfile.manual_payment_cash_app || "",
+      manual_payment_venmo: safeProfile.manual_payment_venmo || "",
+      manual_payment_paypal: safeProfile.manual_payment_paypal || "",
+      manual_payment_other: safeProfile.manual_payment_other || "",
+      manual_payment_qr_url: safeProfile.manual_payment_qr_url || "",
+      manual_payment_qr_caption: safeProfile.manual_payment_qr_caption || "",
+    });
 
     const { data: subscriptionData } = await supabase
       .from("business_subscriptions")
@@ -1481,6 +1650,212 @@ export default function ServicesPage() {
             <p className="mt-4 text-4xl font-black text-white">
               {isLoading ? "..." : visibleSamples.length}
             </p>
+          </div>
+        </section>
+
+        <section className="rounded-[2rem] border border-yellow-400/20 bg-yellow-400/10 p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-yellow-200">
+                {t("manualPayments.title", "Manual payment methods")}
+              </p>
+
+              <h2 className="mt-3 text-2xl font-black text-white">
+                Add payment usernames and QR code.
+              </h2>
+
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
+                {t(
+                  "manualPayments.description",
+                  "Add the payment usernames, links, or QR code customers should use when a manual deposit is required."
+                )}
+              </p>
+            </div>
+
+            <label className="flex w-fit items-center gap-3 rounded-2xl border border-yellow-400/20 bg-black/20 px-4 py-3 text-sm font-black text-yellow-100">
+              <input
+                type="checkbox"
+                checked={manualPaymentSettings.manual_payments_enabled}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payments_enabled",
+                    event.target.checked
+                  )
+                }
+                className="h-5 w-5 accent-emerald-400"
+              />
+              {t(
+                "manualPayments.enabled",
+                "Show manual payment methods on booking page"
+              )}
+            </label>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                {t("manualPayments.zelle", "Zelle")}
+              </label>
+              <input
+                value={manualPaymentSettings.manual_payment_zelle}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payment_zelle",
+                    event.target.value
+                  )
+                }
+                placeholder="Example: business@email.com"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                {t("manualPayments.cashApp", "Cash App")}
+              </label>
+              <input
+                value={manualPaymentSettings.manual_payment_cash_app}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payment_cash_app",
+                    event.target.value
+                  )
+                }
+                placeholder="Example: $BusinessName"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                {t("manualPayments.venmo", "Venmo")}
+              </label>
+              <input
+                value={manualPaymentSettings.manual_payment_venmo}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payment_venmo",
+                    event.target.value
+                  )
+                }
+                placeholder="Example: @BusinessName"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                {t("manualPayments.paypal", "PayPal")}
+              </label>
+              <input
+                value={manualPaymentSettings.manual_payment_paypal}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payment_paypal",
+                    event.target.value
+                  )
+                }
+                placeholder="Example: paypal.me/BusinessName or email"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="text-sm font-medium text-gray-300">
+              {t("manualPayments.other", "Other payment instructions")}
+            </label>
+            <textarea
+              value={manualPaymentSettings.manual_payment_other}
+              onChange={(event) =>
+                updateManualPaymentSetting(
+                  "manual_payment_other",
+                  event.target.value
+                )
+              }
+              placeholder="Example: Apple Pay, bank transfer, or special instructions."
+              className="mt-2 min-h-24 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-[0.8fr_1.2fr]">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-sm font-black text-white">
+                {t("manualPayments.qrCode", "Payment QR code")}
+              </p>
+
+              {manualPaymentSettings.manual_payment_qr_url ? (
+                <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white">
+                  <img
+                    src={manualPaymentSettings.manual_payment_qr_url}
+                    alt={
+                      manualPaymentSettings.manual_payment_qr_caption ||
+                      t("manualPayments.qrCode", "Payment QR code")
+                    }
+                    className="max-h-72 w-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-5 text-sm leading-6 text-gray-400">
+                  No QR code uploaded yet.
+                </div>
+              )}
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <label className="w-fit cursor-pointer rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-black text-black transition hover:bg-emerald-300">
+                  {isUploadingPaymentQr
+                    ? "Uploading..."
+                    : t("manualPayments.uploadQr", "Upload QR code")}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleUploadPaymentQr}
+                    disabled={isUploadingPaymentQr}
+                    className="hidden"
+                  />
+                </label>
+
+                {manualPaymentSettings.manual_payment_qr_url && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateManualPaymentSetting("manual_payment_qr_url", "")
+                    }
+                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    {t("manualPayments.removeQr", "Remove QR code")}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-300">
+                {t("manualPayments.qrCaption", "QR code caption")}
+              </label>
+              <input
+                value={manualPaymentSettings.manual_payment_qr_caption}
+                onChange={(event) =>
+                  updateManualPaymentSetting(
+                    "manual_payment_qr_caption",
+                    event.target.value
+                  )
+                }
+                placeholder="Example: Scan to pay deposit"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+              />
+
+              <button
+                type="button"
+                onClick={saveManualPaymentSettings}
+                disabled={isSavingManualPayments}
+                className="mt-4 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSavingManualPayments
+                  ? t("manualPayments.saving", "Saving payment methods...")
+                  : t("manualPayments.save", "Save payment methods")}
+              </button>
+            </div>
           </div>
         </section>
 

@@ -21,6 +21,14 @@ type PublicBusiness = {
   brand_primary_color: string | null;
   brand_accent_color: string | null;
   booking_page_theme: string | null;
+  manual_payments_enabled: boolean | null;
+  manual_payment_zelle: string | null;
+  manual_payment_cash_app: string | null;
+  manual_payment_venmo: string | null;
+  manual_payment_paypal: string | null;
+  manual_payment_other: string | null;
+  manual_payment_qr_url: string | null;
+  manual_payment_qr_caption: string | null;
 };
 
 type PublicServiceSampleImage = {
@@ -524,6 +532,42 @@ function normalizeQuestionOptions(value: unknown) {
   }
 
   return [];
+}
+
+function getManualPaymentRows(business: PublicBusiness | null | undefined) {
+  if (!business) return [];
+
+  return [
+    {
+      label: "Zelle",
+      value: business.manual_payment_zelle,
+    },
+    {
+      label: "Cash App",
+      value: business.manual_payment_cash_app,
+    },
+    {
+      label: "Venmo",
+      value: business.manual_payment_venmo,
+    },
+    {
+      label: "PayPal",
+      value: business.manual_payment_paypal,
+    },
+    {
+      label: "Other",
+      value: business.manual_payment_other,
+    },
+  ].filter((item) => item.value && item.value.trim());
+}
+
+function hasManualPaymentDetails(business: PublicBusiness | null | undefined) {
+  if (!business || business.manual_payments_enabled === false) return false;
+
+  return (
+    getManualPaymentRows(business).length > 0 ||
+    Boolean(getSafeImageUrl(business.manual_payment_qr_url))
+  );
 }
 
 function isIntakeAnswerMissing(value: string | boolean | undefined) {
@@ -1171,7 +1215,7 @@ export default function PublicBookingPage() {
                 </h2>
 
                 <p className={`mt-3 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
-                  Your booking request was sent to{" "}
+                  {copy.sendRequest}{" "}
                   {confirmationSummary.businessName}.{" "}
                   {confirmationSummary.isFlexibleRequest
                     ? copy.flexibleDescription
@@ -1225,8 +1269,8 @@ export default function PublicBookingPage() {
               >
                 <p className={`text-xs font-bold uppercase tracking-[0.2em] ${softTextClass}`}>
                   {confirmationSummary.isFlexibleRequest
-                    ? "Preferred Time"
-                    : "{copy.requestedTime}"}
+                    ? copy.preferredTime
+                    : copy.requestedTime}
                 </p>
                 <p className={`mt-2 text-lg font-black ${titleTextClass}`}>
                   {formatDateLabel(confirmationSummary.bookingDate, language)}
@@ -1309,7 +1353,7 @@ export default function PublicBookingPage() {
         <section className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
           <div className={cardClass}>
             <p className="text-sm font-black" style={{ color: primaryColor }}>
-              {businessHoursEnabled ? "{copy.businessHours}" : "{copy.byAppointment}"}
+              {businessHoursEnabled ? copy.businessHours : copy.byAppointment}
             </p>
 
             {businessHoursEnabled && pageData.business_hours.length > 0 ? (
@@ -1351,9 +1395,7 @@ export default function PublicBookingPage() {
                   {copy.flexibleScheduling}
                 </p>
                 <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
-                  This business accepts preferred appointment times. Request a
-                  date and time, and the business will confirm or respond with a
-                  time that works.
+                  {copy.flexibleSchedulingDescription}
                 </p>
               </div>
             )}
@@ -1487,7 +1529,7 @@ export default function PublicBookingPage() {
                                 : "bg-white/10 text-gray-300"
                           }`}
                         >
-                          {isSelected ? "Selected" : copy.chooseService}
+                          {isSelected ? copy.selected : copy.chooseServiceButton}
                         </span>
                       </button>
                     );
@@ -1711,8 +1753,8 @@ export default function PublicBookingPage() {
                   </p>
                   <p className={`mt-1 text-xs ${softTextClass}`}>
                     {isFlexibleRequest
-                      ? "{copy.preferredTimeSent}"
-                      : "{copy.pendingUntilConfirmed}"}
+                      ? copy.preferredTimeSent
+                      : copy.pendingUntilConfirmed}
                   </p>
                 </div>
               )}
@@ -1729,8 +1771,7 @@ export default function PublicBookingPage() {
                     {copy.intakeTitle}
                   </p>
                   <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
-                    These questions help the business prepare before confirming
-                    your request.
+                    {copy.intakeDescription}
                   </p>
 
                   <div className="mt-4 grid gap-4">
@@ -1883,6 +1924,84 @@ export default function PublicBookingPage() {
                         </p>
                       </div>
                     )}
+
+                  {selectedService.deposit_collection_method === "manual" &&
+                    hasManualPaymentDetails(pageData.business) && (
+                      <div
+                        className={`mt-4 rounded-2xl border p-4 ${
+                          isCleanTheme
+                            ? "border-yellow-200 bg-white"
+                            : "border-white/10 bg-black/20"
+                        }`}
+                      >
+                        <p className={`text-xs font-black uppercase tracking-[0.2em] ${softTextClass}`}>
+                          {t(
+                            "manualPayments.publicTitle",
+                            "Ways to send your manual deposit"
+                          )}
+                        </p>
+
+                        <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                          {t(
+                            "manualPayments.publicDescription",
+                            "Use one of the payment methods below, then the business will mark your deposit as received."
+                          )}
+                        </p>
+
+                        {getManualPaymentRows(pageData.business).length > 0 && (
+                          <div className="mt-4 grid gap-2">
+                            {getManualPaymentRows(pageData.business).map(
+                              (paymentMethod) => (
+                                <div
+                                  key={paymentMethod.label}
+                                  className={`rounded-2xl border px-4 py-3 ${
+                                    isCleanTheme
+                                      ? "border-yellow-200 bg-yellow-50"
+                                      : "border-white/10 bg-black/30"
+                                  }`}
+                                >
+                                  <p className={`text-xs font-black uppercase tracking-[0.18em] ${softTextClass}`}>
+                                    {paymentMethod.label}
+                                  </p>
+                                  <p className={`mt-1 break-words text-sm font-black ${titleTextClass}`}>
+                                    {paymentMethod.value}
+                                  </p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+
+                        {getSafeImageUrl(pageData.business.manual_payment_qr_url) && (
+                          <div
+                            className={`mt-4 overflow-hidden rounded-2xl border ${
+                              isCleanTheme
+                                ? "border-yellow-200 bg-white"
+                                : "border-white/10 bg-white"
+                            }`}
+                          >
+                            <img
+                              src={getSafeImageUrl(
+                                pageData.business.manual_payment_qr_url
+                              )}
+                              alt={
+                                pageData.business.manual_payment_qr_caption ||
+                                t("manualPayments.qrCode", "Payment QR code")
+                              }
+                              className="max-h-80 w-full object-contain"
+                            />
+
+                            {pageData.business.manual_payment_qr_caption && (
+                              <p className="border-t border-slate-200 px-4 py-3 text-center text-sm font-bold text-slate-700">
+                                {pageData.business.manual_payment_qr_caption}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+
 
                   <label
                     className={`mt-4 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
