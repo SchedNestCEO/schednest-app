@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-import { useT } from "../../lib/i18n/client";
+import { useLanguage, useT } from "../../lib/i18n/client";
 
 type BookingTimeMode = "fixed_hours" | "flexible_requests";
 
@@ -103,15 +103,190 @@ type ConfirmationSummary = {
   manualDepositInstructions: string | null;
 };
 
-const days = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const publicBookingCopy = {
+  en: {
+    schednestBooking: "SchedNest Booking",
+    bookWith: "Book with",
+    fallbackBusiness: "this business",
+    fixedDescription:
+      "Choose a service and available time. Your request is sent to the business for confirmation.",
+    flexibleDescription:
+      "Choose a service, request your preferred time, and the business will confirm or offer another time.",
+    chooseService: "Choose service",
+    requestTime: "Request time",
+    pickTime: "Pick time",
+    sendRequest: "Send request",
+    pickWhatYouNeed: "Pick what you need",
+    selectDateTime: "Select date and time",
+    contactInfoReady: "Contact info ready",
+    addContactInfo: "Add name and contact info",
+    businessHours: "Business Hours",
+    byAppointment: "By Appointment",
+    closed: "Closed",
+    flexibleScheduling: "Flexible scheduling",
+    flexibleSchedulingDescription:
+      "This business accepts preferred appointment times. Request a date and time, and the business will confirm or respond with a time that works.",
+    requestAppointment: "Request Appointment",
+    chooseBookingDetails: "Choose your booking details",
+    noServicesTitle: "No services available yet.",
+    noServicesDescription:
+      "This business has not published any services for online booking yet. Use the contact information above to reach out directly.",
+    service: "Service",
+    pickService: "Pick the service you want to request.",
+    selected: "Selected",
+    chooseServiceButton: "Choose service",
+    selectedServiceGallery: "Selected service gallery",
+    yourName: "Your name",
+    fullName: "Your full name",
+    phone: "Phone",
+    email: "Email",
+    phoneOrEmailRequired: "or email required",
+    emailOrPhoneRequired: "or phone required",
+    phonePlaceholder: "Phone number",
+    emailPlaceholder: "Email address",
+    preferredDate: "Preferred date",
+    date: "Date",
+    preferredTime: "Preferred time",
+    availableTime: "Available time",
+    chooseDateFirst: "Choose a date first",
+    choosePreferredTime: "Choose preferred time",
+    chooseAvailableTime: "Choose an available time",
+    noAvailableTimes: "No available times for this day",
+    closedOn: "This business is closed on",
+    noTimesForService:
+      "No times are available for the selected service on this day.",
+    flexibleTimeNotice:
+      "This is a preferred time request. The business may confirm it or respond with another time.",
+    requestSummary: "Request summary",
+    pendingUntilConfirmed:
+      "This appointment will be pending until the business confirms it.",
+    preferredTimeSent:
+      "This preferred time will be sent to the business for review.",
+    intakeTitle: "A few details for this service",
+    intakeDescription:
+      "These questions help the business prepare before confirming your request.",
+    chooseOption: "Choose an option",
+    yes: "Yes",
+    notes: "Notes",
+    notesPlaceholder: "Anything the business should know?",
+    sendingRequest: "Sending request...",
+    sendPreferredTimeRequest: "Send preferred time request",
+    sendBookingRequest: "Send booking request",
+    noPaymentNotice:
+      "No payment is collected here. The business will review your request and follow up using the contact information you provide.",
+    requestReceived: "Request Received",
+    thanks: "Thanks",
+    requestAnotherTime: "Request another time",
+    requestedTime: "Requested Time",
+    noteSent: "Note Sent",
+    whatHappensNext: "What happens next?",
+    confirmationFixed:
+      "This is not confirmed yet. Once the business approves or declines the request, you may receive an update from the business.",
+    confirmationFlexible:
+      "This is a preferred time request, not a confirmed appointment. The business may approve it or respond with a different time for that date.",
+    days: [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ],
+  },
+  es: {
+    schednestBooking: "Reservas de SchedNest",
+    bookWith: "Reserva con",
+    fallbackBusiness: "este negocio",
+    fixedDescription:
+      "Elige un servicio y una hora disponible. Tu solicitud será enviada al negocio para confirmación.",
+    flexibleDescription:
+      "Elige un servicio, solicita tu horario preferido y el negocio confirmará o propondrá otra hora.",
+    chooseService: "Elegir servicio",
+    requestTime: "Solicitar hora",
+    pickTime: "Elegir hora",
+    sendRequest: "Enviar solicitud",
+    pickWhatYouNeed: "Elige lo que necesitas",
+    selectDateTime: "Selecciona fecha y hora",
+    contactInfoReady: "Información lista",
+    addContactInfo: "Agrega nombre y contacto",
+    businessHours: "Horario del negocio",
+    byAppointment: "Por cita",
+    closed: "Cerrado",
+    flexibleScheduling: "Horario flexible",
+    flexibleSchedulingDescription:
+      "Este negocio acepta horarios preferidos. Solicita una fecha y hora, y el negocio confirmará o responderá con una hora que funcione.",
+    requestAppointment: "Solicitar cita",
+    chooseBookingDetails: "Elige los detalles de tu reserva",
+    noServicesTitle: "No hay servicios disponibles todavía.",
+    noServicesDescription:
+      "Este negocio aún no ha publicado servicios para reservar en línea. Usa la información de contacto para comunicarte directamente.",
+    service: "Servicio",
+    pickService: "Elige el servicio que quieres solicitar.",
+    selected: "Seleccionado",
+    chooseServiceButton: "Elegir servicio",
+    selectedServiceGallery: "Galería del servicio seleccionado",
+    yourName: "Tu nombre",
+    fullName: "Tu nombre completo",
+    phone: "Teléfono",
+    email: "Correo electrónico",
+    phoneOrEmailRequired: "o correo requerido",
+    emailOrPhoneRequired: "o teléfono requerido",
+    phonePlaceholder: "Número de teléfono",
+    emailPlaceholder: "Correo electrónico",
+    preferredDate: "Fecha preferida",
+    date: "Fecha",
+    preferredTime: "Hora preferida",
+    availableTime: "Hora disponible",
+    chooseDateFirst: "Elige una fecha primero",
+    choosePreferredTime: "Elige una hora preferida",
+    chooseAvailableTime: "Elige una hora disponible",
+    noAvailableTimes: "No hay horarios disponibles para este día",
+    closedOn: "Este negocio está cerrado el",
+    noTimesForService:
+      "No hay horarios disponibles para el servicio seleccionado en este día.",
+    flexibleTimeNotice:
+      "Esta es una solicitud de horario preferido. El negocio puede confirmarlo o responder con otra hora.",
+    requestSummary: "Resumen de solicitud",
+    pendingUntilConfirmed:
+      "Esta cita quedará pendiente hasta que el negocio la confirme.",
+    preferredTimeSent:
+      "Este horario preferido será enviado al negocio para revisión.",
+    intakeTitle: "Algunos detalles para este servicio",
+    intakeDescription:
+      "Estas preguntas ayudan al negocio a prepararse antes de confirmar tu solicitud.",
+    chooseOption: "Elige una opción",
+    yes: "Sí",
+    notes: "Notas",
+    notesPlaceholder: "¿Algo que el negocio deba saber?",
+    sendingRequest: "Enviando solicitud...",
+    sendPreferredTimeRequest: "Enviar solicitud de horario preferido",
+    sendBookingRequest: "Enviar solicitud de reserva",
+    noPaymentNotice:
+      "No se cobra ningún pago aquí. El negocio revisará tu solicitud y te contactará usando la información que proporcionaste.",
+    requestReceived: "Solicitud recibida",
+    thanks: "Gracias",
+    requestAnotherTime: "Solicitar otra hora",
+    requestedTime: "Hora solicitada",
+    noteSent: "Nota enviada",
+    whatHappensNext: "¿Qué pasa después?",
+    confirmationFixed:
+      "Esto aún no está confirmado. Cuando el negocio apruebe o rechace la solicitud, podrías recibir una actualización.",
+    confirmationFlexible:
+      "Esta es una solicitud de horario preferido, no una cita confirmada. El negocio puede aprobarla o responder con otra hora para esa fecha.",
+    days: [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ],
+  },
+};
+
+const days = publicBookingCopy.en.days;
 
 const preferredTimeOptions = Array.from({ length: 36 }, (_, index) => {
   const totalMinutes = 6 * 60 + index * 30;
@@ -316,10 +491,10 @@ function getServiceDisplayPrice(service: PublicService) {
   return service.price;
 }
 
-function formatDateLabel(dateValue: string) {
+function formatDateLabel(dateValue: string, language: "en" | "es" = "en") {
   if (!dateValue) return "";
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(language === "es" ? "es-US" : "en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -361,6 +536,8 @@ export default function PublicBookingPage() {
   const slug = params?.slug || "";
   const supabase = useMemo(() => createClient(), []);
   const t = useT();
+  const { language } = useLanguage();
+  const copy = publicBookingCopy[language];
 
   const [pageData, setPageData] = useState<PublicBookingPageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -860,36 +1037,36 @@ export default function PublicBookingPage() {
           />
 
           <p className="mt-6 text-sm font-black uppercase tracking-[0.28em]">
-            <span style={{ color: primaryColor }}>SchedNest Booking</span>
+            <span style={{ color: primaryColor }}>{copy.schednestBooking}</span>
           </p>
 
           <h1 className={`mt-3 text-4xl font-black ${titleTextClass} md:text-5xl`}>
-            Book with {pageData.business.business_name || "this business"}
+            {copy.bookWith} {pageData.business.business_name || copy.fallbackBusiness}
           </h1>
 
           <p className={`mt-4 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
             {pageData.business.business_description ||
               (isFlexibleRequest
-                ? "Choose a service, request your preferred time, and the business will confirm or offer another time."
-                : "Choose a service and available time. Your request is sent to the business for confirmation.")}
+                ? copy.flexibleDescription
+                : copy.fixedDescription)}
           </p>
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             {[
-              ["1", "Choose service", selectedService ? selectedService.name : "Pick what you need"],
+              ["1", copy.chooseService, selectedService ? selectedService.name : copy.pickWhatYouNeed],
               [
                 "2",
-                isFlexibleRequest ? "Request time" : "Pick time",
+                isFlexibleRequest ? copy.requestTime : copy.pickTime,
                 bookingDate && bookingTime
-                  ? `${formatDateLabel(bookingDate)} · ${formatTime12Hour(bookingTime)}`
-                  : "Select date and time",
+                  ? `${formatDateLabel(bookingDate, language)} · ${formatTime12Hour(bookingTime)}`
+                  : copy.selectDateTime,
               ],
               [
                 "3",
-                "Send request",
+                copy.sendRequest,
                 hasContactInfo
-                  ? "Contact info ready"
-                  : "Add name and contact info",
+                  ? copy.contactInfoReady
+                  : copy.addContactInfo,
               ],
             ].map(([step, title, description]) => (
               <div
@@ -971,19 +1148,19 @@ export default function PublicBookingPage() {
                   className="mt-5 text-sm font-black uppercase tracking-[0.28em]"
                   style={{ color: primaryColor }}
                 >
-                  Request Received
+                  {copy.requestReceived}
                 </p>
 
                 <h2 className={`mt-3 text-3xl font-black ${titleTextClass}`}>
-                  Thanks, {confirmationSummary.customerName}.
+                  {copy.thanks}, {confirmationSummary.customerName}.
                 </h2>
 
                 <p className={`mt-3 max-w-2xl text-sm leading-6 ${mutedTextClass}`}>
                   Your booking request was sent to{" "}
                   {confirmationSummary.businessName}.{" "}
                   {confirmationSummary.isFlexibleRequest
-                    ? "The business will review your preferred time and confirm or respond with a time that works."
-                    : "The business will review your request and confirm your appointment soon."}
+                    ? copy.flexibleDescription
+                    : copy.fixedDescription}
                 </p>
               </div>
 
@@ -996,7 +1173,7 @@ export default function PublicBookingPage() {
                     : "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                Request another time
+                {copy.requestAnotherTime}
               </button>
             </div>
 
@@ -1034,10 +1211,10 @@ export default function PublicBookingPage() {
                 <p className={`text-xs font-bold uppercase tracking-[0.2em] ${softTextClass}`}>
                   {confirmationSummary.isFlexibleRequest
                     ? "Preferred Time"
-                    : "Requested Time"}
+                    : "{copy.requestedTime}"}
                 </p>
                 <p className={`mt-2 text-lg font-black ${titleTextClass}`}>
-                  {formatDateLabel(confirmationSummary.bookingDate)}
+                  {formatDateLabel(confirmationSummary.bookingDate, language)}
                 </p>
                 <p className="mt-1 text-sm font-bold" style={{ color: primaryColor }}>
                   {formatTime12Hour(confirmationSummary.bookingTime)}
@@ -1087,7 +1264,7 @@ export default function PublicBookingPage() {
                 }`}
               >
                 <p className={`text-xs font-bold uppercase tracking-[0.2em] ${softTextClass}`}>
-                  Note Sent
+                  {copy.noteSent}
                 </p>
                 <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
                   {confirmationSummary.notes}
@@ -1103,12 +1280,12 @@ export default function PublicBookingPage() {
               }`}
             >
               <p className={`text-sm font-black ${titleTextClass}`}>
-                What happens next?
+                {copy.whatHappensNext}
               </p>
               <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
                 {confirmationSummary.isFlexibleRequest
-                  ? "This is a preferred time request, not a confirmed appointment. The business may approve it or respond with a different time for that date."
-                  : "This is not confirmed yet. Once the business approves or declines the request, you may receive an update from the business."}
+                  ? copy.confirmationFlexible
+                  : copy.confirmationFixed}
               </p>
             </div>
           </section>
@@ -1117,7 +1294,7 @@ export default function PublicBookingPage() {
         <section className="grid gap-6 md:grid-cols-[1fr_1.4fr]">
           <div className={cardClass}>
             <p className="text-sm font-black" style={{ color: primaryColor }}>
-              {businessHoursEnabled ? "Business Hours" : "By Appointment"}
+              {businessHoursEnabled ? "{copy.businessHours}" : "{copy.byAppointment}"}
             </p>
 
             {businessHoursEnabled && pageData.business_hours.length > 0 ? (
@@ -1134,7 +1311,7 @@ export default function PublicBookingPage() {
                         isCleanTheme ? "text-slate-800" : "text-gray-200"
                       }`}
                     >
-                      {days[hour.day_of_week]}
+                      {copy.days[hour.day_of_week]}
                     </span>
                     <span className={mutedTextClass}>
                       {hour.is_open
@@ -1142,7 +1319,7 @@ export default function PublicBookingPage() {
                             hour.open_time,
                             hour.close_time
                           )
-                        : "Closed"}
+                        : copy.closed}
                     </span>
                   </div>
                 ))}
@@ -1156,7 +1333,7 @@ export default function PublicBookingPage() {
                 }}
               >
                 <p className="text-sm font-black" style={{ color: primaryColor }}>
-                  Flexible scheduling
+                  {copy.flexibleScheduling}
                 </p>
                 <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
                   This business accepts preferred appointment times. Request a
@@ -1169,10 +1346,10 @@ export default function PublicBookingPage() {
 
           <div className={cardClass}>
             <p className="text-sm font-black" style={{ color: primaryColor }}>
-              Request Appointment
+              {copy.requestAppointment}
             </p>
             <h2 className={`mt-3 text-2xl font-black ${titleTextClass}`}>
-              Choose your booking details
+              {copy.chooseBookingDetails}
             </h2>
 
             {pageData.services.length === 0 ? (
@@ -1184,10 +1361,10 @@ export default function PublicBookingPage() {
                 }}
               >
                 <p className="text-sm font-black" style={{ color: primaryColor }}>
-                  No services available yet.
+                  {copy.noServicesTitle}
                 </p>
                 <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
-                  This business has not published any services for online booking yet. Use the contact information above to reach out directly.
+                  {copy.noServicesDescription}
                 </p>
               </div>
             ) : (
@@ -1196,10 +1373,10 @@ export default function PublicBookingPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                      Service
+                      {copy.service}
                     </label>
                     <p className={`mt-1 text-xs ${softTextClass}`}>
-                      Pick the service you want to request.
+                      {copy.pickService}
                     </p>
                   </div>
 
@@ -1295,7 +1472,7 @@ export default function PublicBookingPage() {
                                 : "bg-white/10 text-gray-300"
                           }`}
                         >
-                          {isSelected ? "Selected" : "Choose service"}
+                          {isSelected ? "Selected" : copy.chooseService}
                         </span>
                       </button>
                     );
@@ -1338,7 +1515,7 @@ export default function PublicBookingPage() {
                         className="text-xs font-black uppercase tracking-[0.2em]"
                         style={{ color: primaryColor }}
                       >
-                        Selected service gallery
+                        {copy.selectedServiceGallery}
                       </p>
 
                       <p className={`mt-2 text-sm font-bold ${titleTextClass}`}>
@@ -1353,12 +1530,12 @@ export default function PublicBookingPage() {
 
               <div>
                 <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                  Your name
+                  {copy.yourName}
                 </label>
                 <input
                   value={customerName}
                   onChange={(event) => setCustomerName(event.target.value)}
-                  placeholder="Your full name"
+                  placeholder="{copy.fullName}"
                   className={inputClass}
                 />
               </div>
@@ -1366,25 +1543,25 @@ export default function PublicBookingPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    Phone <span className="font-normal opacity-70">or email required</span>
+                    {copy.phone} <span className="font-normal opacity-70">{copy.phoneOrEmailRequired}</span>
                   </label>
                   <input
                     value={customerPhone}
                     onChange={(event) => setCustomerPhone(event.target.value)}
-                    placeholder="Phone number"
+                    placeholder="{copy.phonePlaceholder}"
                     className={inputClass}
                   />
                 </div>
 
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    Email <span className="font-normal opacity-70">or phone required</span>
+                    {copy.email} <span className="font-normal opacity-70">{copy.emailOrPhoneRequired}</span>
                   </label>
                   <input
                     value={customerEmail}
                     onChange={(event) => setCustomerEmail(event.target.value)}
                     type="email"
-                    placeholder="Email address"
+                    placeholder="{copy.emailPlaceholder}"
                     className={inputClass}
                   />
                 </div>
@@ -1393,7 +1570,7 @@ export default function PublicBookingPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    {isFlexibleRequest ? "Preferred date" : "Date"}
+                    {isFlexibleRequest ? copy.preferredDate : copy.date}
                   </label>
                   <input
                     value={bookingDate}
@@ -1411,7 +1588,7 @@ export default function PublicBookingPage() {
 
                 <div>
                   <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                    {isFlexibleRequest ? "Preferred time" : "Available time"}
+                    {isFlexibleRequest ? copy.preferredTime : copy.availableTime}
                   </label>
 
                   {isFlexibleRequest ? (
@@ -1422,11 +1599,11 @@ export default function PublicBookingPage() {
                       className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {!bookingDate && (
-                        <option value="">Choose a date first</option>
+                        <option value="">{copy.chooseDateFirst}</option>
                       )}
 
                       {bookingDate && (
-                        <option value="">Choose preferred time</option>
+                        <option value="">{copy.choosePreferredTime}</option>
                       )}
 
                       {preferredTimeOptions.map((time) => (
@@ -1443,15 +1620,15 @@ export default function PublicBookingPage() {
                       className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-50`}
                     >
                       {!bookingDate && (
-                        <option value="">Choose a date first</option>
+                        <option value="">{copy.chooseDateFirst}</option>
                       )}
 
                       {bookingDate && availableTimes.length === 0 && (
-                        <option value="">No available times for this day</option>
+                        <option value="">{copy.noAvailableTimes}</option>
                       )}
 
                       {bookingDate && availableTimes.length > 0 && (
-                        <option value="">Choose an available time</option>
+                        <option value="">{copy.chooseAvailableTime}</option>
                       )}
 
                       {availableTimes.map((time) => (
@@ -1467,8 +1644,8 @@ export default function PublicBookingPage() {
                     selectedDayHours &&
                     !selectedDayHours.is_open && (
                       <p className={`mt-2 text-xs ${softTextClass}`}>
-                        This business is closed on{" "}
-                        {days[selectedDayHours.day_of_week]}.
+                        {copy.closedOn}{" "}
+                        {copy.days[selectedDayHours.day_of_week]}.
                       </p>
                     )}
 
@@ -1478,15 +1655,13 @@ export default function PublicBookingPage() {
                     selectedDayHours.is_open &&
                     availableTimes.length === 0 && (
                       <p className={`mt-2 text-xs ${softTextClass}`}>
-                        No times are available for the selected service on this
-                        day.
+                        {copy.noTimesForService}
                       </p>
                     )}
 
                   {isFlexibleRequest && bookingDate && (
                     <p className={`mt-2 text-xs ${softTextClass}`}>
-                      This is a preferred time request. The business may confirm
-                      it or respond with another time.
+                      {copy.flexibleTimeNotice}
                     </p>
                   )}
                 </div>
@@ -1501,16 +1676,16 @@ export default function PublicBookingPage() {
                   }}
                 >
                   <p className="text-sm font-black" style={{ color: primaryColor }}>
-                    Request summary
+                    {copy.requestSummary}
                   </p>
                   <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
-                    {selectedService.name} on {formatDateLabel(bookingDate)} at{" "}
+                    {selectedService.name} on {formatDateLabel(bookingDate, language)} at{" "}
                     {formatTime12Hour(bookingTime)}.
                   </p>
                   <p className={`mt-1 text-xs ${softTextClass}`}>
                     {isFlexibleRequest
-                      ? "This preferred time will be sent to the business for review."
-                      : "This appointment will be pending until the business confirms it."}
+                      ? "{copy.preferredTimeSent}"
+                      : "{copy.pendingUntilConfirmed}"}
                   </p>
                 </div>
               )}
@@ -1524,7 +1699,7 @@ export default function PublicBookingPage() {
                   }`}
                 >
                   <p className={`text-sm font-black ${titleTextClass}`}>
-                    A few details for this service
+                    {copy.intakeTitle}
                   </p>
                   <p className={`mt-2 text-xs leading-5 ${softTextClass}`}>
                     These questions help the business prepare before confirming
@@ -1575,7 +1750,7 @@ export default function PublicBookingPage() {
                             }
                             className={inputClass}
                           >
-                            <option value="">Choose an option</option>
+                            <option value="">{copy.chooseOption}</option>
                             {question.options.map((option) => (
                               <option key={option} value={option}>
                                 {option}
@@ -1709,12 +1884,12 @@ export default function PublicBookingPage() {
 
               <div>
                 <label className={`text-sm font-bold ${isCleanTheme ? "text-slate-700" : "text-gray-300"}`}>
-                  Notes
+                  {copy.notes}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Anything the business should know?"
+                  placeholder="{copy.notesPlaceholder}"
                   className={`${inputClass} min-h-24`}
                 />
               </div>
@@ -1732,14 +1907,14 @@ export default function PublicBookingPage() {
                 style={{ backgroundColor: accentColor }}
               >
                 {isSubmitting
-                  ? "Sending request..."
+                  ? copy.sendingRequest
                   : isFlexibleRequest
-                    ? "Send preferred time request"
-                    : "Send booking request"}
+                    ? copy.sendPreferredTimeRequest
+                    : copy.sendBookingRequest}
               </button>
 
               <p className={`text-center text-xs leading-5 ${softTextClass}`}>
-                No payment is collected here. The business will review your request and follow up using the contact information you provide.
+                {copy.noPaymentNotice}
               </p>
             </form>
             )}
