@@ -34,6 +34,7 @@ type BusinessProfile = {
 id: string;
 business_name: string | null;
 email: string | null;
+contact_email: string | null;
 slug: string | null;
 owner_id: string;
 manual_payments_enabled: boolean | null;
@@ -507,7 +508,7 @@ return NextResponse.json(
 
 const { data: business, error: businessError } = await supabase
 .from("business_profiles")
-.select("id, business_name, email, slug, owner_id, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
+.select("id, business_name, email, contact_email, slug, owner_id, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
 .eq("id", typedBooking.business_id)
 .single();
 
@@ -584,7 +585,7 @@ await sendEmail({
 booking: typedBooking,
 eventType,
 recipientType: "owner",
-to: typedBusiness?.email,
+to: typedBusiness?.email || typedBusiness?.contact_email,
 subject: ownerEmail.subject,
 html: ownerEmail.html,
 });
