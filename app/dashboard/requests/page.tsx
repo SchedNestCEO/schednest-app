@@ -9,6 +9,14 @@ type BusinessProfile = {
   id: string;
   owner_id: string;
   business_name: string | null;
+  manual_payments_enabled: boolean | null;
+  manual_payment_zelle: string | null;
+  manual_payment_cash_app: string | null;
+  manual_payment_venmo: string | null;
+  manual_payment_paypal: string | null;
+  manual_payment_other: string | null;
+  manual_payment_qr_url: string | null;
+  manual_payment_qr_caption: string | null;
 };
 
 type Service = {
@@ -70,6 +78,45 @@ function formatDepositStatus(value: string | null | undefined) {
     .join(" ");
 }
 
+function getSafeImageUrl(value: string | null | undefined) {
+  if (!value) return "";
+
+  const cleanValue = value.trim();
+
+  if (
+    cleanValue.startsWith("https://") ||
+    cleanValue.startsWith("http://") ||
+    cleanValue.startsWith("/")
+  ) {
+    return cleanValue;
+  }
+
+  return "";
+}
+
+function getManualPaymentRows(profile: BusinessProfile | null) {
+  if (!profile) return [];
+
+  return [
+    { label: "Zelle", value: profile.manual_payment_zelle },
+    { label: "Cash App", value: profile.manual_payment_cash_app },
+    { label: "Venmo", value: profile.manual_payment_venmo },
+    { label: "PayPal", value: profile.manual_payment_paypal },
+    { label: "Other", value: profile.manual_payment_other },
+  ].filter((item): item is { label: string; value: string } =>
+    Boolean(item.value && item.value.trim())
+  );
+}
+
+function hasManualPaymentDetails(profile: BusinessProfile | null) {
+  if (!profile || profile.manual_payments_enabled === false) return false;
+
+  return (
+    getManualPaymentRows(profile).length > 0 ||
+    Boolean(getSafeImageUrl(profile.manual_payment_qr_url))
+  );
+}
+
 function getTimeInputValue(value: string) {
   const date = new Date(value);
   const hour = String(date.getHours()).padStart(2, "0");
@@ -120,7 +167,7 @@ export default function BookingRequestsPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("business_profiles")
-      .select("id, owner_id, business_name")
+      .select("id, owner_id, business_name, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
       .eq("owner_id", user.id)
       .single();
 
@@ -864,6 +911,63 @@ export default function BookingRequestsPage() {
                         </p>
                       </div>
                     )}
+
+                    {selectedRequest.deposit_collection_method === "manual" &&
+                      hasManualPaymentDetails(businessProfile) && (
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                            {t(
+                              "manualPayments.publicTitle",
+                              "Ways to send manual deposit"
+                            )}
+                          </p>
+
+                          <p className="mt-2 text-sm leading-6 text-gray-300">
+                            These are the payment methods currently shown to the customer on the public booking page.
+                          </p>
+
+                          {getManualPaymentRows(businessProfile).length > 0 && (
+                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                              {getManualPaymentRows(businessProfile).map(
+                                (paymentMethod) => (
+                                  <div
+                                    key={paymentMethod.label}
+                                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                                  >
+                                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
+                                      {paymentMethod.label}
+                                    </p>
+                                    <p className="mt-2 break-words text-sm font-black text-white">
+                                      {paymentMethod.value}
+                                    </p>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )}
+
+                          {getSafeImageUrl(businessProfile?.manual_payment_qr_url) && (
+                            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white">
+                              <img
+                                src={getSafeImageUrl(
+                                  businessProfile?.manual_payment_qr_url
+                                )}
+                                alt={
+                                  businessProfile?.manual_payment_qr_caption ||
+                                  t("manualPayments.qrCode", "Payment QR code")
+                                }
+                                className="max-h-72 w-full object-contain"
+                              />
+
+                              {businessProfile?.manual_payment_qr_caption && (
+                                <p className="border-t border-slate-200 px-4 py-3 text-center text-sm font-bold text-slate-700">
+                                  {businessProfile.manual_payment_qr_caption}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                     <p className="mt-4 text-xs leading-5 text-gray-400">
                       {t(

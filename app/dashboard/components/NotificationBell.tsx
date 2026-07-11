@@ -22,6 +22,14 @@ type BookingNotification = {
 
 type BookingStatusById = Record<string, string>;
 type BookingStartTimesById = Record<string, string | null>;
+type BookingDepositInfoById = Record<
+  string,
+  {
+    deposit_required: boolean | null;
+    deposit_status: string | null;
+    deposit_amount: number | null;
+  }
+>;
 
 const REQUESTED_EVENT = "booking.requested";
 
@@ -37,6 +45,8 @@ export default function NotificationBell({
   const [bookingStatuses, setBookingStatuses] = useState<BookingStatusById>({});
   const [bookingStartTimes, setBookingStartTimes] =
     useState<BookingStartTimesById>({});
+  const [bookingDepositInfo, setBookingDepositInfo] =
+    useState<BookingDepositInfoById>({});
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -87,11 +97,12 @@ export default function NotificationBell({
     if (bookingIds.length > 0) {
       const { data: bookingsData } = await supabase
         .from("bookings")
-        .select("id, status, start_time")
+        .select("id, status, start_time, deposit_required, deposit_status, deposit_amount")
         .in("id", bookingIds);
 
       const nextStatuses: BookingStatusById = {};
       const nextStartTimes: BookingStartTimesById = {};
+      const nextDepositInfo: BookingDepositInfoById = {};
 
       for (const booking of bookingsData || []) {
         if (booking.id && booking.status) {
@@ -100,14 +111,25 @@ export default function NotificationBell({
 
         if (booking.id) {
           nextStartTimes[booking.id] = booking.start_time || null;
+          nextDepositInfo[booking.id] = {
+            deposit_required: booking.deposit_required || false,
+            deposit_status: booking.deposit_status || null,
+            deposit_amount:
+              booking.deposit_amount === null ||
+              booking.deposit_amount === undefined
+                ? null
+                : Number(booking.deposit_amount),
+          };
         }
       }
 
       setBookingStatuses(nextStatuses);
       setBookingStartTimes(nextStartTimes);
+      setBookingDepositInfo(nextDepositInfo);
     } else {
       setBookingStatuses({});
       setBookingStartTimes({});
+      setBookingDepositInfo({});
     }
 
     setIsLoading(false);
@@ -185,7 +207,7 @@ export default function NotificationBell({
     if (!notification.booking_id) return;
 
     const actionKey = `${notification.id}-${decision}`;
-    const nextStatus = decision === "approve" ? "approved" : "declined";
+    const nextStatus = decision === "approve" ? "confirmed" : "cancelled";
     const eventType =
       decision === "approve" ? "booking.approved" : "booking.declined";
 
@@ -202,10 +224,13 @@ export default function NotificationBell({
         throw new Error("Please sign in again before updating this request.");
       }
 
-      const { error: updateError } = await supabase
-        .from("bookings")
-        .update({ status: nextStatus })
-        .eq("id", notification.booking_id);
+      const { error: updateError } = await supabase.rpc(
+        "approve_booking_request",
+        {
+          p_booking_id: notification.booking_id,
+          p_new_status: nextStatus,
+        }
+      );
 
       if (updateError) {
         throw updateError;
@@ -294,23 +319,33 @@ export default function NotificationBell({
   function getStatusLabel(status?: string | null) {
     if (!status) return "Pending";
 
-    if (status === "approved") return "Approved";
-    if (status === "declined") return "Declined";
+    if (status === "approved" || status === "confirmed") return "Approved";
+    if (status === "declined" || status === "cancelled") return "Declined";
     if (status === "pending") return "Pending";
 
     return status;
   }
 
   function getStatusClass(status?: string | null) {
-    if (status === "approved") {
+    if (status === "approved" || status === "confirmed") {
       return "bg-emerald-400/15 text-emerald-300";
     }
 
-    if (status === "declined") {
+    if (status === "declined" || status === "cancelled") {
       return "bg-red-400/15 text-red-300";
     }
 
     return "bg-yellow-400/15 text-yellow-200";
+  }
+
+  function formatDepositStatus(value?: string | null) {
+    if (!value || value === "not_required") return "Not required";
+
+    return value
+      .replace(/_/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 
   function canManageRequest(notification: BookingNotification) {
@@ -412,7 +447,16 @@ export default function NotificationBell({
                   ? bookingStatuses[notification.booking_id]
                   : null;
 
-                const isManageable = canManageRequest(notification);
+                const depositInfo = notification.booking_id
+                  ? bookingDepositInfo[notification.booking_id]
+                  : null;
+                const requiresDepositReview = Boolean(
+                  depositInfo?.deposit_required &&
+                    depositInfo.deposit_status !== "paid" &&
+                    depositInfo.deposit_status !== "waived"
+                );
+                const isManageable =
+                  canManageRequest(notification) && !requiresDepositReview;
                 const bookingStartTime = notification.booking_id
                   ? bookingStartTimes[notification.booking_id]
                   : null;
@@ -436,6 +480,18 @@ export default function NotificationBell({
                         {bookingDateTimeLabel && (
                           <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-black text-emerald-200">
                             Appointment: {bookingDateTimeLabel}
+                          </p>
+                        )}
+
+                        {depositInfo?.deposit_required && (
+                          <p className="mt-2 rounded-xl border border-yellow-400/20 bg-yellow-400/10 px-3 py-2 text-xs font-black text-yellow-200">
+                            Deposit: {formatDepositStatus(depositInfo.deposit_status)}
+                          </p>
+                        )}
+
+                        {requiresDepositReview && (
+                          <p className="mt-2 text-xs leading-5 text-gray-400">
+                            Open the request page to review the deposit before approving.
                           </p>
                         )}
                       </div>
