@@ -21,6 +21,13 @@ customer_name: string | null;
 customer_phone: string | null;
 customer_email: string | null;
 notes: string | null;
+deposit_required: boolean | null;
+deposit_collection_method: string | null;
+deposit_status: string | null;
+deposit_amount: number | null;
+deposit_policy: string | null;
+manual_deposit_instructions: string | null;
+deposit_policy_accepted: boolean | null;
 };
 
 type BusinessProfile = {
@@ -29,6 +36,14 @@ business_name: string | null;
 email: string | null;
 slug: string | null;
 owner_id: string;
+manual_payments_enabled: boolean | null;
+manual_payment_zelle: string | null;
+manual_payment_cash_app: string | null;
+manual_payment_venmo: string | null;
+manual_payment_paypal: string | null;
+manual_payment_other: string | null;
+manual_payment_qr_url: string | null;
+manual_payment_qr_caption: string | null;
 };
 
 type Service = {
@@ -48,6 +63,134 @@ hour: "numeric",
 minute: "2-digit",
 timeZoneName: "short",
 }).format(new Date(value));
+}
+
+function formatMoney(value: number | null | undefined) {
+if (value === null || value === undefined) return "Not set";
+
+return new Intl.NumberFormat("en-US", {
+style: "currency",
+currency: "USD",
+}).format(value);
+}
+
+function formatDepositStatus(value: string | null | undefined) {
+if (!value || value === "not_required") return "Not required";
+
+return value
+.replace(/_/g, " ")
+.split(" ")
+.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+.join(" ");
+}
+
+function escapeHtml(value: string | null | undefined) {
+return String(value || "")
+.replace(/&/g, "&amp;")
+.replace(/</g, "&lt;")
+.replace(/>/g, "&gt;")
+.replace(/"/g, "&quot;")
+.replace(/'/g, "&#039;");
+}
+
+function getSafeImageUrl(value: string | null | undefined) {
+if (!value) return "";
+
+const cleanValue = value.trim();
+
+if (
+cleanValue.startsWith("https://") ||
+cleanValue.startsWith("http://") ||
+cleanValue.startsWith("/")
+) {
+return cleanValue;
+}
+
+return "";
+}
+
+function getManualPaymentRows(business: BusinessProfile | null | undefined) {
+if (!business || business.manual_payments_enabled === false) return [];
+
+return [
+{ label: "Zelle", value: business.manual_payment_zelle },
+{ label: "Cash App", value: business.manual_payment_cash_app },
+{ label: "Venmo", value: business.manual_payment_venmo },
+{ label: "PayPal", value: business.manual_payment_paypal },
+{ label: "Other", value: business.manual_payment_other },
+].filter((item) => item.value && item.value.trim());
+}
+
+function depositEmailHtml(booking: Booking, business: BusinessProfile | null) {
+if (!booking.deposit_required) return "";
+
+const paymentRows = getManualPaymentRows(business);
+const qrUrl = getSafeImageUrl(business?.manual_payment_qr_url);
+const qrCaption = business?.manual_payment_qr_caption || "Payment QR code";
+
+const paymentMethodsHtml =
+paymentRows.length > 0
+? `
+<div style="margin-top:14px;">
+<p style="font-size:13px; font-weight:700; color:#111827; margin:0 0 8px;">Manual payment methods</p>
+${paymentRows
+.map(
+(paymentMethod) => `
+<div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-top:8px;">
+<p style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280; margin:0 0 4px;">${escapeHtml(paymentMethod.label)}</p>
+<p style="font-size:14px; font-weight:700; color:#111827; margin:0; word-break:break-word;">${escapeHtml(paymentMethod.value || "")}</p>
+</div>
+`
+)
+.join("")}
+</div>
+`
+: "";
+
+const qrHtml = qrUrl
+? `
+<div style="margin-top:14px;">
+<p style="font-size:13px; font-weight:700; color:#111827; margin:0 0 8px;">Payment QR code</p>
+<div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:12px; padding:12px; text-align:center;">
+<img src="${qrUrl}" alt="${escapeHtml(qrCaption)}" style="max-width:220px; width:100%; height:auto; border-radius:10px;" />
+<p style="font-size:12px; color:#374151; margin:8px 0 0;">${escapeHtml(qrCaption)}</p>
+</div>
+</div>
+`
+: "";
+
+return `
+<div style="background:#fffbeb; border:1px solid #fde68a; border-radius:14px; padding:16px; margin-top:18px;">
+<p style="font-size:14px; font-weight:700; color:#92400e; margin:0 0 8px;">Deposit required</p>
+<p style="margin:0 0 8px; color:#111827;"><strong>Deposit amount:</strong> ${
+booking.deposit_amount ? formatMoney(booking.deposit_amount) : "Required"
+}</p>
+<p style="margin:0 0 8px; color:#111827;"><strong>Deposit status:</strong> ${formatDepositStatus(
+booking.deposit_status
+)}</p>
+${
+booking.deposit_policy
+? `<p style="margin:12px 0 6px; color:#111827;"><strong>Business-written deposit policy:</strong></p>
+<p style="white-space:pre-line; margin:0; color:#374151; line-height:1.6;">${escapeHtml(
+booking.deposit_policy
+)}</p>`
+: ""
+}
+${
+booking.manual_deposit_instructions
+? `<p style="margin:12px 0 6px; color:#111827;"><strong>Manual deposit instructions:</strong></p>
+<p style="white-space:pre-line; margin:0; color:#374151; line-height:1.6;">${escapeHtml(
+booking.manual_deposit_instructions
+)}</p>`
+: ""
+}
+${paymentMethodsHtml}
+${qrHtml}
+<p style="font-size:12px; color:#92400e; line-height:1.6; margin:14px 0 0;">
+SchedNest cannot automatically verify manual payments. The business will mark the deposit as received after reviewing payment.
+</p>
+</div>
+`;
 }
 
 function baseEmailHtml(content: string) {
@@ -70,7 +213,8 @@ Sent by SchedNest. From first client to full company.
 function customerPendingEmail(
 businessName: string,
 serviceName: string,
-startTime: string
+startTime: string,
+depositHtml = ""
 ) {
 return {
 subject: `Your booking request was received by ${businessName}`,
@@ -83,6 +227,7 @@ Your request with <strong>${businessName}</strong> has been received and is pend
 <p style="margin:0 0 8px; color:#111827;"><strong>Service:</strong> ${serviceName}</p>
 <p style="margin:0; color:#111827;"><strong>Requested time:</strong> ${startTime}</p>
 </div>
+${depositHtml}
 <p style="font-size:15px; line-height:1.7; color:#374151; margin-top:18px;">
 The business will confirm your appointment soon.
 </p>
@@ -94,7 +239,8 @@ function ownerNewRequestEmail(
 customerName: string,
 serviceName: string,
 startTime: string,
-dashboardUrl: string
+dashboardUrl: string,
+depositHtml = ""
 ) {
 return {
 subject: `New booking request from ${customerName}`,
@@ -107,6 +253,7 @@ html: baseEmailHtml(`
 <p style="margin:0 0 8px; color:#111827;"><strong>Service:</strong> ${serviceName}</p>
 <p style="margin:0; color:#111827;"><strong>Requested time:</strong> ${startTime}</p>
 </div>
+${depositHtml}
 <p style="margin-top:24px;">
 <a href="${dashboardUrl}" style="background:#34d399; color:#000000; padding:12px 18px; border-radius:12px; text-decoration:none; font-weight:700;">
 Review request
@@ -119,7 +266,8 @@ Review request
 function customerApprovedEmail(
 businessName: string,
 serviceName: string,
-startTime: string
+startTime: string,
+depositHtml = ""
 ) {
 return {
 subject: `Your appointment with ${businessName} is confirmed`,
@@ -132,6 +280,7 @@ Your appointment with <strong>${businessName}</strong> has been confirmed.
 <p style="margin:0 0 8px; color:#111827;"><strong>Service:</strong> ${serviceName}</p>
 <p style="margin:0; color:#111827;"><strong>Time:</strong> ${startTime}</p>
 </div>
+${depositHtml}
 `),
 };
 }
@@ -313,7 +462,7 @@ const supabase = createAdminClient();
 const { data: booking, error: bookingError } = await supabase
 .from("bookings")
 .select(
-"id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes"
+"id, business_id, owner_id, customer_id, service_id, start_time, end_time, status, source, customer_name, customer_phone, customer_email, notes, deposit_required, deposit_collection_method, deposit_status, deposit_amount, deposit_policy, manual_deposit_instructions, deposit_policy_accepted"
 )
 .eq("id", bookingId)
 .single();
@@ -358,7 +507,7 @@ return NextResponse.json(
 
 const { data: business, error: businessError } = await supabase
 .from("business_profiles")
-.select("id, business_name, email, slug, owner_id")
+.select("id, business_name, email, slug, owner_id, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
 .eq("id", typedBooking.business_id)
 .single();
 
@@ -404,19 +553,22 @@ const dashboardUrl = `${siteUrl}/dashboard/requests`;
 const bookingPageUrl = typedBusiness?.slug
 ? `${siteUrl}/book/${typedBusiness.slug}`
 : siteUrl;
+const sharedDepositHtml = depositEmailHtml(typedBooking, typedBusiness);
 
 if (eventType === "booking.requested") {
 const customerEmail = customerPendingEmail(
 businessName,
 serviceName,
-startTime
+startTime,
+sharedDepositHtml
 );
 
 const ownerEmail = ownerNewRequestEmail(
 customerName,
 serviceName,
 startTime,
-dashboardUrl
+dashboardUrl,
+sharedDepositHtml
 );
 
 await sendEmail({
@@ -439,7 +591,12 @@ html: ownerEmail.html,
 }
 
 if (eventType === "booking.approved") {
-const email = customerApprovedEmail(businessName, serviceName, startTime);
+const email = customerApprovedEmail(
+businessName,
+serviceName,
+startTime,
+sharedDepositHtml
+);
 
 await sendEmail({
 booking: typedBooking,
