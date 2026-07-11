@@ -18,6 +18,10 @@ type BusinessProfile = {
   brand_primary_color: string | null;
   brand_accent_color: string | null;
   booking_page_theme: string | null;
+  reminder_emails_enabled: boolean | null;
+  reminder_hours_before: number | null;
+  deposit_reminder_enabled: boolean | null;
+  owner_reminder_enabled: boolean | null;
 };
 
 type Subscription = {
@@ -34,6 +38,7 @@ type BookingTimeMode = "fixed_hours" | "flexible_requests";
 type SectionKey =
   | "businessInfo"
   | "bookingSettings"
+  | "notificationControls"
   | "brandingControls"
   | "setupHealth"
   | "quickLinks"
@@ -81,7 +86,7 @@ const settingSections = [
   {
     title: "Notifications",
     description:
-      "Review booking request notifications, owner alerts, customer emails, and future reminder settings.",
+      "Manage booking request alerts, customer emails, appointment reminders, and no-show protection.",
     href: "/dashboard/requests",
     label: "Open requests",
   },
@@ -207,6 +212,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingBusinessInfo, setIsSavingBusinessInfo] = useState(false);
   const [isSavingBookingSettings, setIsSavingBookingSettings] = useState(false);
+  const [isSavingReminderSettings, setIsSavingReminderSettings] = useState(false);
   const [isSavingBrandingSettings, setIsSavingBrandingSettings] = useState(false);
   const [message, setMessage] = useState("");
   const [business, setBusiness] = useState<BusinessProfile | null>(null);
@@ -226,10 +232,15 @@ export default function SettingsPage() {
   const [brandPrimaryColor, setBrandPrimaryColor] = useState("#34d399");
   const [brandAccentColor, setBrandAccentColor] = useState("#34d399");
   const [bookingPageTheme, setBookingPageTheme] = useState("schednest_dark");
+  const [reminderEmailsEnabled, setReminderEmailsEnabled] = useState(true);
+  const [reminderHoursBefore, setReminderHoursBefore] = useState(24);
+  const [depositReminderEnabled, setDepositReminderEnabled] = useState(true);
+  const [ownerReminderEnabled, setOwnerReminderEnabled] = useState(true);
 
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
     businessInfo: true,
     bookingSettings: true,
+    notificationControls: true,
     brandingControls: false,
     setupHealth: false,
     quickLinks: false,
@@ -247,6 +258,7 @@ export default function SettingsPage() {
     setOpenSections({
       businessInfo: true,
       bookingSettings: true,
+      notificationControls: true,
       brandingControls: true,
       setupHealth: true,
       quickLinks: true,
@@ -258,6 +270,7 @@ export default function SettingsPage() {
     setOpenSections({
       businessInfo: false,
       bookingSettings: false,
+      notificationControls: false,
       brandingControls: false,
       setupHealth: false,
       quickLinks: false,
@@ -276,6 +289,10 @@ export default function SettingsPage() {
     setBrandPrimaryColor(profile?.brand_primary_color || "#34d399");
     setBrandAccentColor(profile?.brand_accent_color || "#34d399");
     setBookingPageTheme(profile?.booking_page_theme || "schednest_dark");
+    setReminderEmailsEnabled(profile?.reminder_emails_enabled ?? true);
+    setReminderHoursBefore(profile?.reminder_hours_before || 24);
+    setDepositReminderEnabled(profile?.deposit_reminder_enabled ?? true);
+    setOwnerReminderEnabled(profile?.owner_reminder_enabled ?? true);
   }
 
   async function loadSettings() {
@@ -296,7 +313,7 @@ export default function SettingsPage() {
     const { data: businessData, error: businessError } = await supabase
       .from("business_profiles")
       .select(
-        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme, reminder_emails_enabled, reminder_hours_before, deposit_reminder_enabled, owner_reminder_enabled"
       )
       .eq("owner_id", user.id)
       .maybeSingle();
@@ -369,7 +386,7 @@ export default function SettingsPage() {
       })
       .eq("id", business.id)
       .select(
-        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme, reminder_emails_enabled, reminder_hours_before, deposit_reminder_enabled, owner_reminder_enabled"
       )
       .maybeSingle();
 
@@ -407,7 +424,7 @@ export default function SettingsPage() {
       })
       .eq("id", business.id)
       .select(
-        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme, reminder_emails_enabled, reminder_hours_before, deposit_reminder_enabled, owner_reminder_enabled"
       )
       .maybeSingle();
 
@@ -428,6 +445,49 @@ export default function SettingsPage() {
     setIsSavingBookingSettings(false);
   }
 
+
+  async function saveReminderSettings() {
+    if (!business) {
+      setMessage("Create your business profile before saving reminder settings.");
+      return;
+    }
+
+    setIsSavingReminderSettings(true);
+    setMessage("");
+
+    const safeReminderHours = Math.max(1, Math.min(49, Number(reminderHoursBefore || 24)));
+
+    const { data, error } = await supabase
+      .from("business_profiles")
+      .update({
+        reminder_emails_enabled: reminderEmailsEnabled,
+        reminder_hours_before: safeReminderHours,
+        deposit_reminder_enabled: depositReminderEnabled,
+        owner_reminder_enabled: ownerReminderEnabled,
+      })
+      .eq("id", business.id)
+      .select(
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme, reminder_emails_enabled, reminder_hours_before, deposit_reminder_enabled, owner_reminder_enabled"
+      )
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      setIsSavingReminderSettings(false);
+      return;
+    }
+
+    const updatedBusiness = (data || null) as BusinessProfile | null;
+
+    if (updatedBusiness) {
+      setBusiness(updatedBusiness);
+      syncBusinessForm(updatedBusiness);
+    }
+
+    setMessage("No-show protection settings saved.");
+    setIsSavingReminderSettings(false);
+  }
+
   async function saveBrandingSettings() {
     if (!business) {
       setMessage("Create your business profile before saving branding settings.");
@@ -446,7 +506,7 @@ export default function SettingsPage() {
       })
       .eq("id", business.id)
       .select(
-        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme"
+        "id, business_name, slug, timezone, business_description, contact_email, contact_phone, booking_time_mode, business_hours_enabled, brand_primary_color, brand_accent_color, booking_page_theme, reminder_emails_enabled, reminder_hours_before, deposit_reminder_enabled, owner_reminder_enabled"
       )
       .maybeSingle();
 
@@ -909,6 +969,162 @@ export default function SettingsPage() {
           </div>
         </CollapsiblePanel>
 
+
+        <CollapsiblePanel
+          eyebrow="No-show Protection"
+          title="Control appointment reminder emails."
+          description="Reduce missed appointments by sending customer reminders, owner reminders, and deposit reminder notes before confirmed bookings."
+          isOpen={openSections.notificationControls}
+          onToggle={() => toggleSection("notificationControls")}
+          rightContent={
+            <span className="hidden rounded-full bg-white/10 px-3 py-1 text-xs font-black text-gray-300 sm:inline-flex">
+              {reminderEmailsEnabled ? "Reminders on" : "Reminders off"}
+            </span>
+          }
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-lg font-black text-white">
+                    Customer reminder emails
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-gray-400">
+                    Send customers an appointment reminder before confirmed bookings.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setReminderEmailsEnabled((currentValue) => !currentValue)
+                  }
+                  disabled={!business || isSavingReminderSettings}
+                  className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    reminderEmailsEnabled
+                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {reminderEmailsEnabled ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <label className="grid gap-2">
+                <span className="text-lg font-black text-white">
+                  Reminder timing
+                </span>
+                <span className="text-sm leading-6 text-gray-400">
+                  Choose when SchedNest should start sending reminders before the appointment.
+                </span>
+
+                <select
+                  value={reminderHoursBefore}
+                  onChange={(event) =>
+                    setReminderHoursBefore(Number(event.target.value))
+                  }
+                  disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
+                  className="mt-2 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value={1}>1 hour before</option>
+                  <option value={3}>3 hours before</option>
+                  <option value={6}>6 hours before</option>
+                  <option value={12}>12 hours before</option>
+                  <option value={24}>24 hours before</option>
+                  <option value={48}>48 hours before</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-lg font-black text-white">
+                    Owner reminder emails
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-gray-400">
+                    Send the business an appointment reminder so upcoming bookings are not missed.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOwnerReminderEnabled((currentValue) => !currentValue)
+                  }
+                  disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
+                  className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    ownerReminderEnabled
+                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {ownerReminderEnabled ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-lg font-black text-white">
+                    Deposit reminder notes
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-gray-400">
+                    Include pending deposit details and manual payment instructions in reminder emails.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDepositReminderEnabled((currentValue) => !currentValue)
+                  }
+                  disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
+                  className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    depositReminderEnabled
+                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {depositReminderEnabled ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4">
+            <p className="text-sm font-black text-yellow-200">
+              Daily reminder engine
+            </p>
+            <p className="mt-2 text-sm leading-6 text-gray-300">
+              Your current Vercel Hobby setup runs reminders once daily, so the timing works as a reminder window instead of an exact minute-by-minute send time.
+            </p>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={saveReminderSettings}
+              disabled={!business || isSavingReminderSettings}
+              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSavingReminderSettings
+                ? "Saving..."
+                : "Save no-show protection"}
+            </button>
+
+            <Link
+              href="/dashboard/bookings"
+              className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+            >
+              View bookings
+            </Link>
+          </div>
+        </CollapsiblePanel>
+
         <CollapsiblePanel
           eyebrow="Branding Controls"
           title="Customize your public booking page style."
@@ -1186,7 +1402,7 @@ export default function SettingsPage() {
         <CollapsiblePanel
           eyebrow="Coming Next"
           title="More direct settings."
-          description="Business info, booking mode, and branding can now be edited here. Next, we can add notification preferences and billing shortcuts directly into this dashboard."
+          description="Business info, booking mode, branding, and no-show protection can now be edited here. Next, we can add deeper notification templates and billing shortcuts directly into this dashboard."
           isOpen={openSections.nextSteps}
           onToggle={() => toggleSection("nextSteps")}
         >
@@ -1200,12 +1416,12 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5">
               <p className="text-lg font-black text-white">
                 Customer reminders
               </p>
-              <p className="mt-2 text-sm leading-6 text-gray-400">
-                Add automated reminder emails and no-show prevention tools.
+              <p className="mt-2 text-sm leading-6 text-gray-300">
+                Live. Businesses can now control appointment reminders and no-show protection.
               </p>
             </div>
 
