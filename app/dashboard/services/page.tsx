@@ -42,12 +42,16 @@ type Service = {
   discount_label: string | null;
   discount_starts_at: string | null;
   discount_ends_at: string | null;
+  deposits_enabled: boolean | null;
   deposit_required: boolean | null;
   deposit_collection_method: string | null;
-  deposit_type: string | null;
+  deposit_type: "fixed" | "percentage" | null;
   deposit_amount: number | null;
   deposit_policy: string | null;
   manual_deposit_instructions: string | null;
+  cancellation_window_hours: number | null;
+  late_cancellation_forfeits_deposit: boolean | null;
+  no_show_forfeits_deposit: boolean | null;
 };
 
 type ServiceSampleImage = {
@@ -81,12 +85,15 @@ type ServiceSettingsEdit = {
   discount_label: string;
   discount_starts_at: string;
   discount_ends_at: string;
-  deposit_required: boolean;
+  deposits_enabled: boolean;
   deposit_collection_method: "manual" | "stripe";
-  deposit_type: "none" | "fixed" | "percent";
+  deposit_type: "fixed" | "percentage";
   deposit_amount: string;
   deposit_policy: string;
   manual_deposit_instructions: string;
+  cancellation_window_hours: string;
+  late_cancellation_forfeits_deposit: boolean;
+  no_show_forfeits_deposit: boolean;
 };
 
 type ManualPaymentSettings = {
@@ -111,7 +118,7 @@ function formatMoney(value: number | null) {
 
 function formatPriceFromType(
   value: number | null,
-  pricingType: string | null | undefined
+  pricingType: string | null | undefined,
 ) {
   const type = pricingType || "fixed";
 
@@ -134,18 +141,18 @@ function formatServicePrice(service: Service) {
   return formatPriceFromType(service.price, service.pricing_type);
 }
 
-
 function formatDepositAmount(
   depositType: string | null | undefined,
-  depositAmount: number | null | undefined
+  depositAmount: number | null | undefined,
 ) {
-  if (!depositAmount || depositType === "none") return "Not set";
-  if (depositType === "percent") return `${depositAmount}%`;
+  if (!depositAmount) return "Not set";
+  if (depositType === "percentage") return `${depositAmount}%`;
   return formatMoney(depositAmount);
 }
 
 function getDepositBadgeLabel(service: Service) {
-  if (!service.deposit_required) return "No deposit";
+  if (!(service.deposits_enabled || service.deposit_required))
+    return "No deposit";
   return `Deposit: ${formatDepositAmount(service.deposit_type, service.deposit_amount)}`;
 }
 
@@ -196,8 +203,7 @@ function getPlanAccess(subscription: AnyRow | null, plan: AnyRow | null) {
     status === "past_due";
 
   const hasGrowthAccess =
-    isActive &&
-    (planName.includes("growth") || planName.includes("complete"));
+    isActive && (planName.includes("growth") || planName.includes("complete"));
 
   const hasCompleteAccess = isActive && planName.includes("complete");
 
@@ -260,9 +266,9 @@ function getPublishLabel(service: Service) {
 function hasSavedDiscount(service: Service) {
   return Boolean(
     service.discount_type &&
-      service.discount_type !== "none" &&
-      service.discount_value !== null &&
-      service.discount_value !== undefined
+    service.discount_type !== "none" &&
+    service.discount_value !== null &&
+    service.discount_value !== undefined,
   );
 }
 
@@ -278,7 +284,7 @@ function extractCapturedPrice(value: string) {
 
 function extractCapturedDuration(value: string) {
   const durationMatch = value.match(
-    /\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min)\b/i
+    /\b(\d+(?:\.\d+)?)\s*(hours?|hrs?|hr|minutes?|mins?|min)\b/i,
   );
 
   if (!durationMatch) return "";
@@ -306,7 +312,11 @@ function extractCapturedPricingType(value: string): PricingType {
     return "starting_at";
   }
 
-  if (/\b(quote required|request quote|quote only|contact for price)\b/.test(lowerValue)) {
+  if (
+    /\b(quote required|request quote|quote only|contact for price)\b/.test(
+      lowerValue,
+    )
+  ) {
     return "quote";
   }
 
@@ -330,7 +340,7 @@ function extractCapturedDiscount(value: string) {
   }
 
   const fixedMatch = value.match(
-    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:off|discount)\b/i
+    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:off|discount)\b/i,
   );
 
   if (fixedMatch) {
@@ -347,35 +357,37 @@ function extractCapturedDiscount(value: string) {
 }
 
 function extractCapturedPromoLabel(value: string) {
-  const lines = value
-    .split(/\n+/)
-    .map(cleanCapturedLine)
-    .filter(Boolean);
+  const lines = value.split(/\n+/).map(cleanCapturedLine).filter(Boolean);
 
   const promoLine = lines.find((line) =>
     /\b(special|promo|promotion|sale|deal|discount|limited|summer|holiday|new client|first time)\b/i.test(
-      line
-    )
+      line,
+    ),
   );
 
   return promoLine?.slice(0, 60) || "";
 }
 
 function extractCapturedServiceName(value: string) {
-  const lines = value
-    .split(/\n+/)
-    .map(cleanCapturedLine)
-    .filter(Boolean);
+  const lines = value.split(/\n+/).map(cleanCapturedLine).filter(Boolean);
 
   const filteredLines = lines.filter((line) => {
     const lowerLine = line.toLowerCase();
 
     if (line.length < 3 || line.length > 80) return false;
     if (/^\$?\d+(?:\.\d{1,2})?$/.test(line)) return false;
-    if (/\b(off|discount|sale|promo|call|text|dm|book now|link in bio)\b/i.test(line)) {
+    if (
+      /\b(off|discount|sale|promo|call|text|dm|book now|link in bio)\b/i.test(
+        line,
+      )
+    ) {
       return false;
     }
-    if (/\b(am|pm|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(line)) {
+    if (
+      /\b(am|pm|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i.test(
+        line,
+      )
+    ) {
       return false;
     }
     if (lowerLine.includes("@") || lowerLine.includes("http")) return false;
@@ -384,8 +396,9 @@ function extractCapturedServiceName(value: string) {
   });
 
   const lineWithPackage =
-    filteredLines.find((line) => /\b(package|service|session|detail|consult|consultation)\b/i.test(line)) ||
-    filteredLines[0];
+    filteredLines.find((line) =>
+      /\b(package|service|session|detail|consult|consultation)\b/i.test(line),
+    ) || filteredLines[0];
 
   if (!lineWithPackage) return "";
 
@@ -397,10 +410,7 @@ function extractCapturedServiceName(value: string) {
 }
 
 function buildCapturedServiceDescription(value: string) {
-  const lines = value
-    .split(/\n+/)
-    .map(cleanCapturedLine)
-    .filter(Boolean);
+  const lines = value.split(/\n+/).map(cleanCapturedLine).filter(Boolean);
 
   const cleanedLines = lines.filter((line) => {
     if (/^\$?\d+(?:\.\d{1,2})?$/.test(line)) return false;
@@ -444,8 +454,7 @@ export default function ServicesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [newPricingType, setNewPricingType] =
-    useState<PricingType>("fixed");
+  const [newPricingType, setNewPricingType] = useState<PricingType>("fixed");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
@@ -459,15 +468,25 @@ export default function ServicesPage() {
   >("none");
   const [newDiscountValue, setNewDiscountValue] = useState("");
   const [newDiscountLabel, setNewDiscountLabel] = useState("");
-  const [newDepositRequired, setNewDepositRequired] = useState(false);
-  const [newDepositCollectionMethod, setNewDepositCollectionMethod] =
-    useState<"manual" | "stripe">("manual");
-  const [newDepositType, setNewDepositType] =
-    useState<"none" | "fixed" | "percent">("fixed");
+  const [newDepositsEnabled, setNewDepositsEnabled] = useState(false);
+  const [newDepositCollectionMethod, setNewDepositCollectionMethod] = useState<
+    "manual" | "stripe"
+  >("manual");
+  const [newDepositType, setNewDepositType] = useState<"fixed" | "percentage">(
+    "fixed",
+  );
   const [newDepositAmount, setNewDepositAmount] = useState("");
   const [newDepositPolicy, setNewDepositPolicy] = useState("");
   const [newManualDepositInstructions, setNewManualDepositInstructions] =
     useState("");
+  const [newCancellationWindowHours, setNewCancellationWindowHours] =
+    useState("24");
+  const [
+    newLateCancellationForfeitsDeposit,
+    setNewLateCancellationForfeitsDeposit,
+  ] = useState(true);
+  const [newNoShowForfeitsDeposit, setNewNoShowForfeitsDeposit] =
+    useState(true);
 
   const [serviceCaptureText, setServiceCaptureText] = useState("");
   const [serviceCaptureMessage, setServiceCaptureMessage] = useState("");
@@ -475,11 +494,10 @@ export default function ServicesPage() {
     useState<File | null>(null);
   const [serviceCaptureImagePreviewUrl, setServiceCaptureImagePreviewUrl] =
     useState("");
-  const [isReadingServiceCapture, setIsReadingServiceCapture] =
-    useState(false);
+  const [isReadingServiceCapture, setIsReadingServiceCapture] = useState(false);
 
   const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdit>>(
-    {}
+    {},
   );
   const [serviceSettingsEdits, setServiceSettingsEdits] = useState<
     Record<string, ServiceSettingsEdit>
@@ -491,11 +509,11 @@ export default function ServicesPage() {
     Record<string, ServiceSampleImage[]>
   >({});
   const [uploadingServiceId, setUploadingServiceId] = useState<string | null>(
-    null
+    null,
   );
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   const [deletingServiceId, setDeletingServiceId] = useState<string | null>(
-    null
+    null,
   );
 
   const planAccess = getPlanAccess(subscription, plan);
@@ -506,10 +524,10 @@ export default function ServicesPage() {
       : 0;
 
   const activeServices = services.filter(
-    (service) => service.is_active !== false
+    (service) => service.is_active !== false,
   );
   const pausedServices = services.filter(
-    (service) => service.is_active === false
+    (service) => service.is_active === false,
   );
   const visibleSamples = Object.values(serviceImagesByService)
     .flat()
@@ -538,12 +556,16 @@ export default function ServicesPage() {
 
     if (markerIndex === -1) return null;
 
-    return decodeURIComponent(url.slice(markerIndex + marker.length).split("?")[0]);
+    return decodeURIComponent(
+      url.slice(markerIndex + marker.length).split("?")[0],
+    );
   }
 
   function applyCapturedServiceDetails(rawText: string) {
     if (!rawText.trim()) {
-      setServiceCaptureMessage("Paste service text or upload a screenshot first.");
+      setServiceCaptureMessage(
+        "Paste service text or upload a screenshot first.",
+      );
       return;
     }
 
@@ -590,8 +612,10 @@ export default function ServicesPage() {
         capturedName ? "Name found." : "Review service name manually.",
         capturedPrice ? "Price found." : "Review price manually.",
         capturedDuration ? "Duration found." : "Review duration manually.",
-        capturedDiscount.type !== "none" ? "Promo found." : "No promo detected.",
-      ].join(" ")
+        capturedDiscount.type !== "none"
+          ? "Promo found."
+          : "No promo detected.",
+      ].join(" "),
     );
   }
 
@@ -600,7 +624,7 @@ export default function ServicesPage() {
   }
 
   function handleServiceCaptureImageChange(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0] || null;
 
@@ -648,7 +672,7 @@ export default function ServicesPage() {
 
       if (!extractedText) {
         setServiceCaptureMessage(
-          "I could not read text from that screenshot. Try a clearer crop or paste the caption manually."
+          "I could not read text from that screenshot. Try a clearer crop or paste the caption manually.",
         );
         setIsReadingServiceCapture(false);
         return;
@@ -658,13 +682,13 @@ export default function ServicesPage() {
       applyCapturedServiceDetails(extractedText);
 
       setServiceCaptureMessage(
-        "Screenshot text captured. Review the service details before saving."
+        "Screenshot text captured. Review the service details before saving.",
       );
     } catch (error) {
       setServiceCaptureMessage(
         error instanceof Error
           ? error.message
-          : "Unable to read service screenshot right now."
+          : "Unable to read service screenshot right now.",
       );
     }
 
@@ -689,7 +713,7 @@ export default function ServicesPage() {
 
       for (const [serviceId, images] of Object.entries(currentImages)) {
         nextImages[serviceId] = images.map((image) =>
-          image.id === imageId ? { ...image, caption } : image
+          image.id === imageId ? { ...image, caption } : image,
         );
       }
 
@@ -699,7 +723,7 @@ export default function ServicesPage() {
 
   async function handleUploadServiceImage(
     service: Service,
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -720,7 +744,9 @@ export default function ServicesPage() {
     }
 
     if (currentImages.length >= imageLimit) {
-      setErrorMessage(`This plan allows up to ${imageLimit} images per service.`);
+      setErrorMessage(
+        `This plan allows up to ${imageLimit} images per service.`,
+      );
       return;
     }
 
@@ -839,7 +865,7 @@ export default function ServicesPage() {
     setSuccessMessage(
       image.is_visible === false
         ? "Image is now visible."
-        : "Image hidden from public booking page."
+        : "Image hidden from public booking page.",
     );
 
     await loadServices();
@@ -889,7 +915,7 @@ export default function ServicesPage() {
     const { data: profile, error: profileError } = await supabase
       .from("business_profiles")
       .select(
-        "id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption"
+        "id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption",
       )
       .eq("owner_id", user.id)
       .single();
@@ -907,7 +933,7 @@ export default function ServicesPage() {
 
   function updateManualPaymentSetting(
     field: keyof ManualPaymentSettings,
-    value: string | boolean
+    value: string | boolean,
   ) {
     setManualPaymentSettings((current) => ({
       ...current,
@@ -916,7 +942,7 @@ export default function ServicesPage() {
   }
 
   async function handleUploadPaymentQr(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -983,7 +1009,9 @@ export default function ServicesPage() {
       manual_payment_qr_url: publicUrlData.publicUrl,
     }));
 
-    setSuccessMessage(t("manualPayments.uploaded", "Payment QR code uploaded."));
+    setSuccessMessage(
+      t("manualPayments.uploaded", "Payment QR code uploaded."),
+    );
     setIsUploadingPaymentQr(false);
   }
 
@@ -994,8 +1022,7 @@ export default function ServicesPage() {
 
     const { data, error } = await supabase.rpc("save_manual_payment_methods", {
       p_business_id: businessProfile?.id || null,
-      p_manual_payments_enabled:
-        manualPaymentSettings.manual_payments_enabled,
+      p_manual_payments_enabled: manualPaymentSettings.manual_payments_enabled,
       p_zelle: manualPaymentSettings.manual_payment_zelle,
       p_cash_app: manualPaymentSettings.manual_payment_cash_app,
       p_venmo: manualPaymentSettings.manual_payment_venmo,
@@ -1016,21 +1043,19 @@ export default function ServicesPage() {
     if (savedProfile) {
       setBusinessProfile(savedProfile);
       setManualPaymentSettings({
-        manual_payments_enabled:
-          savedProfile.manual_payments_enabled !== false,
+        manual_payments_enabled: savedProfile.manual_payments_enabled !== false,
         manual_payment_zelle: savedProfile.manual_payment_zelle || "",
         manual_payment_cash_app: savedProfile.manual_payment_cash_app || "",
         manual_payment_venmo: savedProfile.manual_payment_venmo || "",
         manual_payment_paypal: savedProfile.manual_payment_paypal || "",
         manual_payment_other: savedProfile.manual_payment_other || "",
         manual_payment_qr_url: savedProfile.manual_payment_qr_url || "",
-        manual_payment_qr_caption:
-          savedProfile.manual_payment_qr_caption || "",
+        manual_payment_qr_caption: savedProfile.manual_payment_qr_caption || "",
       });
     }
 
     setSuccessMessage(
-      t("manualPayments.saved", "Manual payment methods saved.")
+      t("manualPayments.saved", "Manual payment methods saved."),
     );
 
     setIsSavingManualPayments(false);
@@ -1053,7 +1078,9 @@ export default function ServicesPage() {
 
     const { data: profile, error: profileError } = await supabase
       .from("business_profiles")
-      .select("id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption")
+      .select(
+        "id, owner_id, business_name, slug, manual_payments_enabled, manual_payment_zelle, manual_payment_cash_app, manual_payment_venmo, manual_payment_paypal, manual_payment_other, manual_payment_qr_url, manual_payment_qr_caption",
+      )
       .eq("owner_id", user.id)
       .single();
 
@@ -1102,7 +1129,7 @@ export default function ServicesPage() {
     const { data: serviceData, error: servicesError } = await supabase
       .from("services")
       .select(
-        "id, business_id, owner_id, name, description, price, pricing_type, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at, publish_at, unpublish_at, discount_type, discount_value, discount_label, discount_starts_at, discount_ends_at, deposit_required, deposit_collection_method, deposit_type, deposit_amount, deposit_policy, manual_deposit_instructions"
+        "id, business_id, owner_id, name, description, price, pricing_type, duration_minutes, is_active, sample_image_url, sample_caption, show_sample_on_booking_page, deleted_at, publish_at, unpublish_at, discount_type, discount_value, discount_label, discount_starts_at, discount_ends_at, deposits_enabled, deposit_required, deposit_collection_method, deposit_type, deposit_amount, deposit_policy, manual_deposit_instructions, cancellation_window_hours, late_cancellation_forfeits_deposit, no_show_forfeits_deposit",
       )
       .eq("business_id", safeProfile.id)
       .is("deleted_at", null)
@@ -1132,29 +1159,38 @@ export default function ServicesPage() {
         publish_at: toDateTimeLocalValue(service.publish_at),
         unpublish_at: toDateTimeLocalValue(service.unpublish_at),
         discount_type:
-          service.discount_type === "percent" || service.discount_type === "fixed"
+          service.discount_type === "percent" ||
+          service.discount_type === "fixed"
             ? service.discount_type
             : "none",
         discount_value:
-          service.discount_value !== null && service.discount_value !== undefined
+          service.discount_value !== null &&
+          service.discount_value !== undefined
             ? String(service.discount_value)
             : "",
         discount_label: service.discount_label || "",
         discount_starts_at: toDateTimeLocalValue(service.discount_starts_at),
         discount_ends_at: toDateTimeLocalValue(service.discount_ends_at),
-        deposit_required: service.deposit_required === true,
+        deposits_enabled:
+          service.deposits_enabled === true ||
+          service.deposit_required === true,
         deposit_collection_method:
           service.deposit_collection_method === "stripe" ? "stripe" : "manual",
         deposit_type:
-          service.deposit_type === "percent" || service.deposit_type === "fixed"
-            ? service.deposit_type
-            : "none",
+          service.deposit_type === "percentage" ? "percentage" : "fixed",
         deposit_amount:
-          service.deposit_amount !== null && service.deposit_amount !== undefined
+          service.deposit_amount !== null &&
+          service.deposit_amount !== undefined
             ? String(service.deposit_amount)
-            : "",
+            : "0",
         deposit_policy: service.deposit_policy || "",
         manual_deposit_instructions: service.manual_deposit_instructions || "",
+        cancellation_window_hours: String(
+          service.cancellation_window_hours ?? 24,
+        ),
+        late_cancellation_forfeits_deposit:
+          service.late_cancellation_forfeits_deposit !== false,
+        no_show_forfeits_deposit: service.no_show_forfeits_deposit !== false,
       };
     });
 
@@ -1166,12 +1202,12 @@ export default function ServicesPage() {
         await supabase
           .from("service_sample_images")
           .select(
-            "id, service_id, business_id, owner_id, image_url, caption, sort_order, is_visible, created_at, updated_at"
+            "id, service_id, business_id, owner_id, image_url, caption, sort_order, is_visible, created_at, updated_at",
           )
           .eq("business_id", safeProfile.id)
           .in(
             "service_id",
-            safeServices.map((service) => service.id)
+            safeServices.map((service) => service.id),
           )
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: true });
@@ -1238,15 +1274,13 @@ export default function ServicesPage() {
       return;
     }
 
-    const parsedNewDepositAmount =
-      !newDepositRequired || newDepositType === "none" || !newDepositAmount.trim()
-        ? null
-        : Number(newDepositAmount);
+    const parsedNewDepositAmount = newDepositsEnabled
+      ? Number(newDepositAmount)
+      : 0;
 
     if (
-      newDepositRequired &&
-      (newDepositType === "none" ||
-        parsedNewDepositAmount === null ||
+      newDepositsEnabled &&
+      (!newDepositAmount.trim() ||
         Number.isNaN(parsedNewDepositAmount) ||
         parsedNewDepositAmount <= 0)
     ) {
@@ -1255,16 +1289,25 @@ export default function ServicesPage() {
     }
 
     if (
-      newDepositRequired &&
-      newDepositType === "percent" &&
-      parsedNewDepositAmount !== null &&
+      newDepositsEnabled &&
+      newDepositType === "percentage" &&
       parsedNewDepositAmount > 100
     ) {
-      setErrorMessage("Percent deposits cannot be greater than 100%.");
+      setErrorMessage("Percentage deposits cannot be greater than 100%.");
       return;
     }
 
-    if (newDepositRequired && !newDepositPolicy.trim()) {
+    const parsedCancellationWindowHours = Number(newCancellationWindowHours);
+
+    if (
+      Number.isNaN(parsedCancellationWindowHours) ||
+      parsedCancellationWindowHours < 0
+    ) {
+      setErrorMessage("Enter a valid cancellation window.");
+      return;
+    }
+
+    if (newDepositsEnabled && !newDepositPolicy.trim()) {
       setErrorMessage("Add your custom business-written deposit policy.");
       return;
     }
@@ -1308,15 +1351,19 @@ export default function ServicesPage() {
       sample_image_url: null,
       sample_caption: null,
       show_sample_on_booking_page: false,
-      deposit_required: newDepositRequired,
+      deposits_enabled: newDepositsEnabled,
+      deposit_required: newDepositsEnabled,
       deposit_collection_method: newDepositCollectionMethod,
-      deposit_type: newDepositRequired ? newDepositType : "none",
-      deposit_amount: parsedNewDepositAmount,
-      deposit_policy: newDepositRequired ? newDepositPolicy.trim() : null,
+      deposit_type: newDepositType,
+      deposit_amount: newDepositsEnabled ? parsedNewDepositAmount : 0,
+      deposit_policy: newDepositsEnabled ? newDepositPolicy.trim() : null,
       manual_deposit_instructions:
-        newDepositRequired && newDepositCollectionMethod === "manual"
+        newDepositsEnabled && newDepositCollectionMethod === "manual"
           ? newManualDepositInstructions.trim() || null
           : null,
+      cancellation_window_hours: parsedCancellationWindowHours,
+      late_cancellation_forfeits_deposit: newLateCancellationForfeitsDeposit,
+      no_show_forfeits_deposit: newNoShowForfeitsDeposit,
     });
 
     if (error) {
@@ -1338,12 +1385,15 @@ export default function ServicesPage() {
     setNewDiscountType("none");
     setNewDiscountValue("");
     setNewDiscountLabel("");
-    setNewDepositRequired(false);
+    setNewDepositsEnabled(false);
     setNewDepositCollectionMethod("manual");
     setNewDepositType("fixed");
     setNewDepositAmount("");
     setNewDepositPolicy("");
     setNewManualDepositInstructions("");
+    setNewCancellationWindowHours("24");
+    setNewLateCancellationForfeitsDeposit(true);
+    setNewNoShowForfeitsDeposit(true);
     clearServiceCaptureAssistant();
     setIsAddServiceOpen(false);
     setSuccessMessage("Service added.");
@@ -1372,7 +1422,7 @@ export default function ServicesPage() {
     setSuccessMessage(
       nextIsActive
         ? "Service reactivated."
-        : "Service paused. It will not appear as active."
+        : "Service paused. It will not appear as active.",
     );
 
     await loadServices();
@@ -1380,7 +1430,7 @@ export default function ServicesPage() {
 
   async function deleteService(service: Service) {
     const confirmed = window.confirm(
-      `Delete "${service.name}" from your service menu? Existing booking history will stay safe.`
+      `Delete "${service.name}" from your service menu? Existing booking history will stay safe.`,
     );
 
     if (!confirmed) return;
@@ -1460,7 +1510,7 @@ export default function ServicesPage() {
   function updateSampleEdit(
     serviceId: string,
     field: keyof SampleEdit,
-    value: string | boolean
+    value: string | boolean,
   ) {
     setSampleEdits((current) => ({
       ...current,
@@ -1477,7 +1527,7 @@ export default function ServicesPage() {
   function updateServiceSettingsEdit(
     serviceId: string,
     field: keyof ServiceSettingsEdit,
-    value: string | boolean
+    value: string | boolean,
   ) {
     setServiceSettingsEdits((current) => ({
       ...current,
@@ -1489,14 +1539,20 @@ export default function ServicesPage() {
         discount_label: current[serviceId]?.discount_label || "",
         discount_starts_at: current[serviceId]?.discount_starts_at || "",
         discount_ends_at: current[serviceId]?.discount_ends_at || "",
-        deposit_required: current[serviceId]?.deposit_required || false,
+        deposits_enabled: current[serviceId]?.deposits_enabled || false,
         deposit_collection_method:
           current[serviceId]?.deposit_collection_method || "manual",
-        deposit_type: current[serviceId]?.deposit_type || "none",
-        deposit_amount: current[serviceId]?.deposit_amount || "",
+        deposit_type: current[serviceId]?.deposit_type || "fixed",
+        deposit_amount: current[serviceId]?.deposit_amount || "0",
         deposit_policy: current[serviceId]?.deposit_policy || "",
         manual_deposit_instructions:
           current[serviceId]?.manual_deposit_instructions || "",
+        cancellation_window_hours:
+          current[serviceId]?.cancellation_window_hours || "24",
+        late_cancellation_forfeits_deposit:
+          current[serviceId]?.late_cancellation_forfeits_deposit ?? true,
+        no_show_forfeits_deposit:
+          current[serviceId]?.no_show_forfeits_deposit ?? true,
         [field]: value,
       },
     }));
@@ -1518,7 +1574,9 @@ export default function ServicesPage() {
 
     if (
       discountType !== "none" &&
-      (discountValue === null || Number.isNaN(discountValue) || discountValue <= 0)
+      (discountValue === null ||
+        Number.isNaN(discountValue) ||
+        discountValue <= 0)
     ) {
       setErrorMessage("Enter a valid discount amount.");
       return;
@@ -1529,17 +1587,13 @@ export default function ServicesPage() {
       return;
     }
 
-    const depositRequired = edit.deposit_required === true;
-    const depositType = edit.deposit_type || "none";
-    const depositAmount =
-      !depositRequired || depositType === "none" || !edit.deposit_amount.trim()
-        ? null
-        : Number(edit.deposit_amount);
+    const depositsEnabled = edit.deposits_enabled === true;
+    const depositType = edit.deposit_type || "fixed";
+    const depositAmount = depositsEnabled ? Number(edit.deposit_amount) : 0;
 
     if (
-      depositRequired &&
-      (depositType === "none" ||
-        depositAmount === null ||
+      depositsEnabled &&
+      (!edit.deposit_amount.trim() ||
         Number.isNaN(depositAmount) ||
         depositAmount <= 0)
     ) {
@@ -1547,12 +1601,23 @@ export default function ServicesPage() {
       return;
     }
 
-    if (depositRequired && depositType === "percent" && depositAmount && depositAmount > 100) {
-      setErrorMessage("Percent deposits cannot be greater than 100%.");
+    if (
+      depositsEnabled &&
+      depositType === "percentage" &&
+      depositAmount > 100
+    ) {
+      setErrorMessage("Percentage deposits cannot be greater than 100%.");
       return;
     }
 
-    if (depositRequired && !edit.deposit_policy.trim()) {
+    const cancellationWindowHours = Number(edit.cancellation_window_hours);
+
+    if (Number.isNaN(cancellationWindowHours) || cancellationWindowHours < 0) {
+      setErrorMessage("Enter a valid cancellation window.");
+      return;
+    }
+
+    if (depositsEnabled && !edit.deposit_policy.trim()) {
       setErrorMessage("Add your custom business-written deposit policy.");
       return;
     }
@@ -1590,15 +1655,20 @@ export default function ServicesPage() {
           discountType === "none"
             ? null
             : dateTimeLocalToIso(edit.discount_ends_at),
-        deposit_required: depositRequired,
+        deposits_enabled: depositsEnabled,
+        deposit_required: depositsEnabled,
         deposit_collection_method: edit.deposit_collection_method || "manual",
-        deposit_type: depositRequired ? depositType : "none",
-        deposit_amount: depositAmount,
-        deposit_policy: depositRequired ? edit.deposit_policy.trim() : null,
+        deposit_type: depositType,
+        deposit_amount: depositsEnabled ? depositAmount : 0,
+        deposit_policy: depositsEnabled ? edit.deposit_policy.trim() : null,
         manual_deposit_instructions:
-          depositRequired && edit.deposit_collection_method === "manual"
+          depositsEnabled && edit.deposit_collection_method === "manual"
             ? edit.manual_deposit_instructions.trim() || null
             : null,
+        cancellation_window_hours: cancellationWindowHours,
+        late_cancellation_forfeits_deposit:
+          edit.late_cancellation_forfeits_deposit,
+        no_show_forfeits_deposit: edit.no_show_forfeits_deposit,
       })
       .eq("id", service.id)
       .eq("business_id", service.business_id);
@@ -1609,7 +1679,9 @@ export default function ServicesPage() {
       return;
     }
 
-    setSuccessMessage("Service publishing, promotion, and deposit settings saved.");
+    setSuccessMessage(
+      "Service publishing, promotion, deposit, and cancellation settings saved.",
+    );
     await loadServices();
     setSavingServiceSettingsId(null);
   }
@@ -1680,9 +1752,7 @@ export default function ServicesPage() {
           </div>
 
           <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
-            <p className="text-sm font-bold text-emerald-300">
-              Public Samples
-            </p>
+            <p className="text-sm font-bold text-emerald-300">Public Samples</p>
             <p className="mt-4 text-4xl font-black text-white">
               {isLoading ? "..." : visibleSamples.length}
             </p>
@@ -1703,7 +1773,7 @@ export default function ServicesPage() {
               <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300">
                 {t(
                   "manualPayments.description",
-                  "Add the payment usernames, links, or QR code customers should use when a manual deposit is required."
+                  "Add the payment usernames, links, or QR code customers should use when a manual deposit is required.",
                 )}
               </p>
             </div>
@@ -1715,14 +1785,14 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payments_enabled",
-                    event.target.checked
+                    event.target.checked,
                   )
                 }
                 className="h-5 w-5 accent-emerald-400"
               />
               {t(
                 "manualPayments.enabled",
-                "Show manual payment methods on booking page"
+                "Show manual payment methods on booking page",
               )}
             </label>
           </div>
@@ -1737,7 +1807,7 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payment_zelle",
-                    event.target.value
+                    event.target.value,
                   )
                 }
                 placeholder="Example: business@email.com"
@@ -1754,7 +1824,7 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payment_cash_app",
-                    event.target.value
+                    event.target.value,
                   )
                 }
                 placeholder="Example: $BusinessName"
@@ -1771,7 +1841,7 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payment_venmo",
-                    event.target.value
+                    event.target.value,
                   )
                 }
                 placeholder="Example: @BusinessName"
@@ -1788,7 +1858,7 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payment_paypal",
-                    event.target.value
+                    event.target.value,
                   )
                 }
                 placeholder="Example: paypal.me/BusinessName or email"
@@ -1806,7 +1876,7 @@ export default function ServicesPage() {
               onChange={(event) =>
                 updateManualPaymentSetting(
                   "manual_payment_other",
-                  event.target.value
+                  event.target.value,
                 )
               }
               placeholder="Example: Apple Pay, bank transfer, or special instructions."
@@ -1874,7 +1944,7 @@ export default function ServicesPage() {
                 onChange={(event) =>
                   updateManualPaymentSetting(
                     "manual_payment_qr_caption",
-                    event.target.value
+                    event.target.value,
                   )
                 }
                 placeholder="Example: Scan to pay deposit"
@@ -2107,7 +2177,10 @@ export default function ServicesPage() {
 
                     <div>
                       <label className="text-sm font-medium text-gray-300">
-                        Duration minutes <span className="font-normal text-gray-500">(optional)</span>
+                        Duration minutes{" "}
+                        <span className="font-normal text-gray-500">
+                          (optional)
+                        </span>
                       </label>
                       <input
                         value={durationMinutes}
@@ -2172,7 +2245,8 @@ export default function ServicesPage() {
                           value={newDiscountType}
                           onChange={(event) =>
                             setNewDiscountType(
-                              event.target.value as "none" | "percent" | "fixed"
+                              event.target.value as
+                                "none" | "percent" | "fixed",
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2224,34 +2298,37 @@ export default function ServicesPage() {
                     <p className="mt-2 text-xs leading-5 text-gray-300">
                       {t(
                         "deposit.policyHelper",
-                        "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest."
+                        "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest.",
                       )}
                     </p>
 
                     <label className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
                       <input
                         type="checkbox"
-                        checked={newDepositRequired}
+                        checked={newDepositsEnabled}
                         onChange={(event) =>
-                          setNewDepositRequired(event.target.checked)
+                          setNewDepositsEnabled(event.target.checked)
                         }
                         className="h-5 w-5 accent-emerald-400"
                       />
                       {t("deposit.requireToggle", "Require a deposit")}
                     </label>
 
-                    {newDepositRequired && (
+                    {newDepositsEnabled && (
                       <div className="mt-4 grid gap-4">
                         <div className="grid gap-4 md:grid-cols-3">
                           <div>
                             <label className="text-sm font-medium text-gray-300">
-                              {t("deposit.collectionMethod", "Collection method")}
+                              {t(
+                                "deposit.collectionMethod",
+                                "Collection method",
+                              )}
                             </label>
                             <select
                               value={newDepositCollectionMethod}
                               onChange={(event) =>
                                 setNewDepositCollectionMethod(
-                                  event.target.value as "manual" | "stripe"
+                                  event.target.value as "manual" | "stripe",
                                 )
                               }
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2273,7 +2350,7 @@ export default function ServicesPage() {
                               value={newDepositType}
                               onChange={(event) =>
                                 setNewDepositType(
-                                  event.target.value as "none" | "fixed" | "percent"
+                                  event.target.value as "fixed" | "percentage",
                                 )
                               }
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2281,8 +2358,11 @@ export default function ServicesPage() {
                               <option value="fixed">
                                 {t("deposit.fixed", "Fixed amount")}
                               </option>
-                              <option value="percent">
-                                {t("deposit.percent", "Percent of service price")}
+                              <option value="percentage">
+                                {t(
+                                  "deposit.percent",
+                                  "Percent of service price",
+                                )}
                               </option>
                             </select>
                           </div>
@@ -2294,12 +2374,22 @@ export default function ServicesPage() {
                             <input
                               type="number"
                               min="0"
-                              step="0.01"
+                              max={
+                                newDepositType === "percentage"
+                                  ? 100
+                                  : undefined
+                              }
+                              step={
+                                newDepositType === "percentage" ? "1" : "0.01"
+                              }
                               value={newDepositAmount}
                               onChange={(event) =>
                                 setNewDepositAmount(event.target.value)
                               }
-                              placeholder={t("deposit.amountPlaceholder", "Example: 25")}
+                              placeholder={t(
+                                "deposit.amountPlaceholder",
+                                "Example: 25",
+                              )}
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                             />
                           </div>
@@ -2309,7 +2399,7 @@ export default function ServicesPage() {
                           <p className="rounded-2xl border border-yellow-400/20 bg-black/20 px-4 py-3 text-sm leading-6 text-yellow-100">
                             {t(
                               "deposit.stripeComingSoon",
-                              "Stripe checkout is coming soon. Manual deposits work now."
+                              "Stripe checkout is coming soon. Manual deposits work now.",
                             )}
                           </p>
                         )}
@@ -2325,7 +2415,7 @@ export default function ServicesPage() {
                             }
                             placeholder={t(
                               "deposit.policyPlaceholder",
-                              "Example: A $25 deposit is required to secure your appointment. Deposits go toward your final balance and are non-refundable for same-day cancellations."
+                              "Example: A $25 deposit is required to secure your appointment. Deposits go toward your final balance and are non-refundable for same-day cancellations.",
                             )}
                             className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                           />
@@ -2334,21 +2424,84 @@ export default function ServicesPage() {
                         {newDepositCollectionMethod === "manual" && (
                           <div>
                             <label className="text-sm font-medium text-gray-300">
-                              {t("deposit.instructions", "Manual payment instructions")}
+                              {t(
+                                "deposit.instructions",
+                                "Manual payment instructions",
+                              )}
                             </label>
                             <textarea
                               value={newManualDepositInstructions}
                               onChange={(event) =>
-                                setNewManualDepositInstructions(event.target.value)
+                                setNewManualDepositInstructions(
+                                  event.target.value,
+                                )
                               }
                               placeholder={t(
                                 "deposit.instructionsPlaceholder",
-                                "Example: Send deposit to Zelle: business@email.com or Cash App: $BusinessName."
+                                "Example: Send deposit to Zelle: business@email.com or Cash App: $BusinessName.",
                               )}
                               className="mt-2 min-h-24 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                             />
                           </div>
                         )}
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-300">
+                            {t(
+                              "deposit.cancellationWindow",
+                              "Cancellation window",
+                            )}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={newCancellationWindowHours}
+                            onChange={(event) =>
+                              setNewCancellationWindowHours(event.target.value)
+                            }
+                            placeholder="24"
+                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                          />
+                          <p className="mt-2 text-xs text-gray-500">
+                            {t(
+                              "deposit.cancellationWindowHelper",
+                              "Hours before the appointment when cancellation is still considered on time.",
+                            )}
+                          </p>
+                        </div>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
+                          <input
+                            type="checkbox"
+                            checked={newLateCancellationForfeitsDeposit}
+                            onChange={(event) =>
+                              setNewLateCancellationForfeitsDeposit(
+                                event.target.checked,
+                              )
+                            }
+                            className="h-5 w-5 accent-emerald-400"
+                          />
+                          {t(
+                            "deposit.lateCancellationForfeit",
+                            "Late cancellations forfeit the deposit",
+                          )}
+                        </label>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
+                          <input
+                            type="checkbox"
+                            checked={newNoShowForfeitsDeposit}
+                            onChange={(event) =>
+                              setNewNoShowForfeitsDeposit(event.target.checked)
+                            }
+                            className="h-5 w-5 accent-emerald-400"
+                          />
+                          {t(
+                            "deposit.noShowForfeit",
+                            "No-shows forfeit the deposit",
+                          )}
+                        </label>
                       </div>
                     )}
                   </div>
@@ -2510,7 +2663,7 @@ export default function ServicesPage() {
             {services.map((service) => {
               const serviceImages = getImagesForService(service.id);
               const visibleServiceImages = serviceImages.filter(
-                (image) => image.is_visible !== false && image.image_url
+                (image) => image.is_visible !== false && image.image_url,
               );
               const currentImageLimit = getServiceImageLimit();
               const canUploadMoreImages =
@@ -2542,7 +2695,8 @@ export default function ServicesPage() {
                         {visibleServiceImages.length > 0 && (
                           <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
                             {visibleServiceImages.length} image
-                            {visibleServiceImages.length === 1 ? "" : "s"} visible
+                            {visibleServiceImages.length === 1 ? "" : "s"}{" "}
+                            visible
                           </span>
                         )}
 
@@ -2559,7 +2713,8 @@ export default function ServicesPage() {
                           </span>
                         )}
 
-                        {service.deposit_required && (
+                        {(service.deposits_enabled ||
+                          service.deposit_required) && (
                           <span className="rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-yellow-200">
                             {getDepositBadgeLabel(service)}
                           </span>
@@ -2659,12 +2814,14 @@ export default function ServicesPage() {
                         </label>
                         <input
                           type="datetime-local"
-                          value={serviceSettingsEdits[service.id]?.publish_at || ""}
+                          value={
+                            serviceSettingsEdits[service.id]?.publish_at || ""
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "publish_at",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2677,12 +2834,14 @@ export default function ServicesPage() {
                         </label>
                         <input
                           type="datetime-local"
-                          value={serviceSettingsEdits[service.id]?.unpublish_at || ""}
+                          value={
+                            serviceSettingsEdits[service.id]?.unpublish_at || ""
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "unpublish_at",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2696,12 +2855,15 @@ export default function ServicesPage() {
                           Discount type
                         </label>
                         <select
-                          value={serviceSettingsEdits[service.id]?.discount_type || "none"}
+                          value={
+                            serviceSettingsEdits[service.id]?.discount_type ||
+                            "none"
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "discount_type",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2720,12 +2882,15 @@ export default function ServicesPage() {
                           type="number"
                           min="0"
                           step="0.01"
-                          value={serviceSettingsEdits[service.id]?.discount_value || ""}
+                          value={
+                            serviceSettingsEdits[service.id]?.discount_value ||
+                            ""
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "discount_value",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           placeholder="Example: 20"
@@ -2739,12 +2904,14 @@ export default function ServicesPage() {
                         Promo label
                       </label>
                       <input
-                        value={serviceSettingsEdits[service.id]?.discount_label || ""}
+                        value={
+                          serviceSettingsEdits[service.id]?.discount_label || ""
+                        }
                         onChange={(event) =>
                           updateServiceSettingsEdit(
                             service.id,
                             "discount_label",
-                            event.target.value
+                            event.target.value,
                           )
                         }
                         placeholder="Example: Summer Special"
@@ -2759,12 +2926,15 @@ export default function ServicesPage() {
                         </label>
                         <input
                           type="datetime-local"
-                          value={serviceSettingsEdits[service.id]?.discount_starts_at || ""}
+                          value={
+                            serviceSettingsEdits[service.id]
+                              ?.discount_starts_at || ""
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "discount_starts_at",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2777,12 +2947,15 @@ export default function ServicesPage() {
                         </label>
                         <input
                           type="datetime-local"
-                          value={serviceSettingsEdits[service.id]?.discount_ends_at || ""}
+                          value={
+                            serviceSettingsEdits[service.id]
+                              ?.discount_ends_at || ""
+                          }
                           onChange={(event) =>
                             updateServiceSettingsEdit(
                               service.id,
                               "discount_ends_at",
-                              event.target.value
+                              event.target.value,
                             )
                           }
                           className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2812,13 +2985,13 @@ export default function ServicesPage() {
                         <p className="mt-2 text-xs leading-5 text-gray-300">
                           {t(
                             "deposit.policyHelper",
-                            "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest."
+                            "Write the deposit rules your customers must agree to before requesting this service. This policy is created by your business, not SchedNest.",
                           )}
                         </p>
                       </div>
 
                       <span className="w-fit rounded-full border border-yellow-400/20 bg-black/20 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-yellow-100">
-                        {serviceSettingsEdits[service.id]?.deposit_required
+                        {serviceSettingsEdits[service.id]?.deposits_enabled
                           ? t("deposit.required", "Deposit required")
                           : t("deposit.notRequired", "No deposit required")}
                       </span>
@@ -2827,12 +3000,15 @@ export default function ServicesPage() {
                     <label className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
                       <input
                         type="checkbox"
-                        checked={serviceSettingsEdits[service.id]?.deposit_required || false}
+                        checked={
+                          serviceSettingsEdits[service.id]?.deposits_enabled ||
+                          false
+                        }
                         onChange={(event) =>
                           updateServiceSettingsEdit(
                             service.id,
-                            "deposit_required",
-                            event.target.checked
+                            "deposits_enabled",
+                            event.target.checked,
                           )
                         }
                         className="h-5 w-5 accent-emerald-400"
@@ -2840,20 +3016,26 @@ export default function ServicesPage() {
                       {t("deposit.requireToggle", "Require a deposit")}
                     </label>
 
-                    {serviceSettingsEdits[service.id]?.deposit_required && (
+                    {serviceSettingsEdits[service.id]?.deposits_enabled && (
                       <div className="mt-4 grid gap-4">
                         <div className="grid gap-4 md:grid-cols-3">
                           <div>
                             <label className="text-sm font-medium text-gray-300">
-                              {t("deposit.collectionMethod", "Collection method")}
+                              {t(
+                                "deposit.collectionMethod",
+                                "Collection method",
+                              )}
                             </label>
                             <select
-                              value={serviceSettingsEdits[service.id]?.deposit_collection_method || "manual"}
+                              value={
+                                serviceSettingsEdits[service.id]
+                                  ?.deposit_collection_method || "manual"
+                              }
                               onChange={(event) =>
                                 updateServiceSettingsEdit(
                                   service.id,
                                   "deposit_collection_method",
-                                  event.target.value
+                                  event.target.value,
                                 )
                               }
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2872,12 +3054,15 @@ export default function ServicesPage() {
                               {t("deposit.type", "Deposit type")}
                             </label>
                             <select
-                              value={serviceSettingsEdits[service.id]?.deposit_type || "fixed"}
+                              value={
+                                serviceSettingsEdits[service.id]
+                                  ?.deposit_type || "fixed"
+                              }
                               onChange={(event) =>
                                 updateServiceSettingsEdit(
                                   service.id,
                                   "deposit_type",
-                                  event.target.value
+                                  event.target.value,
                                 )
                               }
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
@@ -2885,8 +3070,11 @@ export default function ServicesPage() {
                               <option value="fixed">
                                 {t("deposit.fixed", "Fixed amount")}
                               </option>
-                              <option value="percent">
-                                {t("deposit.percent", "Percent of service price")}
+                              <option value="percentage">
+                                {t(
+                                  "deposit.percent",
+                                  "Percent of service price",
+                                )}
                               </option>
                             </select>
                           </div>
@@ -2898,26 +3086,44 @@ export default function ServicesPage() {
                             <input
                               type="number"
                               min="0"
-                              step="0.01"
-                              value={serviceSettingsEdits[service.id]?.deposit_amount || ""}
+                              max={
+                                serviceSettingsEdits[service.id]
+                                  ?.deposit_type === "percentage"
+                                  ? 100
+                                  : undefined
+                              }
+                              step={
+                                serviceSettingsEdits[service.id]
+                                  ?.deposit_type === "percentage"
+                                  ? "1"
+                                  : "0.01"
+                              }
+                              value={
+                                serviceSettingsEdits[service.id]
+                                  ?.deposit_amount || ""
+                              }
                               onChange={(event) =>
                                 updateServiceSettingsEdit(
                                   service.id,
                                   "deposit_amount",
-                                  event.target.value
+                                  event.target.value,
                                 )
                               }
-                              placeholder={t("deposit.amountPlaceholder", "Example: 25")}
+                              placeholder={t(
+                                "deposit.amountPlaceholder",
+                                "Example: 25",
+                              )}
                               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                             />
                           </div>
                         </div>
 
-                        {serviceSettingsEdits[service.id]?.deposit_collection_method === "stripe" && (
+                        {serviceSettingsEdits[service.id]
+                          ?.deposit_collection_method === "stripe" && (
                           <p className="rounded-2xl border border-yellow-400/20 bg-black/20 px-4 py-3 text-sm leading-6 text-yellow-100">
                             {t(
                               "deposit.stripeComingSoon",
-                              "Stripe checkout is coming soon. Manual deposits work now."
+                              "Stripe checkout is coming soon. Manual deposits work now.",
                             )}
                           </p>
                         )}
@@ -2927,46 +3133,144 @@ export default function ServicesPage() {
                             {t("deposit.policy", "Custom deposit policy")}
                           </label>
                           <textarea
-                            value={serviceSettingsEdits[service.id]?.deposit_policy || ""}
+                            value={
+                              serviceSettingsEdits[service.id]
+                                ?.deposit_policy || ""
+                            }
                             onChange={(event) =>
                               updateServiceSettingsEdit(
                                 service.id,
                                 "deposit_policy",
-                                event.target.value
+                                event.target.value,
                               )
                             }
                             placeholder={t(
                               "deposit.policyPlaceholder",
-                              "Example: A $25 deposit is required to secure your appointment. Deposits go toward your final balance and are non-refundable for same-day cancellations."
+                              "Example: A $25 deposit is required to secure your appointment. Deposits go toward your final balance and are non-refundable for same-day cancellations.",
                             )}
                             className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                           />
                         </div>
 
-                        {serviceSettingsEdits[service.id]?.deposit_collection_method === "manual" && (
+                        {serviceSettingsEdits[service.id]
+                          ?.deposit_collection_method === "manual" && (
                           <div>
                             <label className="text-sm font-medium text-gray-300">
-                              {t("deposit.instructions", "Manual payment instructions")}
+                              {t(
+                                "deposit.instructions",
+                                "Manual payment instructions",
+                              )}
                             </label>
                             <textarea
-                              value={serviceSettingsEdits[service.id]?.manual_deposit_instructions || ""}
+                              value={
+                                serviceSettingsEdits[service.id]
+                                  ?.manual_deposit_instructions || ""
+                              }
                               onChange={(event) =>
                                 updateServiceSettingsEdit(
                                   service.id,
                                   "manual_deposit_instructions",
-                                  event.target.value
+                                  event.target.value,
                                 )
                               }
                               placeholder={t(
                                 "deposit.instructionsPlaceholder",
-                                "Example: Send deposit to Zelle: business@email.com or Cash App: $BusinessName."
+                                "Example: Send deposit to Zelle: business@email.com or Cash App: $BusinessName.",
                               )}
                               className="mt-2 min-h-24 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
                             />
                           </div>
                         )}
+
+                        <div>
+                          <label className="text-sm font-medium text-gray-300">
+                            {t(
+                              "deposit.cancellationWindow",
+                              "Cancellation window",
+                            )}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={
+                              serviceSettingsEdits[service.id]
+                                ?.cancellation_window_hours || "24"
+                            }
+                            onChange={(event) =>
+                              updateServiceSettingsEdit(
+                                service.id,
+                                "cancellation_window_hours",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="24"
+                            className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                          />
+                          <p className="mt-2 text-xs text-gray-500">
+                            {t(
+                              "deposit.cancellationWindowHelper",
+                              "Hours before the appointment when cancellation is still considered on time.",
+                            )}
+                          </p>
+                        </div>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
+                          <input
+                            type="checkbox"
+                            checked={
+                              serviceSettingsEdits[service.id]
+                                ?.late_cancellation_forfeits_deposit ?? true
+                            }
+                            onChange={(event) =>
+                              updateServiceSettingsEdit(
+                                service.id,
+                                "late_cancellation_forfeits_deposit",
+                                event.target.checked,
+                              )
+                            }
+                            className="h-5 w-5 accent-emerald-400"
+                          />
+                          {t(
+                            "deposit.lateCancellationForfeit",
+                            "Late cancellations forfeit the deposit",
+                          )}
+                        </label>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-black text-white">
+                          <input
+                            type="checkbox"
+                            checked={
+                              serviceSettingsEdits[service.id]
+                                ?.no_show_forfeits_deposit ?? true
+                            }
+                            onChange={(event) =>
+                              updateServiceSettingsEdit(
+                                service.id,
+                                "no_show_forfeits_deposit",
+                                event.target.checked,
+                              )
+                            }
+                            className="h-5 w-5 accent-emerald-400"
+                          />
+                          {t(
+                            "deposit.noShowForfeit",
+                            "No-shows forfeit the deposit",
+                          )}
+                        </label>
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => saveServiceSettings(service)}
+                      disabled={savingServiceSettingsId === service.id}
+                      className="mt-4 rounded-2xl border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm font-black text-yellow-100 transition hover:bg-yellow-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {savingServiceSettingsId === service.id
+                        ? "Saving..."
+                        : t("deposit.saveSettings", "Save deposit settings")}
+                    </button>
                   </div>
 
                   <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5">
@@ -3060,7 +3364,7 @@ export default function ServicesPage() {
                                     onChange={(event) =>
                                       updateImageCaptionDraft(
                                         image.id,
-                                        event.target.value
+                                        event.target.value,
                                       )
                                     }
                                     placeholder="Optional image caption"
@@ -3119,7 +3423,6 @@ export default function ServicesPage() {
                       </>
                     )}
                   </div>
-
                 </div>
               );
             })}
