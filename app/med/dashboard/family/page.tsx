@@ -60,7 +60,21 @@ export default function MedFamilyPage() {
       return;
     }
 
-    setInvites((data || []) as SharedPatient[]);
+    const normalizedInvites: SharedPatient[] = (data ?? []).map((invite) => ({
+      id: invite.id,
+      owner_id: invite.owner_id,
+      caregiver_email: invite.caregiver_email,
+      relationship: invite.relationship,
+      status: invite.status as SharedPatient["status"],
+      permissions: (invite.permissions ?? {}) as PermissionMap,
+      med_profiles: Array.isArray(invite.med_profiles)
+        ? invite.med_profiles
+        : invite.med_profiles
+          ? [invite.med_profiles]
+          : [],
+    }));
+
+    setInvites(normalizedInvites);
     setLoading(false);
   }, [supabase]);
 
