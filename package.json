@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "engineering:verify": "node scripts/verify-engineering-foundation.mjs",
+    "quality": "npm run engineering:verify && npm run lint && npm run typecheck && npm run build",
+    "lint:engineering": "eslint app/admin/engineering/page.tsx scripts/verify-engineering-foundation.mjs",
+    "quality:foundation": "npm run engineering:verify && npm run lint:engineering && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
