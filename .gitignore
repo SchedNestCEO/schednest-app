@@ -46,3 +46,6 @@ supabase/.temp/
 
 # Local migration backups
 supabase/migrations-backup-*/
+
+# Local engineering installer backups
+.engineering-backups/
