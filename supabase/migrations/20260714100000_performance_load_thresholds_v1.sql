@@ -1,0 +1,9 @@
+insert into public.performance_thresholds (product,metric_key,display_name,unit,comparison,warning_value,critical_value)
+values
+('platform','http_req_duration_p95_ms','Platform HTTP p95 latency','ms','lte',750,1500),('platform','http_req_duration_p99_ms','Platform HTTP p99 latency','ms','lte',1500,3000),('platform','http_error_rate_percent','Platform HTTP error rate','percent','lte',1,5),
+('business','http_req_duration_p95_ms','Business HTTP p95 latency','ms','lte',500,1500),('business','http_req_duration_p99_ms','Business HTTP p99 latency','ms','lte',1000,3000),('business','http_error_rate_percent','Business HTTP error rate','percent','lte',1,5),
+('student','http_req_duration_p95_ms','Student HTTP p95 latency','ms','lte',750,1500),('student','http_req_duration_p99_ms','Student HTTP p99 latency','ms','lte',1500,3000),('student','http_error_rate_percent','Student HTTP error rate','percent','lte',1,5),
+('teams','http_req_duration_p95_ms','Teams HTTP p95 latency','ms','lte',750,1500),('teams','http_req_duration_p99_ms','Teams HTTP p99 latency','ms','lte',1500,3000),('teams','http_error_rate_percent','Teams HTTP error rate','percent','lte',1,5),
+('medical','http_req_duration_p95_ms','Medical HTTP p95 latency','ms','lte',750,1500),('medical','http_req_duration_p99_ms','Medical HTTP p99 latency','ms','lte',1500,3000),('medical','http_error_rate_percent','Medical HTTP error rate','percent','lte',1,5),
+('life','http_req_duration_p95_ms','Life HTTP p95 latency','ms','lte',750,1500),('life','http_req_duration_p99_ms','Life HTTP p99 latency','ms','lte',1500,3000),('life','http_error_rate_percent','Life HTTP error rate','percent','lte',1,5)
+on conflict (product,metric_key) do update set display_name=excluded.display_name,unit=excluded.unit,comparison=excluded.comparison,warning_value=excluded.warning_value,critical_value=excluded.critical_value,enabled=true,updated_at=now();

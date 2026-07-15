@@ -49,3 +49,6 @@ supabase/migrations-backup-*/
 
 # Local engineering installer backups
 .engineering-backups/
+
+# Local load-test output
+artifacts/load/*.json

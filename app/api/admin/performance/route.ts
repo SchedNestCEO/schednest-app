@@ -64,11 +64,55 @@ export async function GET(request: NextRequest) {
   });
 }
 
+
+function k6Metric(summary: Record<string, unknown>, key: string, field: string) {
+  const metrics = summary.metrics as Record<string, { values?: Record<string, number> }> | undefined;
+  return metrics?.[key]?.values?.[field];
+}
+
+async function ingestK6Summary(
+  auth: Awaited<ReturnType<typeof authorizedClient>> & { ok: true },
+  body: Record<string, unknown>,
+) {
+  const summary = body.summary as Record<string, unknown> | undefined;
+  if (!summary) return NextResponse.json({ error: "A k6 summary is required." }, { status: 400 });
+  const product = typeof body.product === "string" ? body.product : "platform";
+  const environment = typeof body.environment === "string" ? body.environment : "staging";
+  const p95 = k6Metric(summary, "http_req_duration", "p(95)");
+  const p99 = k6Metric(summary, "http_req_duration", "p(99)");
+  const failed = k6Metric(summary, "http_req_failed", "rate");
+  const count = k6Metric(summary, "http_reqs", "count");
+  const vus = k6Metric(summary, "vus_max", "max");
+  const values = [
+    ["http_req_duration_p95_ms", p95, "ms"],
+    ["http_req_duration_p99_ms", p99, "ms"],
+    ["http_error_rate_percent", typeof failed === "number" ? failed * 100 : undefined, "percent"],
+    ["http_request_count", count, "requests"],
+  ].filter((item) => typeof item[1] === "number") as [string, number, string][];
+  const { data: thresholdsData } = await auth.supabase.from("performance_thresholds").select("*").eq("enabled", true);
+  const thresholds = (thresholdsData || []) as PerformanceThreshold[];
+  const now = new Date().toISOString();
+  const { data: run, error: runError } = await auth.supabase.from("performance_test_runs").insert({ created_by: auth.admin.user.id, name: typeof body.name === "string" ? body.name : "k6 load test", product, environment, test_type: "load", status: "running", target_virtual_users: typeof vus === "number" ? Math.round(vus) : null, started_at: now, metadata: { source: "k6" } }).select("*").single();
+  if (runError || !run) return NextResponse.json({ error: runError?.message || "Unable to create load-test run." }, { status: 500 });
+  const snapshots = values.map(([metric_key, metric_value, unit]) => { const threshold = thresholds.find((t) => t.product === product && t.metric_key === metric_key); return { run_id: run.id, product, metric_key, metric_value, unit, source: "k6", status: classifyMetric(metric_value, threshold), metadata: { imported: true } }; });
+  const { error: insertError } = await auth.supabase.from("performance_metric_snapshots").insert(snapshots);
+  const critical = snapshots.filter((x) => x.status === "critical").length;
+  const warning = snapshots.filter((x) => x.status === "warning").length;
+  const status = insertError || critical > 0 ? "failed" : "passed";
+  await auth.supabase.from("performance_test_runs").update({ status, completed_at: new Date().toISOString(), summary: { metric_count: snapshots.length, critical_count: critical, warning_count: warning, imported_from: "k6" }, updated_at: new Date().toISOString() }).eq("id", run.id);
+  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+  return NextResponse.json({ run: { ...run, status }, metrics: snapshots });
+}
+
 export async function POST(request: NextRequest) {
   const auth = await authorizedClient(request);
   if (!auth.ok) return auth.response;
 
   const body = await request.json().catch(() => ({}));
+
+  if (body.action === "ingest_k6_summary") {
+    return ingestK6Summary(auth, body);
+  }
   if (body.action !== "capture_snapshot") {
     return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
   }
