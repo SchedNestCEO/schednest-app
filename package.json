@@ -21,7 +21,9 @@
     "smoke": "node scripts/smoke-test.mjs",
     "deployment:verify": "node scripts/verify-deployment.mjs",
     "sprint2:verify": "node scripts/verify-sprint2.mjs && npm run env:validate && npm run migrations:validate && npm run routes:validate && npm run vercel:validate && npm run lint:engineering && npm run lint:budget",
-    "clean:next": "node scripts/clean-next.mjs"
+    "clean:next": "node scripts/clean-next.mjs",
+    "sprint3:verify": "node scripts/verify-sprint3.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget",
+    "lint:performance": "eslint app/admin/performance/page.tsx app/api/admin/performance/route.ts app/lib/admin/performance.ts scripts/verify-sprint3.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

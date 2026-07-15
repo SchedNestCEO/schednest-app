@@ -9,7 +9,8 @@
     "app/dashboard/page.tsx",
     "app/student/page.tsx",
     "app/teams/page.tsx",
-    "app/med/dashboard/page.tsx"
+    "app/med/dashboard/page.tsx",
+    "app/admin/performance/page.tsx"
   ],
   "apiRoutes": [
     "app/api/admin/health/route.ts",
@@ -17,7 +18,8 @@
     "app/api/platform/activity/route.ts",
     "app/api/platform/notifications/route.ts",
     "app/api/platform/settings/route.ts",
-    "app/api/stripe/webhook/route.ts"
+    "app/api/stripe/webhook/route.ts",
+    "app/api/admin/performance/route.ts"
   ],
   "publicSmokePaths": [
     "/",
