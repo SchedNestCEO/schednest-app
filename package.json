@@ -7,11 +7,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run clean:next && tsc --noEmit",
     "engineering:verify": "node scripts/verify-engineering-foundation.mjs",
     "quality": "npm run engineering:verify && npm run lint && npm run typecheck && npm run build",
     "lint:engineering": "eslint app/admin/engineering/page.tsx scripts/verify-engineering-foundation.mjs",
-    "quality:foundation": "npm run engineering:verify && npm run lint:engineering && npm run typecheck && npm run build"
+    "quality:foundation": "npm run engineering:verify && npm run lint:engineering && npm run typecheck && npm run build",
+    "env:validate": "node scripts/validate-env.mjs",
+    "migrations:validate": "node scripts/validate-migrations.mjs",
+    "routes:validate": "node scripts/validate-routes.mjs",
+    "vercel:validate": "node scripts/validate-vercel-config.mjs",
+    "lint:budget": "node scripts/lint-budget.mjs",
+    "lint:baseline:update": "node scripts/update-lint-baseline.mjs",
+    "smoke": "node scripts/smoke-test.mjs",
+    "deployment:verify": "node scripts/verify-deployment.mjs",
+    "sprint2:verify": "node scripts/verify-sprint2.mjs && npm run env:validate && npm run migrations:validate && npm run routes:validate && npm run vercel:validate && npm run lint:engineering && npm run lint:budget",
+    "clean:next": "node scripts/clean-next.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
