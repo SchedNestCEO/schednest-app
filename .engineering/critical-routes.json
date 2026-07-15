@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "app/page.tsx",
+    "app/login/page.tsx",
+    "app/products/page.tsx",
+    "app/security/page.tsx",
+    "app/admin/page.tsx",
+    "app/admin/engineering/page.tsx",
+    "app/dashboard/page.tsx",
+    "app/student/page.tsx",
+    "app/teams/page.tsx",
+    "app/med/dashboard/page.tsx"
+  ],
+  "apiRoutes": [
+    "app/api/admin/health/route.ts",
+    "app/api/booking-reminders/route.ts",
+    "app/api/platform/activity/route.ts",
+    "app/api/platform/notifications/route.ts",
+    "app/api/platform/settings/route.ts",
+    "app/api/stripe/webhook/route.ts"
+  ],
+  "publicSmokePaths": [
+    "/",
+    "/login",
+    "/products",
+    "/security"
+  ]
+}
