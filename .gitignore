@@ -52,3 +52,4 @@ supabase/migrations-backup-*/
 
 # Local load-test output
 artifacts/load/*.json
+.env.loadtest.local
