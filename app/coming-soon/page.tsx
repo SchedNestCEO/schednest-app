@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ComingSoonPage() {
 return (
 <main className="min-h-screen bg-[#050807] px-6 py-16 text-white">
@@ -16,12 +18,12 @@ your dashboard access will open once your workspace is ready.
 </p>
 
 <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-<a
+<Link
 href="/"
 className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-black"
 >
 Back to home
-</a>
+</Link>
 
 <a
 href="mailto:hello@schednest.com"
