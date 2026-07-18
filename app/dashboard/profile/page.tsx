@@ -148,7 +148,6 @@ export default function BusinessProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [origin, setOrigin] = useState("");
 
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [subscription, setSubscription] = useState<AnyRow | null>(null);
@@ -165,8 +164,7 @@ export default function BusinessProfilePage() {
   const [bookingPageTheme, setBookingPageTheme] = useState("schednest_dark");
 
   const cleanSlug = createSlug(slug);
-  const publicBookingUrl =
-    origin && cleanSlug ? `${origin}/book/${cleanSlug}` : "";
+  const publicBookingPath = cleanSlug ? `/book/${cleanSlug}` : "";
 
   const planAccess = getPlanAccess(subscription, plan);
 
@@ -281,11 +279,6 @@ export default function BusinessProfilePage() {
   }
 
   async function saveProfile() {
-    if (!profile) {
-      setMessage("Business profile not loaded.");
-      return;
-    }
-
     if (!businessName.trim()) {
       setMessage("Business name is required.");
       return;
@@ -309,7 +302,18 @@ export default function BusinessProfilePage() {
     setIsSaving(true);
     setMessage("");
 
-    const updatePayload = {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setMessage("You must be logged in to save a business profile.");
+      setIsSaving(false);
+      return;
+    }
+
+    const profilePayload = {
       business_name: businessName.trim(),
       slug: cleanSlug,
       timezone,
@@ -318,23 +322,48 @@ export default function BusinessProfilePage() {
       contact_phone: contactPhone.trim() || null,
       brand_primary_color: planAccess.hasGrowthAccess
         ? sanitizeHexColor(brandPrimaryColor, "#34d399")
-        : profile.brand_primary_color || "#34d399",
+        : profile?.brand_primary_color || "#34d399",
       brand_accent_color: planAccess.hasGrowthAccess
         ? sanitizeHexColor(brandAccentColor, "#34d399")
-        : profile.brand_accent_color || "#34d399",
+        : profile?.brand_accent_color || "#34d399",
       booking_page_theme: planAccess.hasGrowthAccess
         ? bookingPageTheme
-        : profile.booking_page_theme || "schednest_dark",
+        : profile?.booking_page_theme || "schednest_dark",
     };
 
-    const { error } = await supabase
-      .from("business_profiles")
-      .update(updatePayload)
-      .eq("id", profile.id)
-      .eq("owner_id", profile.owner_id);
+    if (!profile) {
+      const { data: createdProfile, error: createError } = await supabase
+        .from("business_profiles")
+        .insert({
+          ...profilePayload,
+          owner_id: user.id,
+        })
+        .select("*")
+        .single();
 
-    if (error) {
-      setMessage(error.message);
+      if (createError || !createdProfile) {
+        setMessage(
+          createError?.message || "Unable to create the business profile.",
+        );
+        setIsSaving(false);
+        return;
+      }
+
+      setProfile(createdProfile as BusinessProfile);
+      setMessage("Business profile created.");
+      await loadProfile();
+      setIsSaving(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("business_profiles")
+      .update(profilePayload)
+      .eq("id", profile.id)
+      .eq("owner_id", user.id);
+
+    if (updateError) {
+      setMessage(updateError.message);
       setIsSaving(false);
       return;
     }
@@ -345,15 +374,20 @@ export default function BusinessProfilePage() {
   }
 
   async function copyBookingLink() {
-    if (!publicBookingUrl) return;
+    if (!publicBookingPath) return;
 
-    await navigator.clipboard.writeText(publicBookingUrl);
+    await navigator.clipboard.writeText(
+      `${window.location.origin}${publicBookingPath}`,
+    );
     setMessage("Public booking link copied.");
   }
 
   useEffect(() => {
-    setOrigin(window.location.origin);
-    loadProfile();
+    const timer = window.setTimeout(() => {
+      void loadProfile();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -568,7 +602,7 @@ export default function BusinessProfilePage() {
 
             <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
               <p className="break-all text-sm font-black text-emerald-200">
-                {publicBookingUrl || "Your booking link will appear here."}
+                {publicBookingPath || "Your booking link will appear here."}
               </p>
             </div>
 
@@ -576,15 +610,15 @@ export default function BusinessProfilePage() {
               <button
                 type="button"
                 onClick={copyBookingLink}
-                disabled={!publicBookingUrl}
+                disabled={!publicBookingPath}
                 className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Copy Link
               </button>
 
-              {publicBookingUrl && (
+              {publicBookingPath && (
                 <a
-                  href={publicBookingUrl}
+                  href={publicBookingPath}
                   target="_blank"
                   rel="noreferrer"
                   className="rounded-2xl border border-white/10 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
