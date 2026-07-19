@@ -74,6 +74,11 @@ type PublicHour = {
   close_time: string | null;
 };
 
+type OccupiedBookingRange = {
+  start_time: string;
+  end_time: string;
+};
+
 type PublicBookingQuestion = {
   id: string;
   business_id: string;
@@ -607,6 +612,9 @@ export default function PublicBookingPage() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
+  const [occupiedRanges, setOccupiedRanges] = useState<
+    OccupiedBookingRange[]
+  >([]);
   const [notes, setNotes] = useState("");
   const [intakeAnswers, setIntakeAnswers] = useState<
     Record<string, string | boolean>
@@ -728,6 +736,21 @@ export default function PublicBookingPage() {
       }
 
       const value = minutesToTimeValue(minutes);
+      const slotStart = new Date(`${bookingDate}T${value}`);
+      const slotEnd = new Date(
+        slotStart.getTime() + serviceDuration * 60 * 1000
+      );
+
+      const overlapsExistingBooking = occupiedRanges.some((range) => {
+        const occupiedStart = new Date(range.start_time);
+        const occupiedEnd = new Date(range.end_time);
+
+        return slotStart < occupiedEnd && occupiedStart < slotEnd;
+      });
+
+      if (overlapsExistingBooking) {
+        continue;
+      }
 
       slots.push({
         value,
@@ -736,7 +759,13 @@ export default function PublicBookingPage() {
     }
 
     return slots;
-  }, [bookingDate, selectedDayHours, selectedService, isFlexibleRequest]);
+  }, [
+    bookingDate,
+    selectedDayHours,
+    selectedService,
+    isFlexibleRequest,
+    occupiedRanges,
+  ]);
 
   async function loadPage() {
     setIsLoading(true);
@@ -1081,6 +1110,52 @@ export default function PublicBookingPage() {
     return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
+
+  useEffect(() => {
+    if (
+      !pageData?.business.id ||
+      !bookingDate ||
+      isFlexibleRequest
+    ) {
+      return;
+    }
+
+    const businessId = pageData.business.id;
+    let isCurrentRequest = true;
+
+    async function loadOccupiedRanges() {
+      const { data, error } = await supabase.rpc(
+        "get_public_booking_occupied_ranges",
+        {
+          p_business_id: businessId,
+          p_local_date: bookingDate,
+        }
+      );
+
+      if (!isCurrentRequest) return;
+
+      if (error) {
+        setOccupiedRanges([]);
+        setErrorMessage(error.message);
+        return;
+      }
+
+      setOccupiedRanges(
+        Array.isArray(data) ? (data as OccupiedBookingRange[]) : []
+      );
+    }
+
+    void loadOccupiedRanges();
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [
+    bookingDate,
+    isFlexibleRequest,
+    pageData?.business.id,
+    supabase,
+  ]);
 
   useEffect(() => {
     if (!bookingTime || isFlexibleRequest) return;
@@ -1692,6 +1767,7 @@ export default function PublicBookingPage() {
                     onChange={(event) => {
                       setBookingDate(event.target.value);
                       setBookingTime("");
+                      setOccupiedRanges([]);
                       setErrorMessage("");
                       setConfirmationSummary(null);
                     }}
