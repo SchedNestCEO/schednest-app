@@ -107,7 +107,11 @@ export default function MedMedicationsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadMedications();
+    const timeoutId = window.setTimeout(() => {
+      void loadMedications();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadMedications]);
 
   async function addMedication(event: React.FormEvent<HTMLFormElement>) {

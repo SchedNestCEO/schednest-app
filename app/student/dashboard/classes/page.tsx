@@ -133,7 +133,11 @@ export default function ClassesPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadClasses();
+    const timeoutId = window.setTimeout(() => {
+      void loadClasses();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadClasses]);
 
   async function addCourse(event: React.FormEvent<HTMLFormElement>) {

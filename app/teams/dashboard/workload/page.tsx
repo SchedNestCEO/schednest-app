@@ -162,7 +162,11 @@ export default function TeamWorkloadPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadWorkload();
+    const timeoutId = window.setTimeout(() => {
+      void loadWorkload();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadWorkload]);
 
   function workloadLabel(score: number) {

@@ -79,7 +79,11 @@ export default function MedFamilyPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadInvites();
+    const timeoutId = window.setTimeout(() => {
+      void loadInvites();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadInvites]);
 
   async function respond(invite: SharedPatient, status: "accepted" | "declined") {

@@ -478,7 +478,11 @@ export default function CustomersPage() {
   }
 
   useEffect(() => {
-    loadCustomers();
+    const timeoutId = window.setTimeout(() => {
+      void loadCustomers();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

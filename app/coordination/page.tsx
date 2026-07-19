@@ -97,7 +97,11 @@ export default function CoordinationPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadData();
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
   async function addItem(event: React.FormEvent<HTMLFormElement>) {

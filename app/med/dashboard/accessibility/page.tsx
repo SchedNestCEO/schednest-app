@@ -75,7 +75,11 @@ export default function AccessibilityPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadPreferences();
+    const timeoutId = window.setTimeout(() => {
+      void loadPreferences();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadPreferences]);
 
   async function savePreferences() {

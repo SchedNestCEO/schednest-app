@@ -40,7 +40,13 @@ export default function FounderOSPage() {
     setItems((data || []) as Notice[]);
   }
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   async function mark(id: string, status: string) {
     await supabase.from("admin_notifications").update({ status, material_change: false, updated_at: new Date().toISOString() }).eq("id", id);

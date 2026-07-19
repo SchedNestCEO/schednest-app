@@ -120,7 +120,11 @@ export default function ExamsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadData();
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
   async function addExam(event: React.FormEvent<HTMLFormElement>) {

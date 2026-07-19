@@ -139,7 +139,11 @@ export default function BirdyPermissionsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadPermissions();
+    const timeoutId = window.setTimeout(() => {
+      void loadPermissions();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadPermissions]);
 
   function findPermission(product: Product, actionKey: string) {

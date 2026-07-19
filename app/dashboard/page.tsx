@@ -271,7 +271,11 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    loadDashboard();
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -345,11 +349,15 @@ export default function DashboardPage() {
     const dismissedSetupGuide =
       window.localStorage.getItem("schednest-setup-guide-dismissed") === "true";
 
-    if (!isSetupComplete && !dismissedSetupGuide) {
-      setIsSetupGuideOpen(true);
-    }
+    const timeoutId = window.setTimeout(() => {
+      if (!isSetupComplete && !dismissedSetupGuide) {
+        setIsSetupGuideOpen(true);
+      }
 
-    setHasCheckedSetupGuide(true);
+      setHasCheckedSetupGuide(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [isLoading, isSetupComplete, hasCheckedSetupGuide]);
 
 

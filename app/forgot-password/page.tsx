@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+
+
 import { useState } from "react";
 import { createClient } from "../lib/supabase/client";
 
@@ -41,7 +44,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
       <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-7xl items-center justify-center">
         <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#07110d]/85 p-8 shadow-[0_0_80px_rgba(16,185,129,0.12)] backdrop-blur-xl">
-          <a href="/" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-emerald-300">
               S
             </div>
@@ -49,7 +52,7 @@ export default function ForgotPasswordPage() {
             <span className="text-xl font-semibold tracking-tight">
               SchedNest
             </span>
-          </a>
+          </Link>
 
           <div className="mt-10">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">

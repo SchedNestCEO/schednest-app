@@ -133,7 +133,11 @@ export default function AssignmentsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadData();
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
   async function addAssignment(event: React.FormEvent<HTMLFormElement>) {

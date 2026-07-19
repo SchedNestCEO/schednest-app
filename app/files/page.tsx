@@ -83,7 +83,11 @@ export default function UniversalFilesPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadFiles();
+    const timeoutId = window.setTimeout(() => {
+      void loadFiles();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadFiles]);
 
   async function uploadFile(event: React.FormEvent<HTMLFormElement>) {

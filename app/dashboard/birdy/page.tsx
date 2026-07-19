@@ -563,7 +563,11 @@ export default function BirdyPage() {
   }
 
   useEffect(() => {
-    loadBirdy();
+    const timeoutId = window.setTimeout(() => {
+      void loadBirdy();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

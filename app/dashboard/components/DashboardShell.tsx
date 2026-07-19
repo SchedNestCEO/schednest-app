@@ -123,11 +123,15 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   }
 
   useEffect(() => {
-    const savedSidebarPreference = window.localStorage.getItem(
-      "schednest-sidebar-collapsed"
-    );
+    const timeoutId = window.setTimeout(() => {
+      const savedSidebarPreference = window.localStorage.getItem(
+        "schednest-sidebar-collapsed"
+      );
 
-    setIsSidebarCollapsed(savedSidebarPreference === "true");
+      setIsSidebarCollapsed(savedSidebarPreference === "true");
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -146,7 +150,11 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   }, [supabase]);
 
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    const timeoutId = window.setTimeout(() => {
+      setIsMobileMenuOpen(false);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [pathname]);
 
   function isActiveRoute(href: string) {

@@ -68,7 +68,11 @@ export default function StudentImportPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadImports();
+    const timeoutId = window.setTimeout(() => {
+      void loadImports();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadImports]);
 
   async function uploadSyllabus(event: React.FormEvent<HTMLFormElement>) {

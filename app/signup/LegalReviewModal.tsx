@@ -26,14 +26,17 @@ export default function LegalReviewModal({
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    const timeoutId = window.setTimeout(() => {
       setHasReachedBottom(false);
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = 0;
-        }
-      }, 0);
-    }
+
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [isOpen]);
 
   if (!isOpen) return null;

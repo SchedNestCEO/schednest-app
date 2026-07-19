@@ -119,7 +119,11 @@ export default function TeamsDashboardPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadDashboard();
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDashboard]);
 
   const activeProjects = projects.filter(

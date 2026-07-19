@@ -148,7 +148,11 @@ export default function TeamMembersPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadMembers();
+    const timeoutId = window.setTimeout(() => {
+      void loadMembers();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadMembers]);
 
   async function inviteMember(event: React.FormEvent<HTMLFormElement>) {

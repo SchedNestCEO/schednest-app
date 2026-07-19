@@ -102,7 +102,11 @@ export default function TeamsSchedulePage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadEvents();
+    const timeoutId = window.setTimeout(() => {
+      void loadEvents();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadEvents]);
 
   async function addEvent(event: React.FormEvent<HTMLFormElement>) {

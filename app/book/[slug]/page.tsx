@@ -575,6 +575,16 @@ function isIntakeAnswerMissing(value: string | boolean | undefined) {
   return !value || !value.trim();
 }
 
+type PublicServiceDepositRow = {
+  id: string;
+  deposit_required?: boolean | null;
+  deposit_collection_method?: string | null;
+  deposit_type?: string | null;
+  deposit_amount?: number | string | null;
+  deposit_policy?: string | null;
+  manual_deposit_instructions?: string | null;
+};
+
 export default function PublicBookingPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
@@ -799,7 +809,7 @@ export default function PublicBookingPage() {
 
     if (!depositError && Array.isArray(depositData)) {
       const depositByServiceId = new Map(
-        depositData.map((row: Record<string, any>) => [row.id, row])
+        depositData.map((row: PublicServiceDepositRow) => [row.id, row])
       );
 
       servicesWithDeposits = baseServices.map((service) => {
@@ -1058,9 +1068,13 @@ export default function PublicBookingPage() {
   }
 
   useEffect(() => {
-    if (slug) {
-      loadPage();
-    }
+    if (!slug) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void loadPage();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
@@ -1071,9 +1085,13 @@ export default function PublicBookingPage() {
       (time) => time.value === bookingTime
     );
 
-    if (!stillAvailable) {
+    if (stillAvailable) return;
+
+    const timeoutId = window.setTimeout(() => {
       setBookingTime("");
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [availableTimes, bookingTime, isFlexibleRequest]);
 
   if (isLoading) {

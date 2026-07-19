@@ -93,7 +93,11 @@ export default function MedCareNestsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadCareNests();
+    const timeoutId = window.setTimeout(() => {
+      void loadCareNests();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadCareNests]);
 
   async function addCareNest(event: React.FormEvent<HTMLFormElement>) {

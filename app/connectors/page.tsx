@@ -56,7 +56,11 @@ export default function ConnectorsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadConnectors();
+    const timeoutId = window.setTimeout(() => {
+      void loadConnectors();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadConnectors]);
 
   async function addConnector(definition: (typeof connectorRegistry)[number]) {

@@ -17,7 +17,13 @@ export default function SupportPage() {
     setTickets((data || []) as Ticket[]);
   }
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   async function assignToMe(ticketId: string) {
     const { data: { user } } = await supabase.auth.getUser();

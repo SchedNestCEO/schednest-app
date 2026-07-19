@@ -1,13 +1,15 @@
+import Link from "next/link";
+
 export default function TeamsPage() {
   return (
     <main className="min-h-screen bg-[#050807] px-6 py-12 text-white">
       <div className="mx-auto max-w-4xl">
-        <a
+        <Link
           href="/"
           className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300"
         >
           SchedNest
-        </a>
+        </Link>
 
         <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
           <p className="text-xs font-black uppercase tracking-[0.28em] text-emerald-300">

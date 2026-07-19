@@ -4,6 +4,16 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
+type CountQueryResult = {
+  count: number | null;
+  error: { message: string } | null;
+};
+
+type CountQuery = PromiseLike<CountQueryResult> & {
+  eq: (column: string, value: string) => CountQuery;
+  is: (column: string, value: null) => CountQuery;
+};
+
 type DashboardMetrics = {
   businessProfiles: number;
   services: number;
@@ -33,11 +43,11 @@ export default function DashboardActionCenter() {
   const loadCount = useCallback(
     async (
       tableName: string,
-      applyFilters?: (query: any) => any
+      applyFilters?: (query: CountQuery) => CountQuery
     ): Promise<number> => {
       let query = supabase
         .from(tableName)
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true }) as unknown as CountQuery;
 
       if (applyFilters) {
         query = applyFilters(query);
@@ -100,7 +110,11 @@ export default function DashboardActionCenter() {
   }, [loadCount]);
 
   useEffect(() => {
-    loadDashboardUx();
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboardUx();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDashboardUx]);
 
   const setupItems = [
