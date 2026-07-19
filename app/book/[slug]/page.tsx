@@ -1050,7 +1050,11 @@ export default function PublicBookingPage() {
       return;
     }
 
-    const bookingResult = data as { id?: string } | null;
+    const bookingResult = data as {
+      id?: string;
+      start_time?: string;
+      end_time?: string;
+    } | null;
 
     if (bookingResult?.id) {
       await supabase.rpc("apply_public_booking_deposit_snapshot", {
@@ -1070,6 +1074,23 @@ export default function PublicBookingPage() {
           eventType: "booking.requested",
         }),
       });
+    }
+
+    if (
+      !isFlexibleRequest &&
+      bookingResult?.start_time &&
+      bookingResult?.end_time
+    ) {
+      const bookedStartTime = bookingResult.start_time;
+      const bookedEndTime = bookingResult.end_time;
+
+      setOccupiedRanges((currentRanges) => [
+        ...currentRanges,
+        {
+          start_time: bookedStartTime,
+          end_time: bookedEndTime,
+        },
+      ]);
     }
 
     setConfirmationSummary({
