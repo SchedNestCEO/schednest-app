@@ -1012,7 +1012,11 @@ export default function PublicBookingPage() {
     );
 
     if (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error.code === "23P01"
+          ? "That time is no longer available. Please choose another time."
+          : error.message
+      );
       setIsSubmitting(false);
       return;
     }
