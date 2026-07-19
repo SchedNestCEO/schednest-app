@@ -495,8 +495,12 @@ export default function BookingPageSettings() {
   }
 
   useEffect(() => {
-    setOrigin(window.location.origin);
-    loadBookingPageSettings();
+    const timeoutId = window.setTimeout(() => {
+      setOrigin(window.location.origin);
+      void loadBookingPageSettings();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

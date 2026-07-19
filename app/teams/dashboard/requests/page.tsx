@@ -95,7 +95,11 @@ export default function TeamRequestsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadRequests();
+    const timeoutId = window.setTimeout(() => {
+      void loadRequests();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadRequests]);
 
   async function addRequest(event: React.FormEvent<HTMLFormElement>) {

@@ -95,7 +95,11 @@ export default function TeamProjectsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadProjects();
+    const timeoutId = window.setTimeout(() => {
+      void loadProjects();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadProjects]);
 
   async function addProject(event: React.FormEvent<HTMLFormElement>) {

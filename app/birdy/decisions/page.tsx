@@ -71,7 +71,11 @@ export default function BirdyDecisionCenterPage() {
   }, [filter, supabase]);
 
   useEffect(() => {
-    void loadDecisions();
+    const timeoutId = window.setTimeout(() => {
+      void loadDecisions();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDecisions]);
 
   async function decide(

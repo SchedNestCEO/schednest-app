@@ -110,7 +110,11 @@ export default function TeamsAvailabilityPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadAvailability();
+    const timeoutId = window.setTimeout(() => {
+      void loadAvailability();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadAvailability]);
 
   function updateRow(

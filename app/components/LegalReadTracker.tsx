@@ -28,17 +28,20 @@ export default function LegalReadTracker({
       }
     }
 
-    const existingValue = window.localStorage.getItem(storageKey);
+    const timeoutId = window.setTimeout(() => {
+      const existingValue = window.localStorage.getItem(storageKey);
 
-    if (existingValue) {
-      setIsCompleted(true);
-      return;
-    }
+      if (existingValue) {
+        setIsCompleted(true);
+        return;
+      }
 
-    window.addEventListener("scroll", checkScrollProgress);
-    checkScrollProgress();
+      window.addEventListener("scroll", checkScrollProgress);
+      checkScrollProgress();
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       window.removeEventListener("scroll", checkScrollProgress);
     };
   }, [storageKey]);

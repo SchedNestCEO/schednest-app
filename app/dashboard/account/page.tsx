@@ -329,7 +329,7 @@ export default function AccountPage() {
         );
       }
 
-      window.location.href = payload.url;
+      window.location.assign(payload.url);
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -368,7 +368,7 @@ export default function AccountPage() {
         );
       }
 
-      window.location.href = payload.url;
+      window.location.assign(payload.url);
     } catch (error) {
       const errorMessage =
         error instanceof Error
@@ -381,7 +381,11 @@ export default function AccountPage() {
   }
 
   useEffect(() => {
-    loadAccount();
+    const timeoutId = window.setTimeout(() => {
+      void loadAccount();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

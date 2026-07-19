@@ -780,7 +780,7 @@ export default function ServicesPage() {
       .replace(/[^a-z0-9.-]/g, "-")
       .replace(/-+/g, "-");
 
-    const filePath = `${user.id}/${businessProfile.id}/${service.id}/${Date.now()}-${safeFileName}`;
+    const filePath = `${user.id}/${businessProfile.id}/${service.id}/${file.lastModified}-${safeFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("service-samples")

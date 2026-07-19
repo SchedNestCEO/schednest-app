@@ -136,13 +136,18 @@ export default function NotificationBell({
   }, [supabase]);
 
   useEffect(() => {
-    loadNotifications();
+    const timeoutId = window.setTimeout(() => {
+      void loadNotifications();
+    }, 0);
 
     const intervalId = window.setInterval(() => {
-      loadNotifications();
+      void loadNotifications();
     }, 30000);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
   }, [loadNotifications]);
 
   useEffect(() => {

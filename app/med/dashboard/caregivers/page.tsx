@@ -119,7 +119,11 @@ export default function MedCaregiversPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadCaregivers();
+    const timeoutId = window.setTimeout(() => {
+      void loadCaregivers();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadCaregivers]);
 
   async function inviteCaregiver(event: React.FormEvent<HTMLFormElement>) {

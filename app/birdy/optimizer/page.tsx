@@ -63,7 +63,11 @@ export default function BirdyOptimizerPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadRecommendations();
+    const timeoutId = window.setTimeout(() => {
+      void loadRecommendations();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadRecommendations]);
 
   async function runOptimizer() {

@@ -447,7 +447,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<SchedNestLanguage>("en");
 
   useEffect(() => {
-    setLanguageState(getInitialLanguage());
+    const timeoutId = window.setTimeout(() => {
+      setLanguageState(getInitialLanguage());
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {

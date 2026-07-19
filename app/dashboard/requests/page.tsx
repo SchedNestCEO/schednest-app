@@ -461,7 +461,11 @@ export default function BookingRequestsPage() {
   }
 
   useEffect(() => {
-    loadRequests();
+    const timeoutId = window.setTimeout(() => {
+      void loadRequests();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

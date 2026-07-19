@@ -115,7 +115,11 @@ export default function BirdyMemoryPage() {
   }, [productFilter, typeFilter, supabase]);
 
   useEffect(() => {
-    void loadData();
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadData]);
 
   async function addMemory(event: React.FormEvent<HTMLFormElement>) {

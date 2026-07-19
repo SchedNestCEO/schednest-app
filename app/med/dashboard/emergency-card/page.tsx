@@ -99,7 +99,11 @@ export default function EmergencyCardPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadCard();
+    const timeoutId = window.setTimeout(() => {
+      void loadCard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadCard]);
 
   function addContact() {

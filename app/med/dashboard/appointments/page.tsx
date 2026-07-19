@@ -110,7 +110,11 @@ export default function MedAppointmentsPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadAppointments();
+    const timeoutId = window.setTimeout(() => {
+      void loadAppointments();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadAppointments]);
 
   async function addAppointment(event: React.FormEvent<HTMLFormElement>) {

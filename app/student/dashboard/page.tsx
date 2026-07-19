@@ -139,7 +139,11 @@ export default function StudentDashboardPage() {
   }, [supabase]);
 
   useEffect(() => {
-    void loadDashboard();
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboard();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [loadDashboard]);
 
   const urgentAssignments = assignments.filter(
