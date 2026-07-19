@@ -631,31 +631,23 @@ export default function BookingsPage() {
     setErrorMessage("");
 
     const startDateTime = new Date(`${bookingDate}T${bookingTime}`);
-    const duration = selectedService.duration_minutes || 60;
-    const endDateTime = new Date(
-      startDateTime.getTime() + duration * 60 * 1000
-    );
 
-    const customerName =
-      selectedCustomer.full_name || selectedCustomer.name || "Customer";
-
-    const { error } = await supabase.from("bookings").insert({
-      business_id: businessProfile.id,
-      owner_id: businessProfile.owner_id,
-      customer_id: selectedCustomer.id,
-      service_id: selectedService.id,
-      start_time: startDateTime.toISOString(),
-      end_time: endDateTime.toISOString(),
-      status,
-      source,
-      customer_name: customerName,
-      customer_phone: selectedCustomer.phone || null,
-      customer_email: selectedCustomer.email || null,
-      notes: notes.trim() || null,
+    const { error } = await supabase.rpc("create_manual_booking", {
+      p_business_id: businessProfile.id,
+      p_customer_id: selectedCustomer.id,
+      p_service_id: selectedService.id,
+      p_start_time: startDateTime.toISOString(),
+      p_status: status,
+      p_source: source,
+      p_notes: notes.trim() || null,
     });
 
     if (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error.code === "23P01"
+          ? "That time is no longer available. Please choose another time."
+          : error.message
+      );
       setIsSaving(false);
       return;
     }
