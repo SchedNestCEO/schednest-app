@@ -26,7 +26,8 @@
     "lint:performance": "eslint app/admin/performance/page.tsx app/api/admin/performance/route.ts app/lib/admin/performance.ts scripts/verify-sprint3.mjs",
     "sprint4:verify": "node scripts/verify-sprint4.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget",
     "lint:load": "eslint app/api/admin/performance/route.ts scripts/verify-sprint4.mjs scripts/ingest-k6-summary.mjs scripts/patch-performance-api.mjs",
-    "load:ingest": "node scripts/ingest-k6-summary.mjs"
+    "load:ingest": "node scripts/ingest-k6-summary.mjs",
+    "sprint5:verify": "node scripts/verify-sprint5.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
