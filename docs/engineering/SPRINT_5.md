@@ -1,6 +1,6 @@
 # Engineering Phase 1 — Sprint 5
 
-Status: Planned
+Status: Complete
 
 ## Theme
 
@@ -153,3 +153,47 @@ The following remain outside Sprint 5:
 - waitlists
 - payments redesign
 - production-scale write testing
+
+## Completion Summary
+
+Sprint 5 delivered database-backed scheduling integrity across public and authenticated Business booking flows.
+
+Completed work includes:
+
+- active-booking overlap prevention with a PostgreSQL exclusion constraint
+- reusable blocking-status and slot-availability functions
+- protected manual, public, and request-approval booking RPCs
+- fixed-hours validation in each business timezone
+- public occupied-range filtering and immediate availability refresh
+- predictable `23P01` conflict responses
+- a 100 ms transaction-local conflict lock timeout
+- a separate Supabase staging environment for controlled write testing
+- automated Sprint 5 verification and benchmark documentation
+
+### Concurrency Benchmark
+
+Five authenticated virtual users attempted to create the same appointment simultaneously in staging.
+
+- 5 completed attempts
+- 1 successful booking
+- 4 expected conflicts
+- 0 unexpected responses
+- 0 duplicate conflicting bookings
+- 9 of 9 checks passed
+- write p95: 1,176.67 ms
+- generated booking cleanup completed
+
+### Final Quality
+
+- 32 migrations validated
+- lint passed with 0 errors and 29 baseline warnings
+- TypeScript validation passed
+- production build passed
+- all 87 routes generated
+- Sprint 5 verification passed
+
+### Rollback Standard
+
+Applied migrations must not be edited. Any rollback or correction must use a new forward migration. Removing the active-overlap constraint is considered high risk because it would permit conflicting active bookings.
+
+Sprint 5 is formally complete.
