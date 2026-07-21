@@ -478,3 +478,44 @@ with check (
       )
   )
 );
+
+-- Required by later Teams scheduling migrations during clean database builds.
+create or replace function public.is_team_workspace_owner(
+  target_workspace_id uuid
+)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.team_workspaces
+    where id = target_workspace_id
+      and owner_id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_active_team_member(
+  target_workspace_id uuid
+)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1
+    from public.team_memberships
+    where workspace_id = target_workspace_id
+      and user_id = auth.uid()
+      and status = 'active'
+  );
+$$;
+
+revoke all on function public.is_team_workspace_owner(uuid) from public;
+revoke all on function public.is_active_team_member(uuid) from public;
+grant execute on function public.is_team_workspace_owner(uuid) to authenticated;
+grant execute on function public.is_active_team_member(uuid) to authenticated;
