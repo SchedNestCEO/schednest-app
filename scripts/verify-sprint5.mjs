@@ -8,6 +8,10 @@ const requiredFiles = [
   "supabase/migrations/20260719000300_restrict_booking_rpc_permissions.sql",
   "supabase/migrations/20260719000400_enforce_business_hours.sql",
   "supabase/migrations/20260719000500_public_booking_availability.sql",
+  "supabase/migrations/20260720000100_fast_booking_conflict_response.sql",
+  "supabase/migrations/20260720000200_tune_booking_conflict_timeout.sql",
+  "tests/load/business-booking-concurrency.js",
+  "docs/performance/SPRINT_5_BOOKING_CONCURRENCY.md",
   "app/book/[slug]/page.tsx",
   "app/dashboard/bookings/page.tsx",
   "app/dashboard/requests/page.tsx",
@@ -53,6 +57,21 @@ const businessHoursMigration = await readFile(
 
 const availabilityMigration = await readFile(
   "supabase/migrations/20260719000500_public_booking_availability.sql",
+  "utf8"
+);
+
+const concurrencyMigration = await readFile(
+  "supabase/migrations/20260720000200_tune_booking_conflict_timeout.sql",
+  "utf8"
+);
+
+const concurrencyTest = await readFile(
+  "tests/load/business-booking-concurrency.js",
+  "utf8"
+);
+
+const concurrencyBenchmark = await readFile(
+  "docs/performance/SPRINT_5_BOOKING_CONCURRENCY.md",
   "utf8"
 );
 
@@ -126,6 +145,41 @@ const checks = [
     availabilityMigration,
     "get_public_booking_occupied_ranges",
     "Missing public occupied-range RPC.",
+  ],
+  [
+    concurrencyMigration,
+    "set_config('lock_timeout', '100ms', true)",
+    "Missing fast booking-conflict timeout.",
+  ],
+  [
+    concurrencyMigration,
+    "when exclusion_violation or lock_not_available",
+    "Missing predictable lock-conflict handling.",
+  ],
+  [
+    concurrencyTest,
+    'booking_successes: ["count==1"]',
+    "Concurrency test does not require exactly one successful booking.",
+  ],
+  [
+    concurrencyTest,
+    'expected_conflicts: ["count==4"]',
+    "Concurrency test does not require four expected conflicts.",
+  ],
+  [
+    concurrencyTest,
+    'unexpected_responses: ["count==0"]',
+    "Concurrency test does not reject unexpected responses.",
+  ],
+  [
+    concurrencyTest,
+    '"http_req_duration{workflow:booking_concurrency_write}": ["p(95)<1500"]',
+    "Concurrency test write-latency threshold is missing.",
+  ],
+  [
+    concurrencyBenchmark,
+    "Write latency p95 | 1,176.67 ms",
+    "Sprint 5 concurrency benchmark result is missing.",
   ],
   [
     publicBookingPage,
