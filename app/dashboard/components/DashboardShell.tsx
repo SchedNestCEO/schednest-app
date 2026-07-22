@@ -170,7 +170,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
     return `rounded-2xl px-4 py-3 text-sm font-black transition ${
       isActive
-        ? "bg-emerald-400 text-black"
+        ? "bg-edition-primary text-black"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
     }`;
   }
@@ -180,7 +180,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
     return `flex h-12 w-12 items-center justify-center rounded-2xl text-xs font-black transition ${
       isActive
-        ? "bg-emerald-400 text-black"
+        ? "bg-edition-primary text-black"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
     }`;
   }
@@ -190,13 +190,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
 
     return `whitespace-nowrap rounded-2xl px-4 py-2.5 text-sm font-black transition ${
       isActive
-        ? "bg-emerald-400 text-black"
+        ? "bg-edition-primary text-black"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
     }`;
   }
 
   return (
-    <main className="min-h-screen bg-[#050807] text-white">
+    <main className="torogoz-app-background min-h-screen text-white">
       <div className="flex min-h-screen">
         <aside
           className={`hidden shrink-0 border-r border-white/10 bg-black/20 transition-all duration-300 lg:block ${
@@ -215,7 +215,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 href="/dashboard"
                 className={
                   isSidebarCollapsed
-                    ? "flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-sm font-black text-emerald-300"
+                    ? "flex h-14 w-14 items-center justify-center rounded-2xl border border-edition-primary/20 bg-edition-primary/10 text-sm font-black text-edition-primary"
                     : "block"
                 }
                 title="SchedNest Dashboard"
@@ -224,7 +224,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                   "SN"
                 ) : (
                   <>
-                    <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+                    <p className="torogoz-wordmark text-sm font-black uppercase tracking-[0.3em]">
                       SchedNest
                     </p>
 
@@ -252,12 +252,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3"
                 title={userEmail || "Loading..."}
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400 text-sm font-black text-black">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-edition-primary text-sm font-black text-black">
                   {userEmail?.charAt(0).toUpperCase() || "?"}
                 </div>
 
                 {isSchedNestAdmin && (
-                  <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                  <span className="h-2 w-2 rounded-full bg-edition-primary-hover" />
                 )}
               </div>
             ) : (
@@ -269,12 +269,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                  <span className="rounded-full bg-edition-primary px-3 py-1 text-xs font-black text-black">
                     complete
                   </span>
 
                   {isSchedNestAdmin && (
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-edition-primary">
                       admin
                     </span>
                   )}
@@ -331,7 +331,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           <header className="border-b border-white/10 bg-black/20 px-4 py-4 lg:hidden">
             <div className="flex items-center justify-between gap-3">
               <Link href="/dashboard">
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">
+                <p className="torogoz-wordmark text-xs font-black uppercase tracking-[0.3em]">
                   SchedNest
                 </p>
                 <p className="text-lg font-black text-white">{t("nav.dashboard", "Dashboard")}</p>
@@ -354,7 +354,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
             </div>
 
             {isMobileMenuOpen && (
-              <div className="mt-4 rounded-[2rem] border border-white/10 bg-[#07100d] p-3">
+              <div className="mt-4 rounded-[2rem] border border-white/10 bg-surface-dark-raised p-3">
                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                   <p className="text-xs font-bold text-gray-500">
                     Signed in as
@@ -365,12 +365,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                    <span className="rounded-full bg-edition-primary px-3 py-1 text-xs font-black text-black">
                       complete
                     </span>
 
                     {isSchedNestAdmin && (
-                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-emerald-300">
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-edition-primary">
                         admin
                       </span>
                     )}

@@ -76,10 +76,10 @@ function getPriorityClass(priority: BirdySuggestionPriority) {
   }
 
   if (priority === "normal") {
-    return "border-yellow-400/20 bg-yellow-400/10 text-yellow-200";
+    return "border-brand-orange/20 bg-brand-orange/10 text-brand-orange";
   }
 
-  return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
+  return "border-edition-primary/20 bg-edition-primary/10 text-edition-primary";
 }
 
 function formatPriority(priority: BirdySuggestionPriority) {
@@ -434,10 +434,10 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {isSetupGuideOpen && !isSetupComplete && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md">
-            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-emerald-400/20 bg-[#07100d] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.75)] sm:p-6">
+            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-edition-primary/20 bg-surface-dark-raised p-5 shadow-[0_30px_120px_rgba(0,0,0,0.75)] sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                  <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
                     Setup Guide
                   </p>
 
@@ -473,14 +473,14 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <span className="rounded-full bg-emerald-400 px-3 py-1 text-sm font-black text-black">
+                  <span className="rounded-full bg-edition-primary px-3 py-1 text-sm font-black text-black">
                     {setupPercent}%
                   </span>
                 </div>
 
                 <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
                   <div
-                    className="h-full rounded-full bg-emerald-400 transition-all"
+                    className="h-full rounded-full bg-edition-primary transition-all"
                     style={{ width: `${setupPercent}%` }}
                   />
                 </div>
@@ -498,9 +498,9 @@ export default function DashboardPage() {
                       onClick={() => closeSetupGuide()}
                       className={`rounded-2xl border p-4 transition ${
                         item.isComplete
-                          ? "border-emerald-400/20 bg-emerald-400/10"
+                          ? "border-edition-primary/20 bg-edition-primary/10"
                           : isCurrentStep
-                            ? "border-yellow-300/40 bg-yellow-300/10 shadow-[0_0_35px_rgba(250,204,21,0.08)]"
+                            ? "border-brand-orange/40 bg-brand-orange/10 shadow-[0_0_35px_rgba(250,204,21,0.08)]"
                             : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
                       }`}
                     >
@@ -509,9 +509,9 @@ export default function DashboardPage() {
                           <div
                             className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${
                               item.isComplete
-                                ? "bg-emerald-400 text-black"
+                                ? "bg-edition-primary text-black"
                                 : isCurrentStep
-                                  ? "bg-yellow-300 text-black"
+                                  ? "bg-brand-orange text-black"
                                   : "bg-white/10 text-gray-300"
                             }`}
                           >
@@ -532,9 +532,9 @@ export default function DashboardPage() {
                         <span
                           className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
                             item.isComplete
-                              ? "bg-emerald-400 text-black"
+                              ? "bg-edition-primary text-black"
                               : isCurrentStep
-                                ? "bg-yellow-300 text-black"
+                                ? "bg-brand-orange text-black"
                                 : "bg-white/10 text-gray-300"
                           }`}
                         >
@@ -555,7 +555,7 @@ export default function DashboardPage() {
                   <Link
                     href={nextSetupItem.href}
                     onClick={() => closeSetupGuide()}
-                    className="rounded-2xl bg-emerald-400 px-5 py-4 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                    className="rounded-2xl bg-edition-primary px-5 py-4 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
                   >
                     Continue: {nextSetupItem.actionLabel}
                   </Link>
@@ -572,10 +572,10 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04]">
+        <section className="torogoz-panel overflow-hidden rounded-[2rem]">
           <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-6 lg:p-8">
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
                 Command Center
               </p>
 
@@ -602,7 +602,7 @@ export default function DashboardPage() {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href={mainAction.href}
-                  className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                  className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
                 >
                   {mainAction.label}
                 </Link>
@@ -611,7 +611,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={reopenSetupGuide}
-                    className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-300 transition hover:bg-emerald-400/15"
+                    className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-center text-sm font-black text-edition-primary transition hover:bg-edition-primary/15"
                   >
                     Open setup guide
                   </button>
@@ -627,7 +627,7 @@ export default function DashboardPage() {
 
                 <Link
                   href={bookingPageHref}
-                  className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center text-sm font-black text-emerald-300 transition hover:bg-emerald-400/15"
+                  className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-center text-sm font-black text-edition-primary transition hover:bg-edition-primary/15"
                 >
                   View booking page
                 </Link>
@@ -641,7 +641,7 @@ export default function DashboardPage() {
               </div>
 
               {copyMessage && (
-                <p className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm font-black text-emerald-300">
+                <p className="mt-4 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-4 py-3 text-sm font-black text-edition-primary">
                   {copyMessage}
                 </p>
               )}
@@ -650,7 +650,7 @@ export default function DashboardPage() {
             <div className="border-t border-white/10 bg-black/20 p-6 lg:border-l lg:border-t-0 lg:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-black text-emerald-300">
+                  <p className="text-sm font-black text-edition-primary">
                     Setup Progress
                   </p>
 
@@ -669,7 +669,7 @@ export default function DashboardPage() {
 
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full rounded-full bg-emerald-400 transition-all"
+                  className="h-full rounded-full bg-edition-primary transition-all"
                   style={{ width: `${setupPercent}%` }}
                 />
               </div>
@@ -679,8 +679,8 @@ export default function DashboardPage() {
                 complete.
               </p>
 
-              <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
+              <div className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-edition-primary">
                   Subscription
                 </p>
 
@@ -690,7 +690,7 @@ export default function DashboardPage() {
 
                 <Link
                   href="/dashboard/account"
-                  className="mt-3 inline-block text-sm font-black text-emerald-300 transition hover:text-emerald-200"
+                  className="mt-3 inline-block text-sm font-black text-edition-primary transition hover:text-edition-primary"
                 >
                   Manage account →
                 </Link>
@@ -702,7 +702,7 @@ export default function DashboardPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Link
             href="/dashboard/bookings"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
           >
             <p className="text-sm font-bold text-gray-400">
               Today&apos;s Bookings
@@ -723,8 +723,8 @@ export default function DashboardPage() {
             href="/dashboard/requests"
             className={`rounded-[2rem] border p-5 transition ${
               stats.pendingRequests > 0
-                ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
-                : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+                ? "border-brand-orange/30 bg-brand-orange/10 hover:bg-brand-orange/15"
+                : "border-white/10 bg-white/[0.04] hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
             }`}
           >
             <div className="flex items-start justify-between gap-3">
@@ -733,7 +733,7 @@ export default function DashboardPage() {
               </p>
 
               {stats.pendingRequests > 0 && (
-                <span className="rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
+                <span className="rounded-full bg-brand-orange px-3 py-1 text-xs font-black text-black">
                   Action
                 </span>
               )}
@@ -752,7 +752,7 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/customers"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
           >
             <p className="text-sm font-bold text-gray-400">Customers</p>
 
@@ -771,8 +771,8 @@ export default function DashboardPage() {
             href="/dashboard/services"
             className={`rounded-[2rem] border p-5 transition ${
               stats.activeServices > 0
-                ? "border-emerald-400/30 bg-emerald-400/10 hover:bg-emerald-400/15"
-                : "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
+                ? "border-edition-primary/30 bg-edition-primary/10 hover:bg-edition-primary/15"
+                : "border-brand-orange/30 bg-brand-orange/10 hover:bg-brand-orange/15"
             }`}
           >
             <p className="text-sm font-bold text-gray-400">Active Services</p>
@@ -794,9 +794,9 @@ export default function DashboardPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <Link
             href="/dashboard/bookings"
-            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
           >
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Quick Launch
             </p>
             <h3 className="mt-3 text-xl font-black text-white">
@@ -811,11 +811,11 @@ export default function DashboardPage() {
             href="/dashboard/requests"
             className={`rounded-[2rem] border p-5 transition ${
               stats.pendingRequests > 0
-                ? "border-yellow-400/30 bg-yellow-400/10 hover:bg-yellow-400/15"
-                : "border-white/10 bg-black/20 hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+                ? "border-brand-orange/30 bg-brand-orange/10 hover:bg-brand-orange/15"
+                : "border-white/10 bg-black/20 hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
             }`}
           >
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Requests
             </p>
             <h3 className="mt-3 text-xl font-black text-white">
@@ -832,9 +832,9 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/services"
-            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+            className="rounded-[2rem] border border-white/10 bg-black/20 p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
           >
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Services
             </p>
             <h3 className="mt-3 text-xl font-black text-white">
@@ -847,9 +847,9 @@ export default function DashboardPage() {
 
           <Link
             href={bookingPageHref}
-            className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5 transition hover:bg-emerald-400/15"
+            className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-5 transition hover:bg-edition-primary/15"
           >
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Public Page
             </p>
             <h3 className="mt-3 text-xl font-black text-white">
@@ -865,7 +865,7 @@ export default function DashboardPage() {
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-black text-emerald-300">
+                <p className="text-sm font-black text-edition-primary">
                   Needs Attention
                 </p>
 
@@ -890,8 +890,8 @@ export default function DashboardPage() {
                   Checking your Nest...
                 </div>
               ) : activeNeedsAttentionItems.length === 0 ? (
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5">
-                  <p className="text-sm font-black text-emerald-300">
+                <div className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-5">
+                  <p className="text-sm font-black text-edition-primary">
                     Your Nest is calm.
                   </p>
 
@@ -904,7 +904,7 @@ export default function DashboardPage() {
                 activeNeedsAttentionItems.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-4"
+                    className="rounded-2xl border border-brand-orange/20 bg-brand-orange/10 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
 
-                      <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-yellow-300 px-2 text-xs font-black text-black">
+                      <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-brand-orange px-2 text-xs font-black text-black">
                         {item.count}
                       </span>
                     </div>
@@ -935,7 +935,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Setup Checklist
             </p>
 
@@ -948,14 +948,14 @@ export default function DashboardPage() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-emerald-400/30 hover:bg-emerald-400/[0.06]"
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-1 h-4 w-4 shrink-0 rounded-full border ${
                         item.isComplete
-                          ? "border-emerald-400 bg-emerald-400"
-                          : "border-yellow-300"
+                          ? "border-edition-primary bg-edition-primary"
+                          : "border-brand-orange"
                       }`}
                     />
 
@@ -968,8 +968,8 @@ export default function DashboardPage() {
                         <span
                           className={`w-fit rounded-full px-3 py-1 text-xs font-black ${
                             item.isComplete
-                              ? "bg-emerald-400 text-black"
-                              : "bg-yellow-300 text-black"
+                              ? "bg-edition-primary text-black"
+                              : "bg-brand-orange text-black"
                           }`}
                         >
                           {item.isComplete ? "Done" : "Next"}
@@ -987,10 +987,10 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
+        <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
                 Birdy Smart Suggestions
               </p>
 
@@ -1006,7 +1006,7 @@ export default function DashboardPage() {
 
             <Link
               href="/dashboard/birdy"
-              className="w-fit rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+              className="w-fit rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover"
             >
               Open Birdy
             </Link>
@@ -1032,7 +1032,7 @@ export default function DashboardPage() {
 
                 <Link
                   href="/dashboard/birdy"
-                  className="mt-4 inline-block rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-black text-emerald-300 transition hover:bg-emerald-400/20"
+                  className="mt-4 inline-block rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary transition hover:bg-edition-primary/20"
                 >
                   Generate in Birdy
                 </Link>
