@@ -515,20 +515,67 @@ function formatDateLabel(dateValue: string, language: "en" | "es" = "en") {
   }).format(new Date(`${dateValue}T00:00:00`));
 }
 
-function getTodayDateValue() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
+function getZonedDateTimeParts(value: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(value);
 
-  return `${year}-${month}-${day}`;
+  const values = Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value])
+  );
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+    hour: Number(values.hour),
+    minute: Number(values.minute),
+  };
+}
+
+function getTodayDateValue(timeZone: string) {
+  const parts = getZonedDateTimeParts(new Date(), timeZone);
+
+  return [
+    String(parts.year).padStart(4, "0"),
+    String(parts.month).padStart(2, "0"),
+    String(parts.day).padStart(2, "0"),
+  ].join("-");
+}
+
+function getCurrentMinutesInTimeZone(timeZone: string) {
+  const parts = getZonedDateTimeParts(new Date(), timeZone);
+  return parts.hour * 60 + parts.minute;
+}
+
+function getLocalTimelineValue(value: string, timeZone: string) {
+  const parts = getZonedDateTimeParts(new Date(value), timeZone);
+
+  return Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute
+  );
 }
 
 function getDateDayIndex(dateValue: string) {
   if (!dateValue) return null;
 
-  const date = new Date(`${dateValue}T00:00:00`);
-  return date.getDay();
+  const [year, month, day] = dateValue.split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  return new Date(Date.UTC(year, month - 1, day)).getUTCDay();
 }
 
 function normalizeQuestionOptions(value: unknown) {
@@ -724,9 +771,14 @@ export default function PublicBookingPage() {
 
     if (latestStartTime < openMinutes) return [];
 
-    const todayValue = getTodayDateValue();
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const businessTimeZone =
+      pageData?.business.timezone || "America/Los_Angeles";
+    const todayValue = getTodayDateValue(businessTimeZone);
+    const currentMinutes = getCurrentMinutesInTimeZone(businessTimeZone);
+
+    const [bookingYear, bookingMonth, bookingDay] = bookingDate
+      .split("-")
+      .map(Number);
 
     const slots: { value: string; label: string }[] = [];
 
@@ -736,14 +788,24 @@ export default function PublicBookingPage() {
       }
 
       const value = minutesToTimeValue(minutes);
-      const slotStart = new Date(`${bookingDate}T${value}`);
-      const slotEnd = new Date(
-        slotStart.getTime() + serviceDuration * 60 * 1000
+      const slotStart = Date.UTC(
+        bookingYear,
+        bookingMonth - 1,
+        bookingDay,
+        Math.floor(minutes / 60),
+        minutes % 60
       );
+      const slotEnd = slotStart + serviceDuration * 60 * 1000;
 
       const overlapsExistingBooking = occupiedRanges.some((range) => {
-        const occupiedStart = new Date(range.start_time);
-        const occupiedEnd = new Date(range.end_time);
+        const occupiedStart = getLocalTimelineValue(
+          range.start_time,
+          businessTimeZone
+        );
+        const occupiedEnd = getLocalTimelineValue(
+          range.end_time,
+          businessTimeZone
+        );
 
         return slotStart < occupiedEnd && occupiedStart < slotEnd;
       });
@@ -765,6 +827,7 @@ export default function PublicBookingPage() {
     selectedService,
     isFlexibleRequest,
     occupiedRanges,
+    pageData?.business.timezone,
   ]);
 
   async function loadPage() {
@@ -1003,8 +1066,6 @@ export default function PublicBookingPage() {
     setErrorMessage("");
     setConfirmationSummary(null);
 
-    const startDateTime = new Date(`${bookingDate}T${bookingTime}`);
-
     const requestNotes = isFlexibleRequest
       ? [
           notes.trim(),
@@ -1027,14 +1088,15 @@ export default function PublicBookingPage() {
     }, {});
 
     const { data, error } = await supabase.rpc(
-      "create_public_booking_with_intake",
+      "create_public_booking_with_intake_local",
       {
         p_business_id: pageData.business.id,
         p_service_id: selectedServiceId,
         p_customer_name: customerName,
         p_customer_phone: customerPhone,
         p_customer_email: customerEmail,
-        p_start_time: startDateTime.toISOString(),
+        p_local_date: bookingDate,
+        p_local_time: bookingTime,
         p_notes: requestNotes,
         p_intake_answers: intakePayload,
       }
@@ -1793,7 +1855,7 @@ export default function PublicBookingPage() {
                       setConfirmationSummary(null);
                     }}
                     type="date"
-                    min={getTodayDateValue()}
+                    min={getTodayDateValue(pageData?.business.timezone || "America/Los_Angeles")}
                     className={inputClass}
                   />
                 </div>

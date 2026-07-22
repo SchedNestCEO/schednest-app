@@ -630,13 +630,12 @@ export default function BookingsPage() {
     setIsSaving(true);
     setErrorMessage("");
 
-    const startDateTime = new Date(`${bookingDate}T${bookingTime}`);
-
-    const { error } = await supabase.rpc("create_manual_booking", {
+    const { error } = await supabase.rpc("create_manual_booking_local", {
       p_business_id: businessProfile.id,
       p_customer_id: selectedCustomer.id,
       p_service_id: selectedService.id,
-      p_start_time: startDateTime.toISOString(),
+      p_local_date: bookingDate,
+      p_local_time: bookingTime,
       p_status: status,
       p_source: source,
       p_notes: notes.trim() || null,
