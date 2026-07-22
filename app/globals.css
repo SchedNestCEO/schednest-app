@@ -149,3 +149,31 @@ body {
   outline: 2px solid var(--focus-ring);
   outline-offset: 3px;
 }
+
+.torogoz-app-background {
+  background:
+    radial-gradient(circle at 14% 12%, rgb(39 184 174 / 0.16), transparent 28rem),
+    radial-gradient(circle at 86% 18%, rgb(244 123 59 / 0.12), transparent 26rem),
+    radial-gradient(circle at 58% 92%, rgb(168 155 69 / 0.12), transparent 30rem),
+    var(--surface-dark);
+}
+
+.torogoz-wordmark {
+  background-image: linear-gradient(
+    90deg,
+    var(--brand-turquoise) 0%,
+    var(--brand-turquoise) 38%,
+    var(--brand-orange) 62%,
+    var(--brand-olive) 100%
+  );
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.torogoz-panel {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.045);
+  box-shadow: 0 24px 80px rgb(var(--shadow-color) / 0.24);
+  backdrop-filter: blur(18px);
+}
