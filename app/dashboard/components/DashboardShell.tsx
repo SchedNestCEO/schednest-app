@@ -66,6 +66,18 @@ const navItems: NavItem[] = [
     shortLabel: "AI",
   },
   {
+    href: "/dashboard/founder-time",
+    label: "Founder Time",
+    shortLabel: "FT",
+    adminOnly: true,
+  },
+  {
+    href: "/dashboard/revenue-impact",
+    label: "Revenue Impact",
+    shortLabel: "RI",
+    adminOnly: true,
+  },
+  {
     href: "/dashboard/subscriptions",
     label: "Subscriptions",
     shortLabel: "$",
