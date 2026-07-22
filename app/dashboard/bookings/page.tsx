@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { createClient } from "../../lib/supabase/client";
 
@@ -324,6 +324,10 @@ export default function BookingsPage() {
   const [source, setSource] = useState("manual");
   const [notes, setNotes] = useState("");
   const [isCreateBookingOpen, setIsCreateBookingOpen] = useState(false);
+  const bookingSubmissionRef = useRef<{
+    key: string;
+    fingerprint: string;
+  } | null>(null);
 
   const [captureText, setCaptureText] = useState("");
   const [captureMessage, setCaptureMessage] = useState("");
@@ -630,16 +634,41 @@ export default function BookingsPage() {
     setIsSaving(true);
     setErrorMessage("");
 
-    const { error } = await supabase.rpc("create_manual_booking_local", {
-      p_business_id: businessProfile.id,
-      p_customer_id: selectedCustomer.id,
-      p_service_id: selectedService.id,
-      p_local_date: bookingDate,
-      p_local_time: bookingTime,
-      p_status: status,
-      p_source: source,
-      p_notes: notes.trim() || null,
+    const submissionFingerprint = JSON.stringify({
+      businessId: businessProfile.id,
+      customerId: selectedCustomer.id,
+      serviceId: selectedService.id,
+      bookingDate,
+      bookingTime,
+      status,
+      source,
+      notes: notes.trim(),
     });
+
+    if (
+      !bookingSubmissionRef.current ||
+      bookingSubmissionRef.current.fingerprint !== submissionFingerprint
+    ) {
+      bookingSubmissionRef.current = {
+        key: crypto.randomUUID(),
+        fingerprint: submissionFingerprint,
+      };
+    }
+
+    const { error } = await supabase.rpc(
+      "create_manual_booking_local_idempotent",
+      {
+        p_business_id: businessProfile.id,
+        p_customer_id: selectedCustomer.id,
+        p_service_id: selectedService.id,
+        p_local_date: bookingDate,
+        p_local_time: bookingTime,
+        p_submission_key: bookingSubmissionRef.current.key,
+        p_status: status,
+        p_source: source,
+        p_notes: notes.trim() || null,
+      }
+    );
 
     if (error) {
       setErrorMessage(
@@ -651,6 +680,7 @@ export default function BookingsPage() {
       return;
     }
 
+    bookingSubmissionRef.current = null;
     setBookingDate(getTodayDateValue());
     setBookingTime("");
     setStatus("confirmed");
