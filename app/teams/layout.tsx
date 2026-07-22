@@ -10,5 +10,5 @@ export default function TeamsLayout({
     redirect("/coming-soon");
   }
 
-  return children;
+  return <div data-theme="teams">{children}</div>;
 }

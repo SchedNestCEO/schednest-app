@@ -10,5 +10,5 @@ export default function StudentLayout({
     redirect("/coming-soon");
   }
 
-  return children;
+  return <div data-theme="student">{children}</div>;
 }

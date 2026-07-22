@@ -10,5 +10,5 @@ export default function MedLayout({
     redirect("/coming-soon");
   }
 
-  return children;
+  return <div data-theme="medical">{children}</div>;
 }
