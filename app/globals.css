@@ -41,6 +41,42 @@
   --shadow-color: 23 24 22;
 }
 
+[data-theme="business"] {
+  --edition-primary: var(--brand-turquoise);
+  --edition-primary-hover: var(--brand-turquoise-hover);
+  --edition-primary-soft: var(--brand-turquoise-soft);
+  --edition-secondary: var(--brand-orange);
+  --edition-tertiary: var(--brand-olive);
+  --edition-glow: 39 184 174;
+}
+
+[data-theme="teams"] {
+  --edition-primary: var(--brand-orange);
+  --edition-primary-hover: var(--brand-orange-hover);
+  --edition-primary-soft: var(--brand-orange-soft);
+  --edition-secondary: var(--brand-turquoise);
+  --edition-tertiary: var(--brand-olive);
+  --edition-glow: 244 123 59;
+}
+
+[data-theme="student"] {
+  --edition-primary: var(--brand-olive);
+  --edition-primary-hover: var(--brand-olive-hover);
+  --edition-primary-soft: var(--brand-olive-soft);
+  --edition-secondary: var(--brand-turquoise);
+  --edition-tertiary: var(--brand-orange);
+  --edition-glow: 168 155 69;
+}
+
+[data-theme="medical"] {
+  --edition-primary: #4aa59e;
+  --edition-primary-hover: #3b8f89;
+  --edition-primary-soft: #dcefeb;
+  --edition-secondary: var(--brand-olive);
+  --edition-tertiary: var(--brand-orange);
+  --edition-glow: 74 165 158;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -75,6 +111,12 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);
+
+  --color-edition-primary: var(--edition-primary);
+  --color-edition-primary-hover: var(--edition-primary-hover);
+  --color-edition-primary-soft: var(--edition-primary-soft);
+  --color-edition-secondary: var(--edition-secondary);
+  --color-edition-tertiary: var(--edition-tertiary);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

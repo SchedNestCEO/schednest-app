@@ -74,6 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        data-theme="business"
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
       >
         <LanguageProvider>{children}</LanguageProvider>
