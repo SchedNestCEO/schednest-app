@@ -299,20 +299,20 @@ export default function Home() {
   const copy = landingCopy[language];
 
   return (
-    <main className="min-h-screen bg-[#050807] text-white">
+    <main className="torogoz-app-background min-h-screen text-white">
       <section className="relative overflow-hidden px-6 py-6">
-        <div className="absolute left-1/2 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-emerald-400/10 blur-[120px]" />
-        <div className="absolute right-0 top-32 h-80 w-80 rounded-full bg-emerald-300/10 blur-[120px]" />
+        <div className="absolute left-1/2 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-edition-primary/10 blur-[120px]" />
+        <div className="absolute right-0 top-32 h-80 w-80 rounded-full bg-edition-primary-hover/10 blur-[120px]" />
 
         <div className="relative mx-auto max-w-7xl">
           <nav className="flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
             <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400 text-lg font-black text-black">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-edition-primary text-lg font-black text-black">
                 S
               </div>
 
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                <p className="torogoz-wordmark text-sm font-black uppercase tracking-[0.28em]">
                   SchedNest
                 </p>
                 <p className="text-xs text-gray-500">{copy.tagline}</p>
@@ -331,7 +331,7 @@ export default function Home() {
 
               <Link
                 href="/signup"
-                className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300"
+                className="rounded-2xl bg-edition-primary px-4 py-2 text-sm font-black text-black transition hover:bg-edition-primary-hover"
               >
                 {copy.getStarted}
               </Link>
@@ -342,7 +342,7 @@ export default function Home() {
 
               <Link
                 href="/signup"
-                className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300"
+                className="rounded-2xl bg-edition-primary px-4 py-2 text-sm font-black text-black transition hover:bg-edition-primary-hover"
               >
                 {copy.start}
               </Link>
@@ -351,7 +351,7 @@ export default function Home() {
 
           <div className="grid gap-10 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-24">
             <div>
-              <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-bold text-emerald-200">
+              <div className="inline-flex rounded-full border border-edition-primary/20 bg-edition-primary/10 px-4 py-2 text-sm font-bold text-edition-primary">
                 {copy.badge}
               </div>
 
@@ -366,7 +366,7 @@ export default function Home() {
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className="rounded-2xl bg-emerald-400 px-6 py-4 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                  className="rounded-2xl bg-edition-primary px-6 py-4 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
                 >
                   {copy.primaryCta}
                 </Link>
@@ -382,11 +382,11 @@ export default function Home() {
               <p className="mt-5 text-sm text-gray-500">{copy.audience}</p>
             </div>
 
-            <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_0_100px_rgba(16,185,129,0.12)] backdrop-blur-xl">
+            <div className="torogoz-panel rounded-[2.5rem] p-5">
               <div className="rounded-[2rem] border border-white/10 bg-black/30 p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">
+                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-edition-primary">
                       {copy.today}
                     </p>
                     <h2 className="mt-2 text-2xl font-black">
@@ -394,7 +394,7 @@ export default function Home() {
                     </h2>
                   </div>
 
-                  <div className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                  <div className="rounded-full bg-edition-primary px-3 py-1 text-xs font-black text-black">
                     {copy.live}
                   </div>
                 </div>
@@ -454,7 +454,7 @@ export default function Home() {
 
       <section className="border-y border-white/10 bg-white/[0.03] px-6 py-14">
         <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             {copy.mission}
           </p>
 
@@ -467,7 +467,7 @@ export default function Home() {
       <section className="px-6 py-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
               {copy.why}
             </p>
 
@@ -484,7 +484,7 @@ export default function Home() {
             {copy.features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:border-emerald-400/30 hover:bg-emerald-400/5"
+                className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:border-edition-primary/30 hover:bg-edition-primary/5"
               >
                 <h3 className="text-xl font-black text-white">
                   {feature.title}
@@ -501,7 +501,7 @@ export default function Home() {
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
               {copy.pricing}
             </p>
 
@@ -520,12 +520,12 @@ export default function Home() {
                 key={plan.name}
                 className={`rounded-[2rem] border p-6 transition ${
                   plan.highlighted
-                    ? "border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_80px_rgba(16,185,129,0.12)]"
-                    : "border-white/10 bg-white/[0.04] hover:border-emerald-400/30"
+                    ? "border-edition-primary/40 bg-edition-primary/10 shadow-[0_0_80px_rgb(var(--edition-glow)/0.16)]"
+                    : "border-white/10 bg-white/[0.04] hover:border-edition-primary/30"
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="mb-5 inline-flex rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                  <div className="mb-5 inline-flex rounded-full bg-edition-primary px-3 py-1 text-xs font-black text-black">
                     {copy.mostPopular}
                   </div>
                 )}
@@ -533,13 +533,13 @@ export default function Home() {
                 <h3 className="text-2xl font-black text-white">{plan.name}</h3>
 
                 <div className="mt-5">
-                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-300">
+                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-edition-primary">
                     {copy.founderBeta}
                   </p>
                   <p className="mt-2 text-4xl font-black text-white">
                     {plan.founderMonthly}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-emerald-300">
+                  <p className="mt-2 text-sm font-semibold text-edition-primary">
                     {plan.founderYearly}
                   </p>
                 </div>
@@ -560,7 +560,7 @@ export default function Home() {
                 <div className="mt-6 grid gap-3">
                   {plan.features.map((feature) => (
                     <div key={feature} className="flex items-start gap-3">
-                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-xs font-black text-black">
+                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-edition-primary text-xs font-black text-black">
                         ✓
                       </span>
                       <p className="text-sm leading-6 text-gray-300">
@@ -574,7 +574,7 @@ export default function Home() {
                   href="/signup"
                   className={`mt-8 block rounded-2xl px-5 py-3 text-center text-sm font-black transition ${
                     plan.highlighted
-                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      ? "bg-edition-primary text-black hover:bg-edition-primary-hover"
                       : "border border-white/10 text-white hover:bg-white/10"
                   }`}
                 >
@@ -593,7 +593,7 @@ export default function Home() {
       <section className="px-6 pb-20">
         <div className="mx-auto grid max-w-7xl gap-8 rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+            <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
               {copy.vision}
             </p>
 
@@ -612,7 +612,7 @@ export default function Home() {
                 key={step.number}
                 className="rounded-[2rem] border border-white/10 bg-black/20 p-5"
               >
-                <p className="text-sm font-black text-emerald-300">
+                <p className="text-sm font-black text-edition-primary">
                   {step.number}
                 </p>
                 <h3 className="mt-2 text-xl font-black text-white">
@@ -628,8 +628,8 @@ export default function Home() {
       </section>
 
       <section className="px-6 pb-24">
-        <div className="mx-auto max-w-7xl rounded-[2.5rem] border border-emerald-400/20 bg-emerald-400/10 p-8 text-center sm:p-12">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-200">
+        <div className="torogoz-panel mx-auto max-w-7xl rounded-[2.5rem] p-8 text-center sm:p-12">
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             {copy.tagline}
           </p>
 
@@ -640,7 +640,7 @@ export default function Home() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/signup"
-              className="rounded-2xl bg-emerald-400 px-6 py-4 text-sm font-black text-black transition hover:bg-emerald-300"
+              className="rounded-2xl bg-edition-primary px-6 py-4 text-sm font-black text-black transition hover:bg-edition-primary-hover"
             >
               {copy.getStarted}
             </Link>
