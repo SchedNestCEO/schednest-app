@@ -667,6 +667,10 @@ export default function PublicBookingPage() {
     Record<string, string | boolean>
   >({});
   const [depositPolicyAccepted, setDepositPolicyAccepted] = useState(false);
+  const bookingSubmissionRef = useRef<{
+    key: string;
+    fingerprint: string;
+  } | null>(null);
 
   const selectedService = useMemo(() => {
     if (!pageData) return null;
@@ -1087,8 +1091,30 @@ export default function PublicBookingPage() {
       return answers;
     }, {});
 
+    const submissionFingerprint = JSON.stringify({
+      businessId: pageData.business.id,
+      serviceId: selectedServiceId,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      customerEmail: customerEmail.trim().toLowerCase(),
+      bookingDate,
+      bookingTime,
+      notes: requestNotes,
+      intakeAnswers: intakePayload,
+    });
+
+    if (
+      !bookingSubmissionRef.current ||
+      bookingSubmissionRef.current.fingerprint !== submissionFingerprint
+    ) {
+      bookingSubmissionRef.current = {
+        key: crypto.randomUUID(),
+        fingerprint: submissionFingerprint,
+      };
+    }
+
     const { data, error } = await supabase.rpc(
-      "create_public_booking_with_intake_local",
+      "create_public_booking_with_intake_local_idempotent",
       {
         p_business_id: pageData.business.id,
         p_service_id: selectedServiceId,
@@ -1097,6 +1123,7 @@ export default function PublicBookingPage() {
         p_customer_email: customerEmail,
         p_local_date: bookingDate,
         p_local_time: bookingTime,
+        p_submission_key: bookingSubmissionRef.current.key,
         p_notes: requestNotes,
         p_intake_answers: intakePayload,
       }
@@ -1180,6 +1207,7 @@ export default function PublicBookingPage() {
     setBookingTime("");
     setNotes("");
 
+    bookingSubmissionRef.current = null;
     setIsSubmitting(false);
   }
 
