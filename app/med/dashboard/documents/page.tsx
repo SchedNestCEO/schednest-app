@@ -224,15 +224,14 @@ export default function MedDocumentsPage() {
     <ProductShell
       productName="SchedNest Med"
       productLabel="Patient workspace"
-      accent="rose"
       navItems={[...medNavItems]}
     >
-      <section className="rounded-[2rem] border border-rose-400/20 bg-rose-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Private document storage
         </p>
         <h2 className="mt-3 text-4xl font-black">Documents</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-rose-50/75">
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/75">
           Keep patient-uploaded instructions, forms, lab documents, and care files organized.
         </p>
       </section>
@@ -240,7 +239,7 @@ export default function MedDocumentsPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <form
           onSubmit={uploadDocument}
-          className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6"
+          className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6"
         >
           <h3 className="text-xl font-black">Upload a document</h3>
 
@@ -291,13 +290,13 @@ export default function MedDocumentsPage() {
           <button
             type="submit"
             disabled={uploading}
-            className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-5 py-3 text-sm font-black text-rose-100"
+            className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
           >
             {uploading ? "Uploading..." : "Upload document"}
           </button>
         </form>
 
-        <section className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+        <section className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <div className="flex items-center justify-between gap-4">
             <h3 className="text-xl font-black">Your documents</h3>
             <button
@@ -340,7 +339,7 @@ export default function MedDocumentsPage() {
                       <button
                         type="button"
                         onClick={() => void openDocument(document)}
-                        className="rounded-xl border border-rose-300/20 bg-rose-300/10 px-3 py-2 text-xs font-black text-rose-100"
+                        className="rounded-xl border border-edition-primary/20 bg-edition-primary/10 px-3 py-2 text-xs font-black text-edition-primary-soft"
                       >
                         Open
                       </button>

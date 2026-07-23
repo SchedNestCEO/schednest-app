@@ -236,13 +236,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
                   "SN"
                 ) : (
                   <>
-                    <p className="torogoz-wordmark text-sm font-black uppercase tracking-[0.3em]">
+                    <h1 className="text-3xl font-black tracking-tight text-white">
                       SchedNest
-                    </p>
-
-                    <h1 className="mt-2 text-2xl font-black text-white">
-                      {t("brand.founder", "SchedNest Founder")}
                     </h1>
+
+                    <p className="mt-1 text-sm font-black uppercase tracking-[0.22em] text-edition-primary">
+                      Business
+                    </p>
                   </>
                 )}
               </Link>
@@ -343,10 +343,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           <header className="border-b border-white/10 bg-black/20 px-4 py-4 lg:hidden">
             <div className="flex items-center justify-between gap-3">
               <Link href="/dashboard">
-                <p className="torogoz-wordmark text-xs font-black uppercase tracking-[0.3em]">
+                <p className="text-2xl font-black tracking-tight text-white">
                   SchedNest
                 </p>
-                <p className="text-lg font-black text-white">{t("nav.dashboard", "Dashboard")}</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-edition-primary">
+                  Business
+                </p>
               </Link>
 
               <div className="flex items-center gap-2">

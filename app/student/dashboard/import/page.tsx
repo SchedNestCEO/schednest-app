@@ -196,11 +196,10 @@ export default function StudentImportPage() {
     <ProductShell
       productName="SchedNest Student"
       productLabel="Student workspace"
-      accent="sky"
       navItems={[...studentNavItems]}
     >
-      <section className="rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-sky-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Import processing
         </p>
 
@@ -216,7 +215,7 @@ export default function StudentImportPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <form
           onSubmit={uploadSyllabus}
-          className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6"
+          className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6"
         >
           <h3 className="text-xl font-black">Upload a syllabus</h3>
 
@@ -228,7 +227,7 @@ export default function StudentImportPage() {
               value={sourceName}
               onChange={(event) => setSourceName(event.target.value)}
               placeholder="NURS 316 — Maternal Health"
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
             />
           </label>
 
@@ -242,7 +241,7 @@ export default function StudentImportPage() {
               onChange={(event) =>
                 setSelectedFile(event.target.files?.[0] || null)
               }
-              className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/20 px-4 py-5 text-sm text-gray-300 file:mr-4 file:rounded-xl file:border-0 file:bg-sky-300/10 file:px-4 file:py-2 file:font-black file:text-sky-100"
+              className="mt-2 block w-full rounded-2xl border border-dashed border-white/15 bg-black/20 px-4 py-5 text-sm text-gray-300 file:mr-4 file:rounded-xl file:border-0 file:bg-edition-primary/10 file:px-4 file:py-2 file:font-black file:text-edition-primary-soft"
             />
           </label>
 
@@ -253,13 +252,13 @@ export default function StudentImportPage() {
           <button
             type="submit"
             disabled={uploading}
-            className="mt-5 rounded-2xl border border-sky-300/20 bg-sky-300/10 px-5 py-3 text-sm font-black text-sky-100 transition hover:bg-sky-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {uploading ? "Uploading..." : "Upload syllabus"}
           </button>
         </form>
 
-        <section className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+        <section className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-black">Import history</h3>
@@ -327,7 +326,7 @@ export default function StudentImportPage() {
                     </div>
 
                     <div className="flex flex-col items-start gap-2 sm:items-end">
-                      <span className="rounded-full border border-sky-300/15 bg-sky-300/10 px-3 py-1 text-xs font-black text-sky-100">
+                      <span className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-3 py-1 text-xs font-black text-edition-primary-soft">
                         {item.status.replaceAll("_", " ")}
                       </span>
 

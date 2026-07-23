@@ -223,15 +223,14 @@ export default function MedQuestionsPage() {
     <ProductShell
       productName="SchedNest Med"
       productLabel="Patient workspace"
-      accent="rose"
       navItems={[...medNavItems]}
     >
-      <section className="rounded-[2rem] border border-rose-400/20 bg-rose-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Supabase data
         </p>
         <h2 className="mt-3 text-4xl font-black">Questions for My Provider</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-rose-50/75">
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/75">
           Save questions before appointments and record answer notes afterward.
         </p>
       </section>
@@ -239,7 +238,7 @@ export default function MedQuestionsPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <form
           onSubmit={addQuestion}
-          className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6"
+          className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6"
         >
           <h3 className="text-xl font-black">Add a question</h3>
 
@@ -288,13 +287,13 @@ export default function MedQuestionsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-5 py-3 text-sm font-black text-rose-100"
+            className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
           >
             {saving ? "Adding..." : "Add question"}
           </button>
         </form>
 
-        <section className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+        <section className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-black">Your questions</h3>
@@ -333,7 +332,7 @@ export default function MedQuestionsPage() {
                         className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-bold ${
                           question.answered
                             ? "border-emerald-300/15 bg-emerald-300/10 text-emerald-100"
-                            : "border-rose-300/15 bg-rose-300/10 text-rose-100"
+                            : "border-edition-primary/15 bg-edition-primary/10 text-edition-primary-soft"
                         }`}
                       >
                         {question.answered ? "answered" : "unanswered"}
@@ -365,7 +364,7 @@ export default function MedQuestionsPage() {
                   <button
                     type="button"
                     onClick={() => void saveAnswer(question)}
-                    className="mt-3 rounded-xl border border-rose-300/20 bg-rose-300/10 px-4 py-2 text-xs font-black text-rose-100"
+                    className="mt-3 rounded-xl border border-edition-primary/20 bg-edition-primary/10 px-4 py-2 text-xs font-black text-edition-primary-soft"
                   >
                     Save answer
                   </button>

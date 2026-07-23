@@ -172,11 +172,10 @@ export default function TeamsAvailabilityPage() {
     <ProductShell
       productName="SchedNest Teams"
       productLabel="Team workspace"
-      accent="violet"
       navItems={[...teamsNavItems]}
     >
-      <section className="rounded-[2rem] border border-violet-400/20 bg-violet-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-violet-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Personal working hours
         </p>
         <h2 className="mt-3 text-4xl font-black">Availability</h2>
@@ -185,7 +184,7 @@ export default function TeamsAvailabilityPage() {
         </p>
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+      <section className="mt-6 rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
         <h3 className="text-xl font-black">
           {workspace?.name || "Weekly availability"}
         </h3>
@@ -258,7 +257,7 @@ export default function TeamsAvailabilityPage() {
           type="button"
           onClick={() => void saveAvailability()}
           disabled={saving || loading}
-          className="mt-5 rounded-2xl border border-violet-300/20 bg-violet-300/10 px-5 py-3 text-sm font-black text-violet-100"
+          className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
         >
           {saving ? "Saving..." : "Save availability"}
         </button>

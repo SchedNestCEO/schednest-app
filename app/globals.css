@@ -69,12 +69,12 @@
 }
 
 [data-theme="medical"] {
-  --edition-primary: #4aa59e;
-  --edition-primary-hover: #3b8f89;
-  --edition-primary-soft: #dcefeb;
-  --edition-secondary: var(--brand-olive);
+  --edition-primary: var(--text-inverse);
+  --edition-primary-hover: #eee7dc;
+  --edition-primary-soft: #2a2d29;
+  --edition-secondary: var(--brand-turquoise);
   --edition-tertiary: var(--brand-orange);
-  --edition-glow: 74 165 158;
+  --edition-glow: 255 253 248;
 }
 
 @theme inline {
@@ -176,4 +176,196 @@ body {
   background: rgb(255 255 255 / 0.045);
   box-shadow: 0 24px 80px rgb(var(--shadow-color) / 0.24);
   backdrop-filter: blur(18px);
+}
+
+
+.torogoz-edition-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.torogoz-edition-shell::before {
+  position: fixed;
+  right: -8%;
+  bottom: -8rem;
+  left: 12%;
+  z-index: -1;
+  height: 18rem;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 100%, rgb(39 184 174 / 0.34), transparent 46%),
+    radial-gradient(ellipse at 54% 100%, rgb(168 155 69 / 0.28), transparent 48%),
+    radial-gradient(ellipse at 86% 100%, rgb(244 123 59 / 0.32), transparent 46%);
+  filter: blur(34px);
+  opacity: 0.9;
+  transform: rotate(-2deg);
+}
+
+.torogoz-shell-streaks {
+  position: fixed;
+  top: 16%;
+  right: -5rem;
+  z-index: 0;
+  width: 22rem;
+  height: 12rem;
+  pointer-events: none;
+  opacity: 0.78;
+  transform: rotate(-8deg);
+}
+
+.torogoz-shell-streaks span {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--edition-primary) 28%,
+    var(--brand-olive) 62%,
+    var(--brand-orange) 86%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 14px rgb(var(--edition-glow) / 0.65),
+    0 0 32px rgb(var(--edition-glow) / 0.35);
+}
+
+.torogoz-shell-streaks span:first-child {
+  top: 2.5rem;
+}
+
+.torogoz-shell-streaks span:last-child {
+  top: 6.25rem;
+  right: 2.5rem;
+  width: 82%;
+  opacity: 0.72;
+}
+
+@media (max-width: 768px) {
+  .torogoz-shell-streaks {
+    top: 10%;
+    right: -10rem;
+    opacity: 0.45;
+  }
+
+  .torogoz-edition-shell::before {
+    right: -30%;
+    left: -20%;
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .torogoz-shell-streaks,
+  .torogoz-edition-shell::before {
+    transform: none;
+  }
+}
+
+
+.torogoz-command-card > .grid {
+  position: relative;
+  z-index: 1;
+}
+
+.torogoz-card-streaks {
+  position: absolute;
+  top: 0;
+  right: -3rem;
+  bottom: 0;
+  z-index: 0;
+  width: min(42%, 28rem);
+  pointer-events: none;
+  opacity: 0.82;
+}
+
+.torogoz-card-streaks::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 78% 38%, rgb(244 123 59 / 0.25), transparent 36%),
+    radial-gradient(circle at 48% 72%, rgb(39 184 174 / 0.2), transparent 38%);
+  filter: blur(20px);
+}
+
+.torogoz-card-streaks span {
+  position: absolute;
+  right: -3rem;
+  width: 120%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--edition-primary) 34%,
+    var(--brand-olive) 61%,
+    var(--brand-orange) 82%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgb(var(--edition-glow) / 0.58),
+    0 0 28px rgb(244 123 59 / 0.24);
+  transform: rotate(-24deg);
+  transform-origin: right center;
+}
+
+.torogoz-card-streaks span:first-child {
+  top: 35%;
+}
+
+.torogoz-card-streaks span:last-child {
+  top: 57%;
+  right: -1rem;
+  width: 105%;
+  opacity: 0.72;
+}
+
+.torogoz-card-ribbon {
+  position: absolute;
+  right: -8%;
+  bottom: -2.8rem;
+  left: -8%;
+  height: 7rem;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 100%, rgb(39 184 174 / 0.5), transparent 42%),
+    radial-gradient(ellipse at 53% 100%, rgb(168 155 69 / 0.4), transparent 45%),
+    radial-gradient(ellipse at 88% 100%, rgb(244 123 59 / 0.5), transparent 42%);
+  filter: blur(18px);
+  opacity: 0.9;
+  transform: rotate(-2deg);
+}
+
+.torogoz-card-ribbon::after {
+  position: absolute;
+  right: 3%;
+  bottom: 2.2rem;
+  left: 3%;
+  height: 2px;
+  content: "";
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--brand-turquoise),
+    var(--brand-olive),
+    var(--brand-orange),
+    transparent
+  );
+  box-shadow:
+    0 0 12px rgb(39 184 174 / 0.5),
+    0 0 24px rgb(244 123 59 / 0.3);
+}
+
+@media (max-width: 768px) {
+  .torogoz-card-streaks {
+    right: -8rem;
+    width: 70%;
+    opacity: 0.55;
+  }
 }

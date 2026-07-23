@@ -155,11 +155,10 @@ export default function StudentDashboardPage() {
     <ProductShell
       productName="SchedNest Student"
       productLabel="Student workspace"
-      accent="sky"
       navItems={[...studentNavItems]}
     >
-      <section className="rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-sky-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Student dashboard
         </p>
 
@@ -189,34 +188,34 @@ export default function StudentDashboardPage() {
       ) : (
         <>
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Active classes</p>
               <p className="mt-2 text-4xl font-black">{courses.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Open assignments</p>
               <p className="mt-2 text-4xl font-black">{assignments.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">High priority</p>
               <p className="mt-2 text-4xl font-black">{urgentAssignments}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Upcoming exams</p>
               <p className="mt-2 text-4xl font-black">{exams.length}</p>
             </article>
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-2">
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Next assignments</h3>
                 <Link
                   href="/student/dashboard/assignments"
-                  className="text-sm font-black text-sky-300 hover:text-sky-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary"
                 >
                   View all
                 </Link>
@@ -235,7 +234,7 @@ export default function StudentDashboardPage() {
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="font-black">{assignment.title}</p>
-                        <span className="rounded-full border border-sky-300/15 bg-sky-300/10 px-3 py-1 text-xs font-bold text-sky-200">
+                        <span className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-3 py-1 text-xs font-bold text-edition-primary">
                           {assignment.priority}
                         </span>
                       </div>
@@ -250,12 +249,12 @@ export default function StudentDashboardPage() {
               )}
             </article>
 
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Upcoming exams</h3>
                 <Link
                   href="/student/dashboard/exams"
-                  className="text-sm font-black text-sky-300 hover:text-sky-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary"
                 >
                   View all
                 </Link>
@@ -284,12 +283,12 @@ export default function StudentDashboardPage() {
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-2">
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Active classes</h3>
                 <Link
                   href="/student/dashboard/classes"
-                  className="text-sm font-black text-sky-300 hover:text-sky-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary"
                 >
                   Manage
                 </Link>
@@ -304,7 +303,7 @@ export default function StudentDashboardPage() {
                   {courses.map((course) => (
                     <span
                       key={course.id}
-                      className="rounded-full border border-sky-300/15 bg-sky-300/10 px-4 py-2 text-sm font-bold text-sky-100"
+                      className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-4 py-2 text-sm font-bold text-edition-primary-soft"
                     >
                       {course.course_code
                         ? `${course.course_code} · ${course.name}`
@@ -315,12 +314,12 @@ export default function StudentDashboardPage() {
               )}
             </article>
 
-            <article className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Recent imports</h3>
                 <Link
                   href="/student/dashboard/import"
-                  className="text-sm font-black text-sky-300 hover:text-sky-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary"
                 >
                   Import
                 </Link>
