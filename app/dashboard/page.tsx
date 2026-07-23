@@ -572,7 +572,11 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-        <section className="torogoz-panel overflow-hidden rounded-[2rem]">
+        <section className="torogoz-command-card torogoz-panel relative overflow-hidden rounded-[2rem]">
+          <div className="torogoz-card-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
           <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-6 lg:p-8">
               <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
@@ -752,15 +756,16 @@ export default function DashboardPage() {
 
           <Link
             href="/dashboard/customers"
-            className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
+            className="torogoz-ribbon-card relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-edition-primary/30 hover:bg-edition-primary/[0.06]"
           >
-            <p className="text-sm font-bold text-gray-400">Customers</p>
+            <div className="torogoz-card-ribbon" aria-hidden="true" />
+            <p className="relative z-10 text-sm font-bold text-gray-400">Customers</p>
 
-            <p className="mt-4 text-4xl font-black text-white">
+            <p className="relative z-10 mt-4 text-4xl font-black text-white">
               {isLoading ? "..." : stats.customers}
             </p>
 
-            <p className="mt-3 text-sm leading-6 text-gray-400">
+            <p className="relative z-10 mt-3 text-sm leading-6 text-gray-400">
               {stats.customers > 0
                 ? "Customers saved from your booking flow."
                 : "Customers will appear here after they book with you."}

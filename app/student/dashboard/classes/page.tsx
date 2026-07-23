@@ -228,11 +228,10 @@ export default function ClassesPage() {
     <ProductShell
       productName="SchedNest Student"
       productLabel="Student workspace"
-      accent="sky"
       navItems={[...studentNavItems]}
     >
-      <section className="rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-sky-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Supabase data
         </p>
 
@@ -246,7 +245,7 @@ export default function ClassesPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <form
           onSubmit={addCourse}
-          className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6"
+          className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6"
         >
           <h3 className="text-xl font-black">Add a class</h3>
 
@@ -264,7 +263,7 @@ export default function ClassesPage() {
                   }))
                 }
                 placeholder="Anatomy and Physiology"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
 
@@ -281,7 +280,7 @@ export default function ClassesPage() {
                   }))
                 }
                 placeholder="BIO 201"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
 
@@ -298,7 +297,7 @@ export default function ClassesPage() {
                   }))
                 }
                 placeholder="Professor name"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
 
@@ -313,7 +312,7 @@ export default function ClassesPage() {
                   }))
                 }
                 placeholder="Building or online"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
           </div>
@@ -321,13 +320,13 @@ export default function ClassesPage() {
           <button
             type="submit"
             disabled={saving}
-            className="mt-5 inline-flex rounded-2xl border border-sky-300/20 bg-sky-300/10 px-5 py-3 text-sm font-black text-sky-100 transition hover:bg-sky-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 inline-flex rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Adding..." : "Add class"}
           </button>
         </form>
 
-        <section className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+        <section className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-black">Your classes</h3>
@@ -379,7 +378,7 @@ export default function ClassesPage() {
                         <h4 className="text-lg font-black">{course.name}</h4>
 
                         {course.course_code ? (
-                          <span className="rounded-full border border-sky-300/15 bg-sky-300/10 px-3 py-1 text-xs font-bold text-sky-200">
+                          <span className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-3 py-1 text-xs font-bold text-edition-primary">
                             {course.course_code}
                           </span>
                         ) : null}

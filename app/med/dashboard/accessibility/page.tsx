@@ -120,20 +120,19 @@ export default function AccessibilityPage() {
     <ProductShell
       productName="SchedNest Med"
       productLabel="Family care workspace"
-      accent="rose"
       navItems={[...medNavItems]}
     >
-      <section className="rounded-[2rem] border border-rose-400/20 bg-rose-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Easier to use
         </p>
         <h2 className="mt-3 text-4xl font-black">Accessibility</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-rose-50/75">
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/75">
           Personalize SchedNest Med for older adults, caregivers, and users with different accessibility needs.
         </p>
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+      <section className="mt-6 rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
         {loading ? (
           <p className="text-sm text-gray-400">Loading preferences...</p>
         ) : (
@@ -191,7 +190,7 @@ export default function AccessibilityPage() {
               type="button"
               onClick={() => void savePreferences()}
               disabled={saving}
-              className="mt-5 rounded-2xl border border-rose-300/20 bg-rose-300/10 px-5 py-3 text-sm font-black text-rose-100"
+              className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
             >
               {saving ? "Saving..." : "Save preferences"}
             </button>

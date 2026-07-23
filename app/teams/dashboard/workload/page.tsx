@@ -180,11 +180,10 @@ export default function TeamWorkloadPage() {
     <ProductShell
       productName="SchedNest Teams"
       productLabel="Team workspace"
-      accent="violet"
       navItems={[...teamsNavItems]}
     >
-      <section className="rounded-[2rem] border border-violet-400/20 bg-violet-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-violet-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Capacity overview
         </p>
         <h2 className="mt-3 text-4xl font-black">Workload</h2>
@@ -193,7 +192,7 @@ export default function TeamWorkloadPage() {
         </p>
       </section>
 
-      <section className="mt-6 rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+      <section className="mt-6 rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-black">
@@ -235,14 +234,14 @@ export default function TeamWorkloadPage() {
                     </p>
                   </div>
 
-                  <span className="rounded-full border border-violet-300/15 bg-violet-300/10 px-4 py-2 text-sm font-black text-violet-100">
+                  <span className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-4 py-2 text-sm font-black text-edition-primary-soft">
                     {workloadLabel(row.score)}
                   </span>
                 </div>
 
                 <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/5">
                   <div
-                    className="h-full rounded-full bg-violet-300/60"
+                    className="h-full rounded-full bg-edition-primary/60"
                     style={{ width: `${Math.min(row.score * 8, 100)}%` }}
                   />
                 </div>

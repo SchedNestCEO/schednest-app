@@ -182,11 +182,10 @@ export default function MedDashboardPage() {
     <ProductShell
       productName={medProductConfig.name}
       productLabel="Patient workspace"
-      accent="rose"
       navItems={[...medNavItems]}
     >
-      <section className="rounded-[2rem] border border-rose-400/20 bg-rose-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Med dashboard
         </p>
 
@@ -196,7 +195,7 @@ export default function MedDashboardPage() {
             : "Keep every next step organized"}
         </h2>
 
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-rose-50/75">
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/75">
           Appointments, medications, care tasks, and Care Nests in one place.
         </p>
       </section>
@@ -212,34 +211,34 @@ export default function MedDashboardPage() {
       ) : (
         <>
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Upcoming appointments</p>
               <p className="mt-2 text-4xl font-black">{appointments.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Active medications</p>
               <p className="mt-2 text-4xl font-black">{medications.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Active Care Nests</p>
               <p className="mt-2 text-4xl font-black">{careNests.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Open care tasks</p>
               <p className="mt-2 text-4xl font-black">{tasks.length}</p>
             </article>
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-2">
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Next appointments</h3>
                 <Link
                   href="/med/dashboard/appointments"
-                  className="text-sm font-black text-rose-300 hover:text-rose-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary-soft"
                 >
                   View all
                 </Link>
@@ -271,12 +270,12 @@ export default function MedDashboardPage() {
               )}
             </article>
 
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Active medications</h3>
                 <Link
                   href="/med/dashboard/medications"
-                  className="text-sm font-black text-rose-300 hover:text-rose-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary-soft"
                 >
                   View all
                 </Link>
@@ -310,12 +309,12 @@ export default function MedDashboardPage() {
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-2">
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Care Nests</h3>
                 <Link
                   href="/med/dashboard/care-nests"
-                  className="text-sm font-black text-rose-300 hover:text-rose-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary-soft"
                 >
                   Manage
                 </Link>
@@ -330,7 +329,7 @@ export default function MedDashboardPage() {
                   {careNests.map((nest) => (
                     <span
                       key={nest.id}
-                      className="rounded-full border border-rose-300/15 bg-rose-300/10 px-4 py-2 text-sm font-bold text-rose-100"
+                      className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-4 py-2 text-sm font-bold text-edition-primary-soft"
                     >
                       {nest.name}
                     </span>
@@ -339,9 +338,9 @@ export default function MedDashboardPage() {
               )}
             </article>
 
-            <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <h3 className="text-xl font-black">Patient safety boundary</h3>
-              <p className="mt-3 text-sm leading-6 text-rose-100/55">
+              <p className="mt-3 text-sm leading-6 text-edition-primary-soft/55">
                 SchedNest Med organizes patient-provided information and
                 reminders. It does not diagnose, prescribe, or replace licensed
                 medical care.

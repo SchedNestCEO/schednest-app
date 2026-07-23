@@ -55,7 +55,7 @@ const statusLabels: Record<StudentAssignment["status"], string> = {
 
 const priorityStyles: Record<StudentAssignment["priority"], string> = {
   low: "border-gray-300/15 bg-gray-300/10 text-gray-200",
-  medium: "border-sky-300/15 bg-sky-300/10 text-sky-200",
+  medium: "border-edition-primary/15 bg-edition-primary/10 text-edition-primary",
   high: "border-amber-300/15 bg-amber-300/10 text-amber-100",
   urgent: "border-red-300/15 bg-red-300/10 text-red-100",
 };
@@ -253,11 +253,10 @@ export default function AssignmentsPage() {
     <ProductShell
       productName="SchedNest Student"
       productLabel="Student workspace"
-      accent="sky"
       navItems={[...studentNavItems]}
     >
-      <section className="rounded-[2rem] border border-sky-400/20 bg-sky-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-sky-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Supabase data
         </p>
 
@@ -271,7 +270,7 @@ export default function AssignmentsPage() {
       <section className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.4fr]">
         <form
           onSubmit={addAssignment}
-          className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6"
+          className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6"
         >
           <h3 className="text-xl font-black">Add an assignment</h3>
 
@@ -287,7 +286,7 @@ export default function AssignmentsPage() {
                   }))
                 }
                 placeholder="Chapter 4 discussion post"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
 
@@ -301,7 +300,7 @@ export default function AssignmentsPage() {
                     courseId: event.target.value,
                   }))
                 }
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-edition-primary/40"
               >
                 <option value="">No course selected</option>
                 {courses.map((course) => (
@@ -325,7 +324,7 @@ export default function AssignmentsPage() {
                     dueAt: event.target.value,
                   }))
                 }
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-edition-primary/40"
               />
             </label>
 
@@ -339,7 +338,7 @@ export default function AssignmentsPage() {
                     priority: event.target.value as StudentAssignment["priority"],
                   }))
                 }
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-sky-300/40"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-edition-primary/40"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -362,7 +361,7 @@ export default function AssignmentsPage() {
                 }
                 placeholder="Add instructions or notes"
                 rows={4}
-                className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-sky-300/40"
+                className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/40"
               />
             </label>
           </div>
@@ -370,13 +369,13 @@ export default function AssignmentsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="mt-5 inline-flex rounded-2xl border border-sky-300/20 bg-sky-300/10 px-5 py-3 text-sm font-black text-sky-100 transition hover:bg-sky-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 inline-flex rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Adding..." : "Add assignment"}
           </button>
         </form>
 
-        <section className="rounded-[2rem] border border-sky-200/10 bg-white/[0.04] p-6">
+        <section className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-black">Your assignments</h3>
@@ -487,7 +486,7 @@ export default function AssignmentsPage() {
                           }
                           className={`rounded-xl border px-3 py-2 text-xs font-black transition ${
                             assignment.status === status
-                              ? "border-sky-300/20 bg-sky-300/15 text-sky-100"
+                              ? "border-edition-primary/20 bg-edition-primary/15 text-edition-primary-soft"
                               : "border-white/10 text-gray-500 hover:bg-white/[0.06] hover:text-white"
                           }`}
                         >

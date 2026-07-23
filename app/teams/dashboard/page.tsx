@@ -142,11 +142,10 @@ export default function TeamsDashboardPage() {
     <ProductShell
       productName="SchedNest Teams"
       productLabel="Team workspace"
-      accent="violet"
       navItems={[...teamsNavItems]}
     >
-      <section className="rounded-[2rem] border border-violet-400/20 bg-violet-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-violet-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Live Teams dashboard
         </p>
 
@@ -168,14 +167,14 @@ export default function TeamsDashboardPage() {
       {loading ? (
         <p className="mt-6 text-sm text-gray-400">Loading dashboard...</p>
       ) : !workspace ? (
-        <section className="mt-6 rounded-[2rem] border border-dashed border-violet-300/20 bg-white/[0.03] p-8 text-center">
+        <section className="mt-6 rounded-[2rem] border border-dashed border-edition-primary/20 bg-white/[0.03] p-8 text-center">
           <h3 className="text-xl font-black">No workspace yet</h3>
           <p className="mt-3 text-sm text-gray-500">
             Open Members to create your first workspace automatically.
           </p>
           <Link
             href="/teams/dashboard/members"
-            className="mt-5 inline-flex rounded-2xl border border-violet-300/20 bg-violet-300/10 px-5 py-3 text-sm font-black text-violet-100"
+            className="mt-5 inline-flex rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
           >
             Open Members
           </Link>
@@ -183,34 +182,34 @@ export default function TeamsDashboardPage() {
       ) : (
         <>
           <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Team members</p>
               <p className="mt-2 text-4xl font-black">{members.length}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Active members</p>
               <p className="mt-2 text-4xl font-black">{activeMembers}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Active projects</p>
               <p className="mt-2 text-4xl font-black">{activeProjects}</p>
             </article>
 
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <p className="text-sm text-gray-500">Pending requests</p>
               <p className="mt-2 text-4xl font-black">{pendingRequests}</p>
             </article>
           </section>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-2">
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Recent projects</h3>
                 <Link
                   href="/teams/dashboard/projects"
-                  className="text-sm font-black text-violet-300 hover:text-violet-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary-soft"
                 >
                   View all
                 </Link>
@@ -227,7 +226,7 @@ export default function TeamsDashboardPage() {
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="font-black">{project.name}</p>
-                        <span className="rounded-full border border-violet-300/15 bg-violet-300/10 px-3 py-1 text-xs font-bold text-violet-100">
+                        <span className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-3 py-1 text-xs font-bold text-edition-primary-soft">
                           {project.status}
                         </span>
                       </div>
@@ -240,12 +239,12 @@ export default function TeamsDashboardPage() {
               )}
             </article>
 
-            <article className="rounded-[2rem] border border-violet-200/10 bg-white/[0.04] p-6">
+            <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-xl font-black">Recent requests</h3>
                 <Link
                   href="/teams/dashboard/requests"
-                  className="text-sm font-black text-violet-300 hover:text-violet-200"
+                  className="text-sm font-black text-edition-primary hover:text-edition-primary-soft"
                 >
                   View all
                 </Link>

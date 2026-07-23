@@ -128,15 +128,14 @@ export default function MedFamilyPage() {
     <ProductShell
       productName="SchedNest Med"
       productLabel="Family care workspace"
-      accent="rose"
       navItems={[...medNavItems]}
     >
-      <section className="rounded-[2rem] border border-rose-400/20 bg-rose-400/10 p-7">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-300">
+      <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+        <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
           Caregiver portal
         </p>
         <h2 className="mt-3 text-4xl font-black">Family View</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-rose-50/75">
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-white/75">
           Accept care invitations and open the shared dashboard for each patient.
         </p>
       </section>
@@ -145,7 +144,7 @@ export default function MedFamilyPage() {
       {errorMessage ? <p className="mt-6 text-red-200">{errorMessage}</p> : null}
 
       <section className="mt-6 grid gap-6 xl:grid-cols-2">
-        <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+        <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <h3 className="text-xl font-black">Pending invitations</h3>
 
           {loading ? (
@@ -188,7 +187,7 @@ export default function MedFamilyPage() {
           )}
         </article>
 
-        <article className="rounded-[2rem] border border-rose-200/10 bg-white/[0.04] p-6">
+        <article className="rounded-[2rem] border border-edition-primary/10 bg-white/[0.04] p-6">
           <h3 className="text-xl font-black">Patients shared with you</h3>
 
           {accepted.length === 0 ? (
@@ -201,7 +200,7 @@ export default function MedFamilyPage() {
                 <Link
                   key={invite.id}
                   href={`/med/dashboard/family/${invite.owner_id}`}
-                  className="block rounded-2xl border border-white/10 bg-black/10 p-4 transition hover:border-rose-300/20 hover:bg-rose-300/[0.05]"
+                  className="block rounded-2xl border border-white/10 bg-black/10 p-4 transition hover:border-edition-primary/20 hover:bg-edition-primary-hover/[0.05]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -213,7 +212,7 @@ export default function MedFamilyPage() {
                       </p>
                     </div>
 
-                    <span className="text-sm font-black text-rose-300">
+                    <span className="text-sm font-black text-edition-primary">
                       Open dashboard
                     </span>
                   </div>
@@ -224,7 +223,7 @@ export default function MedFamilyPage() {
                       .map(([key]) => (
                         <span
                           key={key}
-                          className="rounded-full border border-rose-300/15 bg-rose-300/10 px-3 py-1 text-xs font-bold text-rose-100"
+                          className="rounded-full border border-edition-primary/15 bg-edition-primary/10 px-3 py-1 text-xs font-bold text-edition-primary-soft"
                         >
                           {key.replaceAll("_", " ")}
                         </span>
