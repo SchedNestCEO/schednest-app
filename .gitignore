@@ -54,3 +54,5 @@ supabase/migrations-backup-*/
 artifacts/load/*.json
 .env.loadtest.local
 supabase/.branches/
+playwright-report/
+test-results/

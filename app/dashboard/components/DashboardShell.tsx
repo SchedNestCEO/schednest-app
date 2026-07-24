@@ -100,6 +100,7 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   const t = useT();
 
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [isSchedNestAdmin, setIsSchedNestAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -140,19 +141,34 @@ export default function DashboardShell({ children }: DashboardShellProps) {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadUser() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const email = user?.email?.toLowerCase() || null;
+      if (!isMounted) return;
+
+      if (!user) {
+        const nextPath = encodeURIComponent(pathname || "/dashboard");
+        router.replace(`/login?next=${nextPath}`);
+        return;
+      }
+
+      const email = user.email?.toLowerCase() || null;
 
       setUserEmail(email);
       setIsSchedNestAdmin(email === ADMIN_EMAIL);
+      setIsAuthChecked(true);
     }
 
-    loadUser();
-  }, [supabase]);
+    void loadUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname, router, supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -198,6 +214,16 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         ? "bg-edition-primary text-black"
         : "text-gray-300 hover:bg-white/10 hover:text-white"
     }`;
+  }
+
+  if (!isAuthChecked) {
+    return (
+      <main className="torogoz-app-background flex min-h-screen items-center justify-center px-6 text-white">
+        <p className="text-sm font-bold text-gray-400">
+          Verifying your account...
+        </p>
+      </main>
+    );
   }
 
   return (
