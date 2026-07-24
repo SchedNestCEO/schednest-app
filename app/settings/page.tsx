@@ -243,8 +243,8 @@ export default function UnifiedSettingsPage() {
   return (
     <main className="min-h-screen bg-[#07090d] px-5 py-8 text-white">
       <div className="mx-auto max-w-6xl">
-        <section className="rounded-[2rem] border border-indigo-400/20 bg-indigo-400/10 p-7">
-          <p className="text-sm font-black uppercase tracking-[0.28em] text-indigo-300">
+        <section className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-7">
+          <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
             SchedNest Platform
           </p>
           <h1 className="mt-3 text-4xl font-black">
@@ -425,7 +425,7 @@ export default function UnifiedSettingsPage() {
         </section>
 
         {message ? (
-          <p className="mt-6 text-emerald-200">{message}</p>
+          <p className="mt-6 text-edition-primary-soft">{message}</p>
         ) : null}
 
         {errorMessage ? (
@@ -436,7 +436,7 @@ export default function UnifiedSettingsPage() {
           type="button"
           onClick={() => void saveSettings()}
           disabled={saving}
-          className="mt-6 rounded-2xl border border-indigo-300/20 bg-indigo-300/10 px-5 py-3 text-sm font-black text-indigo-100"
+          className="mt-6 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft"
         >
           {saving ? "Saving..." : "Save all settings"}
         </button>

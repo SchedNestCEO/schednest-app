@@ -77,12 +77,6 @@ const navItems: NavItem[] = [
     shortLabel: "RI",
     adminOnly: true,
   },
-  {
-    href: "/dashboard/subscriptions",
-    label: "Subscriptions",
-    shortLabel: "$",
-    adminOnly: true,
-  },
 ];
 
 const navLabelKeys: Record<string, string> = {
@@ -95,7 +89,6 @@ const navLabelKeys: Record<string, string> = {
   "/dashboard/booking-page": "nav.bookingPage",
   "/dashboard/settings": "nav.settings",
   "/dashboard/birdy": "nav.birdy",
-  "/dashboard/subscriptions": "nav.subscriptions",
 };
 
 const ADMIN_EMAIL = "hello@schednest.com";

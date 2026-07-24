@@ -129,7 +129,7 @@ function formatLabel(value: string | null | undefined, fallback = "Not set") {
 
 function getStatusClass(isGood: boolean) {
   return isGood
-    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+    ? "border-edition-primary/20 bg-edition-primary/10 text-edition-primary"
     : "border-yellow-400/20 bg-yellow-400/10 text-yellow-200";
 }
 
@@ -181,7 +181,7 @@ function CollapsiblePanel({
         className="flex w-full flex-col gap-4 p-6 text-left transition hover:bg-white/[0.03] lg:flex-row lg:items-start lg:justify-between"
       >
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+          <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
             {eyebrow}
           </p>
 
@@ -587,10 +587,14 @@ export default function SettingsPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+        <section className="torogoz-dashboard-hero relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="torogoz-dashboard-hero-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
                 Settings
               </p>
 
@@ -730,7 +734,7 @@ export default function SettingsPage() {
                 value={businessName}
                 onChange={(event) => setBusinessName(event.target.value)}
                 disabled={!business || isSavingBusinessInfo}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="SchedNest LLC"
               />
             </label>
@@ -743,7 +747,7 @@ export default function SettingsPage() {
                 value={timezone}
                 onChange={(event) => setTimezone(event.target.value)}
                 disabled={!business || isSavingBusinessInfo}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="America/Los_Angeles"
               />
             </label>
@@ -756,7 +760,7 @@ export default function SettingsPage() {
                 value={contactEmail}
                 onChange={(event) => setContactEmail(event.target.value)}
                 disabled={!business || isSavingBusinessInfo}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="hello@schednest.com"
               />
             </label>
@@ -769,7 +773,7 @@ export default function SettingsPage() {
                 value={contactPhone}
                 onChange={(event) => setContactPhone(event.target.value)}
                 disabled={!business || isSavingBusinessInfo}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="(555) 555-5555"
               />
             </label>
@@ -785,7 +789,7 @@ export default function SettingsPage() {
                 }
                 disabled={!business || isSavingBusinessInfo}
                 rows={5}
-                className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black leading-6 text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black leading-6 text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 placeholder="Describe what your business offers and who you help."
               />
             </label>
@@ -796,7 +800,7 @@ export default function SettingsPage() {
               type="button"
               onClick={saveBusinessInfo}
               disabled={!business || isSavingBusinessInfo}
-              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSavingBusinessInfo ? "Saving..." : "Save business info"}
             </button>
@@ -829,7 +833,7 @@ export default function SettingsPage() {
               disabled={!business || isSavingBookingSettings}
               className={`rounded-[2rem] border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
                 bookingTimeMode === "fixed_hours"
-                  ? "border-emerald-400/30 bg-emerald-400/10"
+                  ? "border-edition-primary/30 bg-edition-primary/10"
                   : "border-white/10 bg-black/20 hover:bg-white/[0.03]"
               }`}
             >
@@ -842,7 +846,7 @@ export default function SettingsPage() {
               <span
                 className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
                   bookingTimeMode === "fixed_hours"
-                    ? "bg-emerald-400 text-black"
+                    ? "bg-edition-primary text-black"
                     : "bg-white/10 text-gray-300"
                 }`}
               >
@@ -856,7 +860,7 @@ export default function SettingsPage() {
               disabled={!business || isSavingBookingSettings}
               className={`rounded-[2rem] border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
                 bookingTimeMode === "flexible_requests"
-                  ? "border-emerald-400/30 bg-emerald-400/10"
+                  ? "border-edition-primary/30 bg-edition-primary/10"
                   : "border-white/10 bg-black/20 hover:bg-white/[0.03]"
               }`}
             >
@@ -871,7 +875,7 @@ export default function SettingsPage() {
               <span
                 className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
                   bookingTimeMode === "flexible_requests"
-                    ? "bg-emerald-400 text-black"
+                    ? "bg-edition-primary text-black"
                     : "bg-white/10 text-gray-300"
                 }`}
               >
@@ -903,7 +907,7 @@ export default function SettingsPage() {
                 disabled={!business || isSavingBookingSettings}
                 className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   businessHoursEnabled
-                    ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                    ? "bg-edition-primary text-black hover:bg-edition-primary-hover"
                     : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
                 }`}
               >
@@ -948,7 +952,7 @@ export default function SettingsPage() {
               type="button"
               onClick={saveBookingSettings}
               disabled={!business || isSavingBookingSettings}
-              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSavingBookingSettings
                 ? "Saving..."
@@ -1006,7 +1010,7 @@ export default function SettingsPage() {
                   disabled={!business || isSavingReminderSettings}
                   className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
                     reminderEmailsEnabled
-                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      ? "bg-edition-primary text-black hover:bg-edition-primary-hover"
                       : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -1030,7 +1034,7 @@ export default function SettingsPage() {
                     setReminderHoursBefore(Number(event.target.value))
                   }
                   disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
-                  className="mt-2 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-2 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value={1}>1 hour before</option>
                   <option value={3}>3 hours before</option>
@@ -1061,7 +1065,7 @@ export default function SettingsPage() {
                   disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
                   className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
                     ownerReminderEnabled
-                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      ? "bg-edition-primary text-black hover:bg-edition-primary-hover"
                       : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -1089,7 +1093,7 @@ export default function SettingsPage() {
                   disabled={!business || isSavingReminderSettings || !reminderEmailsEnabled}
                   className={`w-fit rounded-2xl px-5 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
                     depositReminderEnabled
-                      ? "bg-emerald-400 text-black hover:bg-emerald-300"
+                      ? "bg-edition-primary text-black hover:bg-edition-primary-hover"
                       : "border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
                   }`}
                 >
@@ -1113,7 +1117,7 @@ export default function SettingsPage() {
               type="button"
               onClick={saveReminderSettings}
               disabled={!business || isSavingReminderSettings}
-              className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSavingReminderSettings
                 ? "Saving..."
@@ -1237,7 +1241,7 @@ export default function SettingsPage() {
                   value={bookingPageTheme}
                   onChange={(event) => setBookingPageTheme(event.target.value)}
                   disabled={!business || isSavingBrandingSettings}
-                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-emerald-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-black text-white outline-none transition focus:border-edition-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {bookingThemeOptions.map((theme) => (
                     <option key={theme.value} value={theme.value}>
@@ -1252,7 +1256,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={saveBrandingSettings}
                   disabled={!business || isSavingBrandingSettings}
-                  className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingBrandingSettings
                     ? "Saving..."
@@ -1351,7 +1355,7 @@ export default function SettingsPage() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     item.complete
-                      ? "bg-emerald-400 text-black"
+                      ? "bg-edition-primary text-black"
                       : "bg-yellow-400/10 text-yellow-200"
                   }`}
                 >
@@ -1363,7 +1367,7 @@ export default function SettingsPage() {
 
           <Link
             href="/dashboard/profile"
-            className="mt-5 inline-flex rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300"
+            className="mt-5 inline-flex rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover"
           >
             Improve profile
           </Link>
@@ -1381,7 +1385,7 @@ export default function SettingsPage() {
               <Link
                 key={section.href}
                 href={section.href}
-                className="group rounded-[2rem] border border-white/10 bg-black/20 p-6 transition hover:border-emerald-400/30 hover:bg-emerald-400/10"
+                className="group rounded-[2rem] border border-white/10 bg-black/20 p-6 transition hover:border-edition-primary/30 hover:bg-edition-primary/10"
               >
                 <div className="flex h-full flex-col justify-between gap-6">
                   <div>
@@ -1394,7 +1398,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition group-hover:border-emerald-400/30 group-hover:bg-emerald-400 group-hover:text-black">
+                  <span className="w-fit rounded-2xl border border-white/10 px-4 py-3 text-sm font-black text-gray-300 transition group-hover:border-edition-primary/30 group-hover:bg-edition-primary group-hover:text-black">
                     {section.label}
                   </span>
                 </div>
@@ -1420,7 +1424,7 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5">
+            <div className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-5">
               <p className="text-lg font-black text-white">
                 Customer reminders
               </p>

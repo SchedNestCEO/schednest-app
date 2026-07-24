@@ -374,7 +374,7 @@ export default function SignupPage() {
   const activePolicyContent = activePolicy ? legalContent[activePolicy] : null;
 
   return (
-    <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+    <main className="torogoz-auth-page min-h-screen px-6 py-10 text-white">
       {activePolicy && activePolicyContent && (
         <LegalReviewModal
           isOpen={Boolean(activePolicy)}
@@ -392,12 +392,12 @@ export default function SignupPage() {
         <div className="grid w-full gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <section className="hidden lg:block">
             <Link href="/" className="inline-flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400 text-xl font-black text-black">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-edition-primary text-xl font-black text-black">
                 S
               </div>
 
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                <p className="torogoz-wordmark text-lg font-black tracking-tight">
                   SchedNest
                 </p>
                 <p className="text-sm text-gray-500">
@@ -416,15 +416,16 @@ export default function SignupPage() {
             </p>
           </section>
 
-          <section className="mx-auto w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_0_100px_rgba(16,185,129,0.10)] backdrop-blur-xl sm:p-8">
+          <section className="torogoz-auth-card mx-auto w-full max-w-xl rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_0_100px_rgb(var(--edition-glow)/0.1)] backdrop-blur-xl sm:p-8">
+            <div className="torogoz-auth-ribbon" aria-hidden="true" />
             <div className="lg:hidden">
               <Link href="/" className="inline-flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-400 text-lg font-black text-black">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-edition-primary text-lg font-black text-black">
                   S
                 </div>
 
                 <div>
-                  <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                  <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
                     SchedNest
                   </p>
                   <p className="text-xs text-gray-500">
@@ -435,7 +436,7 @@ export default function SignupPage() {
             </div>
 
             <div className="mt-8 lg:mt-0">
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
                 Create account
               </p>
 
@@ -459,7 +460,7 @@ export default function SignupPage() {
                   value={businessName}
                   onChange={(event) => setBusinessName(event.target.value)}
                   placeholder="Example: Steven's Detailing"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/60"
                   required
                 />
               </div>
@@ -473,7 +474,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/60"
                   required
                 />
               </div>
@@ -487,7 +488,7 @@ export default function SignupPage() {
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="At least 6 characters"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary/60"
                   required
                   minLength={6}
                 />
@@ -541,7 +542,7 @@ export default function SignupPage() {
                       setAcceptedTerms(event.target.checked)
                     }
                     disabled={!termsReadAt}
-                    className="mt-1 h-4 w-4 accent-emerald-400 disabled:cursor-not-allowed"
+                    className="mt-1 h-4 w-4 accent-[var(--edition-primary)] disabled:cursor-not-allowed"
                     required
                   />
                   <span>I have read and agree to the Terms of Service.</span>
@@ -559,7 +560,7 @@ export default function SignupPage() {
                       setAcceptedPrivacy(event.target.checked)
                     }
                     disabled={!privacyReadAt}
-                    className="mt-1 h-4 w-4 accent-emerald-400 disabled:cursor-not-allowed"
+                    className="mt-1 h-4 w-4 accent-[var(--edition-primary)] disabled:cursor-not-allowed"
                     required
                   />
                   <span>I have read and agree to the Privacy Policy.</span>
@@ -577,7 +578,7 @@ export default function SignupPage() {
                       setAcceptedSecurity(event.target.checked)
                     }
                     disabled={!securityReadAt}
-                    className="mt-1 h-4 w-4 accent-emerald-400 disabled:cursor-not-allowed"
+                    className="mt-1 h-4 w-4 accent-[var(--edition-primary)] disabled:cursor-not-allowed"
                     required
                   />
                   <span>
@@ -595,7 +596,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl bg-edition-primary px-5 py-4 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isLoading ? "Creating account..." : "Create account"}
               </button>
@@ -604,7 +605,7 @@ export default function SignupPage() {
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="font-bold text-emerald-300 hover:text-emerald-200"
+                  className="font-bold text-edition-primary hover:text-edition-primary-soft"
                 >
                   Log in
                 </Link>

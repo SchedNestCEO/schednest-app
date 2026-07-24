@@ -704,11 +704,11 @@ export default function PublicBookingPage() {
 
   const primaryColor = normalizeColor(
     pageData?.business.brand_primary_color || null,
-    "#34d399"
+    "#27b8ae"
   );
   const accentColor = normalizeColor(
     pageData?.business.brand_accent_color || null,
-    "#34d399"
+    "#f47b3b"
   );
   const bookingPageTheme =
     pageData?.business.booking_page_theme || "schednest_dark";
@@ -722,8 +722,8 @@ export default function PublicBookingPage() {
   const pageClass = isCleanTheme
     ? "min-h-screen bg-slate-50 px-4 py-6 text-slate-950 sm:px-6 sm:py-10"
     : isPremiumTheme
-      ? "min-h-screen bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.16),_transparent_32%),#050807] px-4 py-6 text-white sm:px-6 sm:py-10"
-      : "min-h-screen bg-[#050807] px-4 py-6 text-white sm:px-6 sm:py-10";
+      ? "torogoz-public-page min-h-screen px-4 py-6 text-white sm:px-6 sm:py-10"
+      : "torogoz-public-page min-h-screen px-4 py-6 text-white sm:px-6 sm:py-10";
 
   const cardClass = isCleanTheme
     ? "rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
@@ -732,7 +732,7 @@ export default function PublicBookingPage() {
   const heroCardClass = isCleanTheme
     ? "rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
     : isPremiumTheme
-      ? "rounded-[2rem] border border-emerald-400/20 bg-white/[0.05] p-6 shadow-[0_0_60px_rgba(52,211,153,0.08)] sm:p-8"
+      ? "rounded-[2rem] border border-edition-primary/20 bg-white/[0.05] p-6 shadow-[0_0_60px_rgb(var(--edition-glow)/0.08)] sm:p-8"
       : "rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 sm:p-8";
 
   const mutedTextClass = isCleanTheme ? "text-slate-600" : "text-gray-400";
@@ -740,7 +740,7 @@ export default function PublicBookingPage() {
   const titleTextClass = isCleanTheme ? "text-slate-950" : "text-white";
   const inputClass = isCleanTheme
     ? "mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:border-slate-400"
-    : "mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400";
+    : "mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-edition-primary";
 
   const selectedDayHours = useMemo(() => {
     if (!pageData || !bookingDate) return null;
@@ -1286,7 +1286,7 @@ export default function PublicBookingPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+      <main className="torogoz-public-page min-h-screen px-6 py-10 text-white">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
           <p className="text-sm text-gray-400">Loading booking page...</p>
         </div>
@@ -1296,7 +1296,7 @@ export default function PublicBookingPage() {
 
   if (!pageData) {
     return (
-      <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+      <main className="torogoz-public-page min-h-screen px-6 py-10 text-white">
         <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-white/[0.04] p-8">
           <h1 className="text-2xl font-bold">Booking page unavailable</h1>
           <p className="mt-3 text-sm text-gray-400">{errorMessage}</p>
@@ -1420,7 +1420,7 @@ export default function PublicBookingPage() {
 
         {confirmationSummary && (
           <section
-            className="rounded-[2rem] border p-8 shadow-[0_0_40px_rgba(52,211,153,0.08)]"
+            className="rounded-[2rem] border p-8 shadow-[0_0_40px_rgb(var(--edition-glow)/0.08)]"
             style={{
               borderColor: `${primaryColor}40`,
               backgroundColor: `${primaryColor}18`,
@@ -1699,7 +1699,7 @@ export default function PublicBookingPage() {
                         }}
                         className={`rounded-2xl border p-4 text-left transition ${
                           isSelected
-                            ? "border-emerald-400/40 bg-emerald-400/10"
+                            ? "border-edition-primary/40 bg-edition-primary/10"
                             : isCleanTheme
                               ? "border-slate-200 bg-slate-50 hover:bg-slate-100"
                               : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
@@ -1755,7 +1755,7 @@ export default function PublicBookingPage() {
                         <span
                           className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black ${
                             isSelected
-                              ? "bg-emerald-400 text-black"
+                              ? "bg-edition-primary text-black"
                               : isCleanTheme
                                 ? "bg-white text-slate-600"
                                 : "bg-white/10 text-gray-300"
@@ -2075,7 +2075,7 @@ export default function PublicBookingPage() {
                                   [question.id]: event.target.checked,
                                 }))
                               }
-                              className="h-5 w-5 accent-emerald-400"
+                              className="h-5 w-5 accent-[var(--edition-primary)]"
                             />
                             Yes
                           </label>
@@ -2249,7 +2249,7 @@ export default function PublicBookingPage() {
                       onChange={(event) =>
                         setDepositPolicyAccepted(event.target.checked)
                       }
-                      className="mt-0.5 h-5 w-5 accent-emerald-400"
+                      className="mt-0.5 h-5 w-5 accent-[var(--edition-primary)]"
                     />
                     <span>
                       {t(

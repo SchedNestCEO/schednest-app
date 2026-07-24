@@ -73,7 +73,7 @@ export default function FounderOSPage() {
         {error ? <p className="mt-6 text-red-300">{error}</p> : null}
 
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          {[["/admin/health","Platform Health"],["/admin/support","Support Operations"],["/admin/engineering","Engineering"],["/admin/performance","Performance"],["/birdy/decisions","Birdy Decisions"],["/connectors","Connectors"]].map(([href,title]) => (
+          {[["/admin/health","Platform Health"],["/admin/support","Support Operations"],["/admin/engineering","Engineering"],["/admin/performance","Performance"],["/admin/subscriptions","Subscriptions"],["/birdy/decisions","Birdy Decisions"],["/connectors","Connectors"]].map(([href,title]) => (
             <Link key={href} href={href} className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"><h2 className="text-xl font-black">{title}</h2></Link>
           ))}
         </section>

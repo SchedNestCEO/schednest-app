@@ -507,8 +507,12 @@ export default function BookingPageSettings() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+        <section className="torogoz-dashboard-hero relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="torogoz-dashboard-hero-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             Booking Page
           </p>
 
@@ -529,8 +533,8 @@ export default function BookingPageSettings() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
-            <p className="text-sm font-black text-emerald-300">
+          <div className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-6">
+            <p className="text-sm font-black text-edition-primary">
               Public Booking Link
             </p>
 
@@ -549,8 +553,8 @@ export default function BookingPageSettings() {
               </p>
             ) : (
               <>
-                <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-black/20 px-4 py-4">
-                  <p className="break-all text-sm font-black text-emerald-200 sm:text-base">
+                <div className="mt-6 rounded-2xl border border-edition-primary/30 bg-black/20 px-4 py-4">
+                  <p className="break-all text-sm font-black text-edition-primary-soft sm:text-base">
                     {publicBookingUrl ||
                       "Your public booking link will appear here once your business profile is ready."}
                   </p>
@@ -561,7 +565,7 @@ export default function BookingPageSettings() {
                     type="button"
                     onClick={copyBookingLink}
                     disabled={!publicBookingUrl}
-                    className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Copy Link
                   </button>
@@ -581,7 +585,7 @@ export default function BookingPageSettings() {
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Setup Readiness
             </p>
 
@@ -601,7 +605,7 @@ export default function BookingPageSettings() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     publicBookingUrl
-                      ? "bg-emerald-400/10 text-emerald-300"
+                      ? "bg-edition-primary/10 text-edition-primary"
                       : "bg-yellow-400/10 text-yellow-200"
                   }`}
                 >
@@ -617,7 +621,7 @@ export default function BookingPageSettings() {
                   </p>
                 </div>
 
-                <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-300">
+                <span className="rounded-full bg-edition-primary/10 px-3 py-1 text-xs font-black text-edition-primary">
                   {bookingTimeMode === "fixed_hours"
                     ? "Hours"
                     : "Flexible"}
@@ -637,7 +641,7 @@ export default function BookingPageSettings() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     businessHoursEnabled && hasOpenHours
-                      ? "bg-emerald-400/10 text-emerald-300"
+                      ? "bg-edition-primary/10 text-edition-primary"
                       : "bg-white/10 text-gray-300"
                   }`}
                 >
@@ -649,7 +653,7 @@ export default function BookingPageSettings() {
         </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black text-emerald-300">Booking Mode</p>
+          <p className="text-sm font-black text-edition-primary">Booking Mode</p>
 
           <h2 className="mt-3 text-2xl font-black text-white">
             How should customers request time?
@@ -669,8 +673,8 @@ export default function BookingPageSettings() {
               }}
               className={`rounded-[2rem] border p-5 text-left transition ${
                 bookingTimeMode === "fixed_hours"
-                  ? "border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_35px_rgba(52,211,153,0.08)]"
-                  : "border-white/10 bg-black/20 hover:border-emerald-400/30"
+                  ? "border-edition-primary/40 bg-edition-primary/10 shadow-[0_0_35px_rgba(52,211,153,0.08)]"
+                  : "border-white/10 bg-black/20 hover:border-edition-primary/30"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -687,7 +691,7 @@ export default function BookingPageSettings() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     bookingTimeMode === "fixed_hours"
-                      ? "bg-emerald-400 text-black"
+                      ? "bg-edition-primary text-black"
                       : "bg-white/10 text-gray-300"
                   }`}
                 >
@@ -701,8 +705,8 @@ export default function BookingPageSettings() {
               onClick={() => setBookingTimeMode("flexible_requests")}
               className={`rounded-[2rem] border p-5 text-left transition ${
                 bookingTimeMode === "flexible_requests"
-                  ? "border-emerald-400/40 bg-emerald-400/10 shadow-[0_0_35px_rgba(52,211,153,0.08)]"
-                  : "border-white/10 bg-black/20 hover:border-emerald-400/30"
+                  ? "border-edition-primary/40 bg-edition-primary/10 shadow-[0_0_35px_rgba(52,211,153,0.08)]"
+                  : "border-white/10 bg-black/20 hover:border-edition-primary/30"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -719,7 +723,7 @@ export default function BookingPageSettings() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     bookingTimeMode === "flexible_requests"
-                      ? "bg-emerald-400 text-black"
+                      ? "bg-edition-primary text-black"
                       : "bg-white/10 text-gray-300"
                   }`}
                 >
@@ -750,7 +754,7 @@ export default function BookingPageSettings() {
                 onChange={(event) =>
                   setBusinessHoursEnabled(event.target.checked)
                 }
-                className="h-5 w-5 accent-emerald-400 disabled:opacity-50"
+                className="h-5 w-5 accent-[var(--edition-primary)] disabled:opacity-50"
               />
             </label>
 
@@ -766,14 +770,14 @@ export default function BookingPageSettings() {
             type="button"
             onClick={saveBookingMode}
             disabled={isSavingBookingMode}
-            className="mt-6 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSavingBookingMode ? "Saving..." : "Save Booking Mode"}
           </button>
         </section>
 
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black text-emerald-300">
+          <p className="text-sm font-black text-edition-primary">
             Intake Questions
           </p>
 
@@ -786,7 +790,7 @@ export default function BookingPageSettings() {
             them before sending a booking request.
           </p>
 
-          <div className="mt-6 rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+          <div className="mt-6 rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-5">
             <div className="grid gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-300">
@@ -796,7 +800,7 @@ export default function BookingPageSettings() {
                   value={questionLabel}
                   onChange={(event) => setQuestionLabel(event.target.value)}
                   placeholder="Example: What is the service address?"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-edition-primary"
                 />
               </div>
 
@@ -812,7 +816,7 @@ export default function BookingPageSettings() {
                         event.target.value as BookingQuestion["question_type"]
                       )
                     }
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-edition-primary"
                   >
                     <option value="short_text">Short answer</option>
                     <option value="long_text">Long answer</option>
@@ -830,7 +834,7 @@ export default function BookingPageSettings() {
                     onChange={(event) =>
                       setQuestionServiceId(event.target.value)
                     }
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-edition-primary"
                   >
                     <option value="all">All services</option>
                     {services.map((service) => (
@@ -848,7 +852,7 @@ export default function BookingPageSettings() {
                     onChange={(event) =>
                       setQuestionRequired(event.target.checked)
                     }
-                    className="h-5 w-5 accent-emerald-400"
+                    className="h-5 w-5 accent-[var(--edition-primary)]"
                   />
                   Required
                 </label>
@@ -865,7 +869,7 @@ export default function BookingPageSettings() {
                       setQuestionOptions(event.target.value)
                     }
                     placeholder="Example: Small, Medium, Large"
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-emerald-400"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-edition-primary"
                   />
                   <p className="mt-2 text-xs text-gray-500">
                     Separate options with commas.
@@ -877,7 +881,7 @@ export default function BookingPageSettings() {
                 type="button"
                 onClick={saveBookingQuestion}
                 disabled={isSavingQuestion}
-                className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
+                className="w-full rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
               >
                 {isSavingQuestion ? "Saving..." : "Add question"}
               </button>
@@ -915,7 +919,7 @@ export default function BookingPageSettings() {
                         <span
                           className={`rounded-full px-3 py-1 text-xs font-black ${
                             question.is_active
-                              ? "bg-emerald-400/10 text-emerald-300"
+                              ? "bg-edition-primary/10 text-edition-primary"
                               : "bg-white/10 text-gray-400"
                           }`}
                         >
@@ -962,7 +966,7 @@ export default function BookingPageSettings() {
 
         {businessHoursEnabled ? (
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Business Hours
             </p>
 
@@ -990,7 +994,7 @@ export default function BookingPageSettings() {
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-black ${
                           item.is_open
-                            ? "bg-emerald-400/10 text-emerald-300"
+                            ? "bg-edition-primary/10 text-edition-primary"
                             : "bg-white/10 text-gray-400"
                         }`}
                       >
@@ -1018,7 +1022,7 @@ export default function BookingPageSettings() {
                           event.target.checked
                         )
                       }
-                      className="accent-emerald-400"
+                      className="accent-[var(--edition-primary)]"
                     />
                     Open
                   </label>
@@ -1033,7 +1037,7 @@ export default function BookingPageSettings() {
                         event.target.value
                       )
                     }
-                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-40"
+                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-edition-primary disabled:opacity-40"
                   >
                     <option value="">Opening time</option>
                     {timeOptions.map((option) => (
@@ -1056,7 +1060,7 @@ export default function BookingPageSettings() {
                         event.target.value
                       )
                     }
-                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-emerald-400 disabled:opacity-40"
+                    className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-edition-primary disabled:opacity-40"
                   >
                     <option value="">Closing time</option>
                     {timeOptions.map((option) => (
@@ -1076,14 +1080,14 @@ export default function BookingPageSettings() {
               type="button"
               onClick={saveHours}
               disabled={isSavingHours}
-              className="mt-6 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-6 rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSavingHours ? "Saving..." : "Save Business Hours"}
             </button>
           </section>
         ) : (
           <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Business Hours Off
             </p>
 
@@ -1100,7 +1104,7 @@ export default function BookingPageSettings() {
             <button
               type="button"
               onClick={() => setBusinessHoursEnabled(true)}
-              className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-5 py-3 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/20"
+              className="mt-6 rounded-2xl border border-edition-primary/30 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20"
             >
               Turn Business Hours Back On
             </button>

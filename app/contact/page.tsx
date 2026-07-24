@@ -53,23 +53,32 @@ const contactOptions = [
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+    <main className="torogoz-public-page min-h-screen px-6 py-10 text-white">
       <div className="mx-auto max-w-5xl">
-        <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4">
-          <Link href="/" className="text-sm font-black text-emerald-300">
-            ← Back to SchedNest
+        <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+          <Link href="/" className="group">
+            <p className="torogoz-wordmark text-2xl font-black tracking-tight">
+              SchedNest
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-gray-500 transition group-hover:text-gray-300">
+              ← Back home
+            </p>
           </Link>
 
           <Link
             href="/signup"
-            className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300"
+            className="rounded-2xl bg-edition-primary px-4 py-2 text-sm font-black text-black transition hover:bg-edition-primary-hover"
           >
             Get started
           </Link>
         </nav>
 
-        <section className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-10">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+        <section className="torogoz-public-hero relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-10">
+          <div className="torogoz-public-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             Contact
           </p>
 
@@ -90,13 +99,13 @@ export default function ContactPage() {
               key={option.email}
               className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"
             >
-              <p className="text-sm font-black uppercase tracking-[0.24em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.24em] text-edition-primary">
                 {option.title}
               </p>
 
               <a
                 href={`mailto:${option.email}`}
-                className="mt-3 block text-xl font-black text-white underline decoration-emerald-400/40 underline-offset-4 transition hover:text-emerald-300"
+                className="mt-3 block text-xl font-black text-white underline decoration-[color:var(--edition-primary)]/40 underline-offset-4 transition hover:text-edition-primary"
               >
                 {option.email}
               </a>
@@ -109,7 +118,7 @@ export default function ContactPage() {
         </section>
 
         <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black uppercase tracking-[0.24em] text-emerald-300">
+          <p className="text-sm font-black uppercase tracking-[0.24em] text-edition-primary">
             Automated Emails
           </p>
 
@@ -140,14 +149,15 @@ export default function ContactPage() {
 
           <Link
             href="/security"
-            className="rounded-2xl bg-emerald-400 px-5 py-4 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+            className="rounded-2xl bg-edition-primary px-5 py-4 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
           >
             Security Statement
           </Link>
         </section>
 
-        <footer className="mt-8 text-sm text-gray-500">
-          <p>SchedNest is operated by SchedNest, LLC.</p>
+        <footer className="relative mt-8 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 text-sm text-gray-500">
+          <div className="torogoz-public-ribbon" aria-hidden="true" />
+          <p className="relative z-10">SchedNest is operated by SchedNest, LLC.</p>
         </footer>
       </div>
     </main>
