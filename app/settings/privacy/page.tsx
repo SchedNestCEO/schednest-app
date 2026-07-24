@@ -132,7 +132,7 @@ export default function PrivacyControlsPage() {
     <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
       <div className="mx-auto max-w-5xl">
         <section className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-10">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             Account Settings
           </p>
 
@@ -145,7 +145,7 @@ export default function PrivacyControlsPage() {
           </p>
         </section>
 
-        {message ? <p className="mt-6 text-emerald-300">{message}</p> : null}
+        {message ? <p className="mt-6 text-edition-primary">{message}</p> : null}
         {errorMessage ? <p className="mt-6 text-red-300">{errorMessage}</p> : null}
 
         <div className="mt-8 grid gap-5">
@@ -188,7 +188,7 @@ export default function PrivacyControlsPage() {
           <button
             type="button"
             onClick={() => void requestExport()}
-            className="mt-5 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black hover:bg-emerald-300"
+            className="mt-5 rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black hover:bg-edition-primary-hover"
           >
             Request data export
           </button>

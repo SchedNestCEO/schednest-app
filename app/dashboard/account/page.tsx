@@ -157,7 +157,7 @@ function getStatusClass(status: string) {
   const cleanStatus = status.toLowerCase();
 
   if (cleanStatus.includes("active")) {
-    return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
+    return "border-edition-primary/20 bg-edition-primary/10 text-edition-primary";
   }
 
   if (cleanStatus.includes("past") || cleanStatus.includes("overdue")) {
@@ -457,10 +457,14 @@ export default function AccountPage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+        <section className="torogoz-dashboard-hero relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="torogoz-dashboard-hero-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
                 Account
               </p>
 
@@ -492,10 +496,10 @@ export default function AccountPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6 shadow-[0_0_40px_rgba(52,211,153,0.08)]">
+          <div className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-6 shadow-[0_0_40px_rgba(52,211,153,0.08)]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+                <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
                   Subscription
                 </p>
 
@@ -566,7 +570,7 @@ export default function AccountPage() {
                     type="button"
                     onClick={openBillingPortal}
                     disabled={isPortalLoading}
-                    className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isPortalLoading ? "Opening portal..." : "Manage billing"}
                   </button>
@@ -582,7 +586,7 @@ export default function AccountPage() {
                 <>
                   <a
                     href="#plans"
-                    className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                    className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
                   >
                     Choose plan
                   </a>
@@ -611,7 +615,7 @@ export default function AccountPage() {
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Billing Summary
             </p>
 
@@ -644,7 +648,7 @@ export default function AccountPage() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-black ${
                     founderBetaSpot
-                      ? "bg-emerald-400/10 text-emerald-300"
+                      ? "bg-edition-primary/10 text-edition-primary"
                       : "bg-white/10 text-gray-300"
                   }`}
                 >
@@ -702,8 +706,8 @@ export default function AccountPage() {
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               {isAdmin && (
                 <Link
-                  href="/dashboard/subscriptions"
-                  className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                  href="/admin/subscriptions"
+                  className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
                 >
                   Open admin subscriptions
                 </Link>
@@ -746,7 +750,7 @@ export default function AccountPage() {
               type="button"
               onClick={openBillingPortal}
               disabled={isPortalLoading}
-              className="mt-5 rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-5 rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPortalLoading ? "Opening portal..." : "Open billing portal"}
             </button>
@@ -759,7 +763,7 @@ export default function AccountPage() {
         >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+              <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
                 Plans
               </p>
 
@@ -774,7 +778,7 @@ export default function AccountPage() {
               </p>
             </div>
 
-            <span className="w-fit rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+            <span className="w-fit rounded-full border border-edition-primary/20 bg-edition-primary/10 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-edition-primary">
               Stripe connected
             </span>
           </div>
@@ -798,7 +802,7 @@ export default function AccountPage() {
                   key={option.key}
                   className={`rounded-[2rem] border p-5 ${
                     isCurrentPlan
-                      ? "border-emerald-400/30 bg-emerald-400/10"
+                      ? "border-edition-primary/30 bg-edition-primary/10"
                       : "border-white/10 bg-black/20"
                   }`}
                 >
@@ -814,7 +818,7 @@ export default function AccountPage() {
                     </div>
 
                     {isCurrentPlan && (
-                      <span className="rounded-full bg-emerald-400 px-3 py-1 text-xs font-black text-black">
+                      <span className="rounded-full bg-edition-primary px-3 py-1 text-xs font-black text-black">
                         Current
                       </span>
                     )}
@@ -851,7 +855,7 @@ export default function AccountPage() {
                   <div className="mt-5 space-y-3">
                     {option.features.map((feature) => (
                       <div key={feature} className="flex items-start gap-3">
-                        <span className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
+                        <span className="mt-1 h-2 w-2 rounded-full bg-edition-primary" />
                         <p className="text-sm leading-5 text-gray-300">
                           {feature}
                         </p>
@@ -868,8 +872,8 @@ export default function AccountPage() {
                           disabled={isPortalLoading}
                           className={`w-full rounded-2xl px-5 py-3 text-center text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${
                             isCurrentPlan
-                              ? "border border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/15"
-                              : "bg-emerald-400 text-black hover:bg-emerald-300"
+                              ? "border border-edition-primary/30 bg-edition-primary/10 text-edition-primary hover:bg-edition-primary/15"
+                              : "bg-edition-primary text-black hover:bg-edition-primary-hover"
                           }`}
                         >
                           {isPortalLoading
@@ -890,7 +894,7 @@ export default function AccountPage() {
                           type="button"
                           onClick={() => startCheckout(option.key, "monthly")}
                           disabled={Boolean(checkoutLoadingKey)}
-                          className="w-full rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="w-full rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {monthlyLoading
                             ? "Opening checkout..."
@@ -918,7 +922,7 @@ export default function AccountPage() {
 
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Stripe Readiness
             </p>
 
@@ -927,8 +931,8 @@ export default function AccountPage() {
             </h3>
 
             <div className="mt-5 grid gap-3">
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-sm font-black text-emerald-300">
+              <div className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-4">
+                <p className="text-sm font-black text-edition-primary">
                   Checkout route ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
@@ -936,8 +940,8 @@ export default function AccountPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-sm font-black text-emerald-300">
+              <div className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-4">
+                <p className="text-sm font-black text-edition-primary">
                   Billing portal route ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
@@ -946,8 +950,8 @@ export default function AccountPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-sm font-black text-emerald-300">
+              <div className="rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-4">
+                <p className="text-sm font-black text-edition-primary">
                   Webhook sync ready
                 </p>
                 <p className="mt-1 text-xs leading-5 text-gray-300">
@@ -958,37 +962,37 @@ export default function AccountPage() {
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
-              Stripe Records
+            <p className="text-sm font-black text-edition-primary">
+              Billing Connection
             </p>
 
             <h3 className="mt-3 text-xl font-black text-white">
-              Connected billing IDs
+              Stripe connection status
             </h3>
 
             <div className="mt-5 grid gap-3">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                  Customer ID
+                  Customer account
                 </p>
-                <p className="mt-2 break-all text-sm font-black text-gray-300">
-                  {stripeCustomerId}
+                <p className="mt-2 text-sm font-black text-gray-300">
+                  {stripeCustomerId ? "Connected" : "Not connected"}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-                  Subscription ID
+                  Subscription
                 </p>
-                <p className="mt-2 break-all text-sm font-black text-gray-300">
-                  {stripeSubscriptionId}
+                <p className="mt-2 text-sm font-black text-gray-300">
+                  {stripeSubscriptionId ? "Connected" : "Not connected"}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">Support</p>
+            <p className="text-sm font-black text-edition-primary">Support</p>
 
             <h3 className="mt-3 text-xl font-black text-white">Need help?</h3>
 
@@ -1000,7 +1004,7 @@ export default function AccountPage() {
             <div className="mt-5 grid gap-3">
               <a
                 href="mailto:billing@schednest.com"
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+                className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
               >
                 Email billing
               </a>

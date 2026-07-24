@@ -369,3 +369,222 @@ body {
     opacity: 0.55;
   }
 }
+
+
+.torogoz-auth-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgb(39 184 174 / 0.14), transparent 28rem),
+    radial-gradient(circle at 88% 22%, rgb(244 123 59 / 0.1), transparent 26rem),
+    radial-gradient(circle at 58% 100%, rgb(168 155 69 / 0.1), transparent 30rem),
+    #050807;
+}
+
+.torogoz-auth-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.torogoz-auth-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.torogoz-auth-card::before,
+.torogoz-auth-card::after {
+  position: absolute;
+  right: -8rem;
+  z-index: 1;
+  width: 58%;
+  height: 2px;
+  content: "";
+  pointer-events: none;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--edition-primary) 34%,
+    var(--brand-olive) 64%,
+    var(--brand-orange) 84%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgb(var(--edition-glow) / 0.48),
+    0 0 26px rgb(244 123 59 / 0.2);
+  transform: rotate(-22deg);
+  transform-origin: right center;
+  opacity: 0.56;
+}
+
+.torogoz-auth-card::before {
+  top: 8%;
+}
+
+.torogoz-auth-card::after {
+  top: 13%;
+  right: -8rem;
+  width: 46%;
+  opacity: 0.38;
+}
+
+.torogoz-auth-ribbon {
+  position: absolute;
+  right: -10%;
+  bottom: -3.5rem;
+  left: -10%;
+  z-index: 1;
+  height: 8rem;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 100%, rgb(39 184 174 / 0.38), transparent 44%),
+    radial-gradient(ellipse at 52% 100%, rgb(168 155 69 / 0.3), transparent 46%),
+    radial-gradient(ellipse at 88% 100%, rgb(244 123 59 / 0.38), transparent 44%);
+  filter: blur(18px);
+  opacity: 0.72;
+}
+
+@media (max-width: 768px) {
+  .torogoz-auth-card::before,
+  .torogoz-auth-card::after {
+    right: -8rem;
+    width: 90%;
+    opacity: 0.34;
+  }
+}
+
+
+.torogoz-public-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 18%, rgb(39 184 174 / 0.14), transparent 28rem),
+    radial-gradient(circle at 88% 20%, rgb(244 123 59 / 0.1), transparent 26rem),
+    radial-gradient(circle at 54% 100%, rgb(168 155 69 / 0.1), transparent 30rem),
+    #050807;
+}
+
+.torogoz-public-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+.torogoz-public-streaks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.torogoz-public-streaks span {
+  position: absolute;
+  right: -5rem;
+  width: min(46%, 28rem);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--edition-primary) 32%,
+    var(--brand-olive) 64%,
+    var(--brand-orange) 84%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgb(var(--edition-glow) / 0.48),
+    0 0 26px rgb(244 123 59 / 0.2);
+  transform: rotate(-18deg);
+  transform-origin: right center;
+  opacity: 0.58;
+}
+
+.torogoz-public-streaks span:first-child {
+  top: 26%;
+}
+
+.torogoz-public-streaks span:last-child {
+  top: 46%;
+  right: -2rem;
+  width: min(38%, 22rem);
+  opacity: 0.4;
+}
+
+.torogoz-public-ribbon {
+  position: absolute;
+  right: -8%;
+  bottom: -3rem;
+  left: -8%;
+  height: 7rem;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 100%, rgb(39 184 174 / 0.4), transparent 44%),
+    radial-gradient(ellipse at 52% 100%, rgb(168 155 69 / 0.32), transparent 46%),
+    radial-gradient(ellipse at 88% 100%, rgb(244 123 59 / 0.4), transparent 44%);
+  filter: blur(18px);
+  opacity: 0.75;
+}
+
+@media (max-width: 768px) {
+  .torogoz-public-streaks span {
+    right: -8rem;
+    width: 72%;
+    opacity: 0.36;
+  }
+}
+
+
+.torogoz-dashboard-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+.torogoz-dashboard-hero-streaks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.torogoz-dashboard-hero-streaks span {
+  position: absolute;
+  right: -5rem;
+  width: min(42%, 26rem);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--edition-primary) 34%,
+    var(--brand-olive) 64%,
+    var(--brand-orange) 84%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgb(var(--edition-glow) / 0.48),
+    0 0 26px rgb(244 123 59 / 0.18);
+  transform: rotate(-18deg);
+  transform-origin: right center;
+  opacity: 0.52;
+}
+
+.torogoz-dashboard-hero-streaks span:first-child {
+  top: 24%;
+}
+
+.torogoz-dashboard-hero-streaks span:last-child {
+  top: 48%;
+  right: -2rem;
+  width: min(34%, 21rem);
+  opacity: 0.34;
+}
+
+@media (max-width: 768px) {
+  .torogoz-dashboard-hero-streaks span {
+    right: -8rem;
+    width: 70%;
+    opacity: 0.3;
+  }
+}

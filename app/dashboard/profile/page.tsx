@@ -394,8 +394,12 @@ export default function BusinessProfilePage() {
   return (
     <DashboardShell>
       <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+        <section className="torogoz-dashboard-hero relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
+          <div className="torogoz-dashboard-hero-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             Business Profile
           </p>
 
@@ -417,7 +421,7 @@ export default function BusinessProfilePage() {
 
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Business Details
             </p>
 
@@ -440,7 +444,7 @@ export default function BusinessProfilePage() {
                     }
                   }}
                   placeholder="Example: SchedNest Studio"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/60"
                 />
               </div>
 
@@ -452,12 +456,12 @@ export default function BusinessProfilePage() {
                   value={slug}
                   onChange={(event) => setSlug(event.target.value)}
                   placeholder="schednest"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/60"
                 />
 
                 <p className="mt-2 text-xs leading-5 text-gray-500">
                   Clean URL preview:{" "}
-                  <span className="font-bold text-emerald-300">
+                  <span className="font-bold text-edition-primary">
                     {cleanSlug || "your-business"}
                   </span>
                 </p>
@@ -470,7 +474,7 @@ export default function BusinessProfilePage() {
                 <select
                   value={timezone}
                   onChange={(event) => setTimezone(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-edition-primary/60"
                 >
                   {timezoneOptions.map((option) => (
                     <option key={option} value={option}>
@@ -490,14 +494,14 @@ export default function BusinessProfilePage() {
                     setBusinessDescription(event.target.value)
                   }
                   placeholder="Tell customers what your business does, what you specialize in, or what they should expect."
-                  className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/60"
                 />
               </div>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-emerald-400/20 bg-emerald-400/10 p-6">
-            <p className="text-sm font-black uppercase tracking-[0.28em] text-emerald-300">
+          <div className="rounded-[2rem] border border-edition-primary/20 bg-edition-primary/10 p-6">
+            <p className="text-sm font-black uppercase tracking-[0.28em] text-edition-primary">
               Setup Readiness
             </p>
 
@@ -530,7 +534,7 @@ export default function BusinessProfilePage() {
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-black ${
                       item.ready
-                        ? "bg-emerald-400/10 text-emerald-300"
+                        ? "bg-edition-primary/10 text-edition-primary"
                         : "bg-yellow-400/10 text-yellow-200"
                     }`}
                   >
@@ -544,7 +548,7 @@ export default function BusinessProfilePage() {
 
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Contact Info
             </p>
 
@@ -567,7 +571,7 @@ export default function BusinessProfilePage() {
                   value={contactEmail}
                   onChange={(event) => setContactEmail(event.target.value)}
                   placeholder="business@example.com"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/60"
                 />
               </div>
 
@@ -580,14 +584,14 @@ export default function BusinessProfilePage() {
                   value={contactPhone}
                   onChange={(event) => setContactPhone(event.target.value)}
                   placeholder="(555) 555-5555"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-emerald-400/60"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-edition-primary/60"
                 />
               </div>
             </div>
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-            <p className="text-sm font-black text-emerald-300">
+            <p className="text-sm font-black text-edition-primary">
               Public URL Preview
             </p>
 
@@ -600,8 +604,8 @@ export default function BusinessProfilePage() {
               page.
             </p>
 
-            <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-              <p className="break-all text-sm font-black text-emerald-200">
+            <div className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 p-4">
+              <p className="break-all text-sm font-black text-edition-primary-soft">
                 {publicBookingPath || "Your booking link will appear here."}
               </p>
             </div>
@@ -611,7 +615,7 @@ export default function BusinessProfilePage() {
                 type="button"
                 onClick={copyBookingLink}
                 disabled={!publicBookingPath}
-                className="rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-2xl bg-edition-primary px-5 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Copy Link
               </button>
@@ -633,7 +637,7 @@ export default function BusinessProfilePage() {
         <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-black text-emerald-300">
+              <p className="text-sm font-black text-edition-primary">
                 Booking Page Design
               </p>
 
@@ -650,7 +654,7 @@ export default function BusinessProfilePage() {
             <span
               className={`w-fit rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.16em] ${
                 planAccess.hasGrowthAccess
-                  ? "bg-emerald-400/10 text-emerald-300"
+                  ? "bg-edition-primary/10 text-edition-primary"
                   : "bg-yellow-400/10 text-yellow-200"
               }`}
             >
@@ -801,7 +805,7 @@ export default function BusinessProfilePage() {
                   value={bookingPageTheme}
                   disabled={!planAccess.hasGrowthAccess}
                   onChange={(event) => setBookingPageTheme(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60 disabled:cursor-not-allowed"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-edition-primary/60 disabled:cursor-not-allowed"
                 >
                   {themeOptions.map((theme) => (
                     <option key={theme.value} value={theme.value}>
@@ -813,7 +817,7 @@ export default function BusinessProfilePage() {
             </div>
 
             <div className="rounded-[2rem] border border-white/10 bg-black/20 p-5">
-              <p className="text-sm font-black text-emerald-300">
+              <p className="text-sm font-black text-edition-primary">
                 Live style preview
               </p>
 
@@ -902,7 +906,7 @@ export default function BusinessProfilePage() {
               <span
                 className={`w-fit rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.16em] ${
                   planAccess.hasCompleteAccess
-                    ? "bg-emerald-400/10 text-emerald-300"
+                    ? "bg-edition-primary/10 text-edition-primary"
                     : "bg-white/10 text-gray-300"
                 }`}
               >
@@ -923,7 +927,7 @@ export default function BusinessProfilePage() {
               type="button"
               onClick={saveProfile}
               disabled={isSaving || isLoading}
-              className="rounded-2xl bg-emerald-400 px-6 py-3 text-sm font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-edition-primary px-6 py-3 text-sm font-black text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSaving ? "Saving..." : "Save Business Profile"}
             </button>

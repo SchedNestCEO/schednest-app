@@ -106,28 +106,37 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+    <main className="torogoz-public-page min-h-screen px-6 py-10 text-white">
       <LegalReadTracker
         storageKey="schednest_privacy_read_2026-07-02"
         label="Privacy Policy"
       />
 
       <div className="mx-auto max-w-4xl">
-        <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4">
-          <Link href="/" className="text-sm font-black text-emerald-300">
-            SchedNest
+        <nav className="mb-8 flex items-center justify-between rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+          <Link href="/" className="group">
+            <p className="torogoz-wordmark text-2xl font-black tracking-tight">
+              SchedNest
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-gray-500 transition group-hover:text-gray-300">
+              ← Back home
+            </p>
           </Link>
 
           <Link
             href="/signup"
-            className="rounded-2xl bg-emerald-400 px-4 py-2 text-sm font-black text-black transition hover:bg-emerald-300"
+            className="rounded-2xl bg-edition-primary px-4 py-2 text-sm font-black text-black transition hover:bg-edition-primary-hover"
           >
             Get started
           </Link>
         </nav>
 
-        <section className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-10">
-          <p className="text-sm font-black uppercase tracking-[0.3em] text-emerald-300">
+        <section className="torogoz-public-hero relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 sm:p-10">
+          <div className="torogoz-public-streaks" aria-hidden="true">
+            <span />
+            <span />
+          </div>
+          <p className="text-sm font-black uppercase tracking-[0.3em] text-edition-primary">
             Privacy Policy
           </p>
 
@@ -187,7 +196,7 @@ export default function PrivacyPage() {
 
           <Link
             href="/security"
-            className="rounded-2xl bg-emerald-400 px-5 py-3 text-center text-sm font-black text-black transition hover:bg-emerald-300"
+            className="rounded-2xl bg-edition-primary px-5 py-3 text-center text-sm font-black text-black transition hover:bg-edition-primary-hover"
           >
             Security
           </Link>

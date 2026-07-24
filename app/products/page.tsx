@@ -15,10 +15,10 @@ const accentStyles: Record<
   }
 > = {
   emerald: {
-    card: "border-emerald-400/20 bg-emerald-400/[0.07]",
-    label: "text-emerald-300",
+    card: "border-edition-primary/20 bg-edition-primary/[0.07]",
+    label: "text-edition-primary",
     button:
-      "border-emerald-300/20 bg-emerald-300/10 text-emerald-100 hover:bg-emerald-300/20",
+      "border-edition-primary/20 bg-edition-primary/10 text-edition-primary-soft hover:bg-edition-primary-hover/20",
   },
   sky: {
     card: "border-sky-400/20 bg-sky-400/[0.07]",
@@ -99,12 +99,12 @@ export default function ProductHubPage() {
           })}
         </section>
 
-        <section className="mt-6 rounded-[2rem] border border-amber-300/15 bg-amber-300/[0.05] p-6">
-          <h2 className="text-lg font-black text-amber-100">
+        <section className="mt-6 rounded-[2rem] border border-brand-orange/15 bg-brand-orange/[0.05] p-6">
+          <h2 className="text-lg font-black text-brand-orange-soft">
             Internal-only route
           </h2>
 
-          <p className="mt-3 text-sm leading-6 text-amber-50/60">
+          <p className="mt-3 text-sm leading-6 text-brand-orange-soft/60">
             Keep this route out of the public navigation until the unfinished
             product versions are ready for launch.
           </p>

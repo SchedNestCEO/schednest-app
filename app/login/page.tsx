@@ -43,21 +43,22 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
+    <main className="torogoz-auth-page min-h-screen px-6 py-10 text-white">
       <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-7xl items-center justify-center">
-        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#07110d]/85 p-8 shadow-[0_0_80px_rgba(16,185,129,0.12)] backdrop-blur-xl">
+        <div className="torogoz-auth-card w-full max-w-md rounded-3xl border border-white/10 bg-[#07110d]/85 p-8 shadow-[0_0_80px_rgb(var(--edition-glow)/0.12)] backdrop-blur-xl">
+          <div className="torogoz-auth-ribbon" aria-hidden="true" />
           <Link href="/" className="inline-flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-emerald-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm font-bold text-edition-primary">
               S
             </div>
 
-            <span className="text-xl font-semibold tracking-tight">
+            <span className="torogoz-wordmark text-xl font-black tracking-tight">
               SchedNest
             </span>
           </Link>
 
           <div className="mt-10">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-300">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-edition-primary">
               Welcome Back
             </p>
 
@@ -81,7 +82,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 required
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-300"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary"
               />
             </label>
 
@@ -92,7 +93,7 @@ export default function LoginPage() {
                 </span>
                 <a
                   href="/forgot-password"
-                  className="text-sm font-medium text-emerald-300 transition hover:text-emerald-200"
+                  className="text-sm font-medium text-edition-primary transition hover:text-edition-primary-soft"
                 >
                   Forgot?
                 </a>
@@ -105,7 +106,7 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-emerald-300"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-edition-primary"
               />
             </label>
 
@@ -118,7 +119,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full rounded-2xl bg-emerald-400 px-6 py-4 font-semibold text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl bg-edition-primary px-6 py-4 font-semibold text-black transition hover:bg-edition-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isLoading ? "Logging in..." : "Log In"}
             </button>
@@ -128,7 +129,7 @@ export default function LoginPage() {
             New to SchedNest?{" "}
             <a
               href="/signup"
-              className="font-medium text-emerald-300 transition hover:text-emerald-200"
+              className="font-medium text-edition-primary transition hover:text-edition-primary-soft"
             >
               Create an account
             </a>
