@@ -24,7 +24,14 @@
   "publicSmokePaths": [
     "/",
     "/login",
-    "/products",
-    "/security"
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/security",
+    "/coming-soon",
+    "/products"
   ]
 }

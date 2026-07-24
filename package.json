@@ -27,12 +27,15 @@
     "sprint4:verify": "node scripts/verify-sprint4.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget",
     "lint:load": "eslint app/api/admin/performance/route.ts scripts/verify-sprint4.mjs scripts/ingest-k6-summary.mjs scripts/patch-performance-api.mjs",
     "load:ingest": "node scripts/ingest-k6-summary.mjs",
-    "sprint5:verify": "node scripts/verify-sprint5.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget"
+    "sprint5:verify": "node scripts/verify-sprint5.mjs && npm run migrations:validate && npm run routes:validate && npm run lint:budget",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
-    "next": "16.2.9",
+    "next": "^16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.16.0",
@@ -41,12 +44,13 @@
     "twilio": "^6.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "^16.2.11",
     "supabase": "^2.109.1",
     "tailwindcss": "^4",
     "typescript": "^5"
