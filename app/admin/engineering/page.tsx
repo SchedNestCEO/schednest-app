@@ -4,8 +4,9 @@ const sections = [
   ["Documentation", "Active", "Engineering standards, architecture records, and release guidance are repository-owned."],
   ["Architecture", "Active", "Platform boundaries and major decisions are tracked through ADRs."],
   ["Build", "Configured", "GitHub Actions runs verification, lint, type checking, and a production build."],
-  ["Tests", "Foundation", "Static and build gates are active. Workflow and load tests arrive later."],
-  ["Performance", "Planned", "Performance Center data and dashboards are scheduled for Sprint 3."],
+  ["Tests", "Active", "Unit tests, browser regression coverage, static checks, and production build gates are active."],
+  ["Performance", "Active", "Performance Center, load-test ingestion, thresholds, and adaptive health detection are active."],
+  ["Capability Graph", "Active", "Products, features, platform systems, operations, dependencies, and evidence are mapped from one repository-owned manifest."],
   ["Security", "Documented", "Authorization, secrets, migration, and product-boundary rules are documented."],
 ];
 
@@ -31,11 +32,13 @@ export default function EngineeringPage() {
           ))}
         </section>
         <section className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6">
-          <h2 className="text-xl font-black">Sprint 1 validation</h2>
+          <h2 className="text-xl font-black">Current validation</h2>
           <pre className="mt-4 overflow-x-auto rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-gray-300">{`npm run engineering:verify
 npm run lint
 npm run typecheck
-npm run build`}</pre>
+npm run test:unit
+npm run build
+npm run test:e2e`}</pre>
         </section>
       </div>
     </main>
