@@ -31,10 +31,10 @@ jobs:
       - run: npm run lint:engineering
       - run: npm run lint:budget
 
-  build:
+  system-test:
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
@@ -51,5 +51,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run system:test
