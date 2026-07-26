@@ -10,6 +10,7 @@ const requiredFiles = [
   "supabase/migrations/20260719000500_public_booking_availability.sql",
   "supabase/migrations/20260720000100_fast_booking_conflict_response.sql",
   "supabase/migrations/20260720000200_tune_booking_conflict_timeout.sql",
+  "supabase/migrations/20260722002819_booking_submission_idempotency.sql",
   "tests/load/business-booking-concurrency.js",
   "docs/performance/SPRINT_5_BOOKING_CONCURRENCY.md",
   "app/book/[slug]/page.tsx",
@@ -193,8 +194,8 @@ const checks = [
   ],
   [
     dashboardBookings,
-    'supabase.rpc("create_manual_booking"',
-    "Dashboard booking creation bypasses the protected RPC.",
+    'supabase.rpc(\n      "create_manual_booking_local_idempotent"',
+    "Dashboard booking creation bypasses the protected idempotent RPC.",
   ],
   [
     dashboardRequests,

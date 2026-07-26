@@ -31,7 +31,8 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "system:test": "node scripts/verify-system.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
