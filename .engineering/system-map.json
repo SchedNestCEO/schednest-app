@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T22:23:36.520Z",
+  "generatedAt": "2026-07-27T22:31:04.400Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
     "total": 96,
@@ -422,7 +422,9 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": [],
+      "notes": [
+        "Canonical subscription-management interface reached through /dashboard/subscriptions."
+      ],
       "auth": {
         "operations": [
           "get-user"
@@ -2233,17 +2235,23 @@
       "tests": [
         "tests/e2e/auth-behavior.spec.ts"
       ],
-      "coverage": "partial",
-      "notes": [],
+      "coverage": "covered",
+      "notes": [
+        "Redirect alias to /admin/subscriptions; contains no independent subscription UI."
+      ],
       "auth": {
         "operations": [],
         "authenticated": true
       },
       "httpMethods": [],
-      "criticality": "standard",
+      "criticality": "structural",
       "syntheticActors": [
         "business-owner"
-      ]
+      ],
+      "redirect": {
+        "destination": "/admin/subscriptions",
+        "permanent": false
+      }
     },
     {
       "id": "page:/files",
@@ -3940,6 +3948,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-27T22:23:36.646Z",
+  "enrichedAt": "2026-07-27T22:31:04.517Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }

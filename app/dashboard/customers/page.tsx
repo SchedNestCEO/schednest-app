@@ -358,8 +358,20 @@ export default function CustomersPage() {
 
     setIsSaving(true);
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setMessage("You must be logged in to add customers.");
+      setIsSaving(false);
+      return;
+    }
+
     const { error } = await supabase.from("customers").insert({
       business_id: business.id,
+      owner_id: user.id,
       name: name.trim(),
       email: email.trim() || null,
       phone: phone.trim() || null,

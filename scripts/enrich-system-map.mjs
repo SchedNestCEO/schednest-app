@@ -279,9 +279,17 @@ for (const capability of systemMap.capabilities) {
   capability.roles = inferRoles(capability, authOperations);
   capability.criticality = inferCriticality(capability);
   capability.syntheticActors = inferSyntheticActors(capability);
+
+  applyRouteOverrides(capability);
+
   capability.tests = assignExistingTests(capability);
   capability.coverage =
-    capability.tests.length > 0 ? "partial" : "unassigned";
+    capability.route === "/dashboard/subscriptions" &&
+    capability.tests.includes(AUTH_BEHAVIOR_TEST)
+      ? "covered"
+      : capability.tests.length > 0
+        ? "partial"
+        : "unassigned";
 }
 
 systemMap.enrichedAt = new Date().toISOString();

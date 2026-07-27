@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --ignore-pattern '.engineering-backups/**' --ignore-pattern 'artifacts/**'",
+    "lint": "eslint --ignore-pattern '.engineering-backups/**' --ignore-pattern 'artifacts/**' --ignore-pattern 'playwright-report-synthetic/**' --ignore-pattern 'test-results/**'",
     "typecheck": "npm run clean:next && tsc --noEmit",
     "engineering:verify": "node scripts/verify-engineering-foundation.mjs",
     "quality": "npm run engineering:verify && npm run lint && npm run typecheck && npm run build",
@@ -36,7 +36,8 @@
     "system:map": "node scripts/generate-system-map.mjs",
     "sprint7:verify": "node scripts/verify-sprint7.mjs",
     "system:map:enrich": "npm run system:map && node scripts/enrich-system-map.mjs",
-    "test:synthetic": "vitest run --config vitest.synthetic.config.ts"
+    "test:synthetic": "vitest run --config vitest.synthetic.config.ts",
+    "test:e2e:synthetic": "node --env-file=.env.local ./node_modules/@playwright/test/cli.js test --config playwright.synthetic.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
