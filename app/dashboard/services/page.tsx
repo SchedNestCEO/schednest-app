@@ -72,12 +72,6 @@ type AnyRow = Record<string, unknown>;
 
 type PricingType = "fixed" | "hourly" | "starting_at" | "quote" | "varies";
 
-type SampleEdit = {
-  sample_image_url: string;
-  sample_caption: string;
-  show_sample_on_booking_page: boolean;
-};
-
 type ServiceSettingsEdit = {
   publish_at: string;
   unpublish_at: string;
@@ -216,17 +210,6 @@ function getPlanAccess(subscription: AnyRow | null, plan: AnyRow | null) {
   };
 }
 
-function isUsableImageUrl(value: string) {
-  const cleanValue = value.trim();
-
-  if (!cleanValue) return true;
-
-  return (
-    cleanValue.startsWith("https://") ||
-    cleanValue.startsWith("http://") ||
-    cleanValue.startsWith("/")
-  );
-}
 
 function toDateTimeLocalValue(value: string | null | undefined) {
   if (!value) return "";
@@ -435,7 +418,6 @@ export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [savingSampleId, setSavingSampleId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [manualPaymentSettings, setManualPaymentSettings] =
@@ -459,9 +441,6 @@ export default function ServicesPage() {
   const [durationMinutes, setDurationMinutes] = useState("");
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
-  const [newSampleImageUrl, setNewSampleImageUrl] = useState("");
-  const [newSampleCaption, setNewSampleCaption] = useState("");
-  const [newShowSample, setNewShowSample] = useState(false);
   const [newPublishAt, setNewPublishAt] = useState("");
   const [newUnpublishAt, setNewUnpublishAt] = useState("");
   const [newDiscountType, setNewDiscountType] = useState<
@@ -497,9 +476,6 @@ export default function ServicesPage() {
     useState("");
   const [isReadingServiceCapture, setIsReadingServiceCapture] = useState(false);
 
-  const [sampleEdits, setSampleEdits] = useState<Record<string, SampleEdit>>(
-    {},
-  );
   const [serviceSettingsEdits, setServiceSettingsEdits] = useState<
     Record<string, ServiceSettingsEdit>
   >({});
@@ -1145,17 +1121,9 @@ export default function ServicesPage() {
     const safeServices = (serviceData || []) as Service[];
     setServices(safeServices);
 
-    const initialSampleEdits: Record<string, SampleEdit> = {};
     const initialServiceSettingsEdits: Record<string, ServiceSettingsEdit> = {};
 
     safeServices.forEach((service) => {
-      initialSampleEdits[service.id] = {
-        sample_image_url: service.sample_image_url || "",
-        sample_caption: service.sample_caption || "",
-        show_sample_on_booking_page:
-          service.show_sample_on_booking_page || false,
-      };
-
       initialServiceSettingsEdits[service.id] = {
         publish_at: toDateTimeLocalValue(service.publish_at),
         unpublish_at: toDateTimeLocalValue(service.unpublish_at),
@@ -1195,7 +1163,6 @@ export default function ServicesPage() {
       };
     });
 
-    setSampleEdits(initialSampleEdits);
     setServiceSettingsEdits(initialServiceSettingsEdits);
 
     if (safeServices.length > 0) {
@@ -1378,9 +1345,6 @@ export default function ServicesPage() {
     setPrice("");
     setNewPricingType("fixed");
     setDurationMinutes("");
-    setNewSampleImageUrl("");
-    setNewSampleCaption("");
-    setNewShowSample(false);
     setNewPublishAt("");
     setNewUnpublishAt("");
     setNewDiscountType("none");
@@ -1458,71 +1422,6 @@ export default function ServicesPage() {
     setSuccessMessage("Service removed from your menu.");
     await loadServices();
     setDeletingServiceId(null);
-  }
-
-  async function saveServiceSample(service: Service) {
-    if (!planAccess.hasGrowthAccess) {
-      setErrorMessage("Service samples are available on Growth and Complete.");
-      return;
-    }
-
-    const edit = sampleEdits[service.id];
-
-    if (!edit) {
-      setErrorMessage("Sample details not loaded yet.");
-      return;
-    }
-
-    if (!isUsableImageUrl(edit.sample_image_url)) {
-      setErrorMessage("Sample image must be a valid image URL.");
-      return;
-    }
-
-    if (edit.show_sample_on_booking_page && !edit.sample_image_url.trim()) {
-      setErrorMessage("Add a sample image URL before showing it publicly.");
-      return;
-    }
-
-    setSavingSampleId(service.id);
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    const { error } = await supabase
-      .from("services")
-      .update({
-        sample_image_url: edit.sample_image_url.trim() || null,
-        sample_caption: edit.sample_caption.trim() || null,
-        show_sample_on_booking_page: edit.show_sample_on_booking_page,
-      })
-      .eq("id", service.id)
-      .eq("business_id", service.business_id);
-
-    if (error) {
-      setErrorMessage(error.message);
-      setSavingSampleId(null);
-      return;
-    }
-
-    setSuccessMessage("Service sample saved.");
-    await loadServices();
-    setSavingSampleId(null);
-  }
-
-  function updateSampleEdit(
-    serviceId: string,
-    field: keyof SampleEdit,
-    value: string | boolean,
-  ) {
-    setSampleEdits((current) => ({
-      ...current,
-      [serviceId]: {
-        sample_image_url: current[serviceId]?.sample_image_url || "",
-        sample_caption: current[serviceId]?.sample_caption || "",
-        show_sample_on_booking_page:
-          current[serviceId]?.show_sample_on_booking_page || false,
-        [field]: value,
-      },
-    }));
   }
 
   function updateServiceSettingsEdit(
