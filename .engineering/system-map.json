@@ -1,0 +1,2364 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-27T03:19:46.192Z",
+  "generator": "scripts/generate-system-map.mjs",
+  "summary": {
+    "total": 96,
+    "pages": 71,
+    "APIs": 21,
+    "layouts": 4,
+    "assignedTests": 0
+  },
+  "capabilities": [
+    {
+      "id": "layout:/",
+      "type": "layout",
+      "route": "/",
+      "source": "app/layout.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/",
+      "type": "page",
+      "route": "/",
+      "source": "app/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/activity",
+      "type": "page",
+      "route": "/activity",
+      "source": "app/activity/page.tsx",
+      "area": "public",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin",
+      "type": "page",
+      "route": "/admin",
+      "source": "app/admin/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/audit",
+      "type": "page",
+      "route": "/admin/audit",
+      "source": "app/admin/audit/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/capabilities",
+      "type": "page",
+      "route": "/admin/capabilities",
+      "source": "app/admin/capabilities/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/engineering",
+      "type": "page",
+      "route": "/admin/engineering",
+      "source": "app/admin/engineering/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/health",
+      "type": "page",
+      "route": "/admin/health",
+      "source": "app/admin/health/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/incidents",
+      "type": "page",
+      "route": "/admin/incidents",
+      "source": "app/admin/incidents/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/performance",
+      "type": "page",
+      "route": "/admin/performance",
+      "source": "app/admin/performance/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/subscriptions",
+      "type": "page",
+      "route": "/admin/subscriptions",
+      "source": "app/admin/subscriptions/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/admin/support",
+      "type": "page",
+      "route": "/admin/support",
+      "source": "app/admin/support/page.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/admin/health",
+      "type": "api",
+      "route": "/api/admin/health",
+      "source": "app/api/admin/health/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/admin/performance",
+      "type": "api",
+      "route": "/api/admin/performance",
+      "source": "app/api/admin/performance/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/booking-notifications",
+      "type": "api",
+      "route": "/api/booking-notifications",
+      "source": "app/api/booking-notifications/route.ts",
+      "area": "api",
+      "access": "scheduled-job",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/booking-reminders",
+      "type": "api",
+      "route": "/api/booking-reminders",
+      "source": "app/api/booking-reminders/route.ts",
+      "area": "api",
+      "access": "scheduled-job",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/activity",
+      "type": "api",
+      "route": "/api/platform/activity",
+      "source": "app/api/platform/activity/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/birdy/decisions",
+      "type": "api",
+      "route": "/api/platform/birdy/decisions",
+      "source": "app/api/platform/birdy/decisions/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/birdy/memory",
+      "type": "api",
+      "route": "/api/platform/birdy/memory",
+      "source": "app/api/platform/birdy/memory/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/birdy/optimizer",
+      "type": "api",
+      "route": "/api/platform/birdy/optimizer",
+      "source": "app/api/platform/birdy/optimizer/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/birdy/permissions",
+      "type": "api",
+      "route": "/api/platform/birdy/permissions",
+      "source": "app/api/platform/birdy/permissions/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/connectors",
+      "type": "api",
+      "route": "/api/platform/connectors",
+      "source": "app/api/platform/connectors/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/coordination/conflicts",
+      "type": "api",
+      "route": "/api/platform/coordination/conflicts",
+      "source": "app/api/platform/coordination/conflicts/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/coordination/items",
+      "type": "api",
+      "route": "/api/platform/coordination/items",
+      "source": "app/api/platform/coordination/items/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/files",
+      "type": "api",
+      "route": "/api/platform/files",
+      "source": "app/api/platform/files/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/notifications",
+      "type": "api",
+      "route": "/api/platform/notifications",
+      "source": "app/api/platform/notifications/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/privacy/consent",
+      "type": "api",
+      "route": "/api/platform/privacy/consent",
+      "source": "app/api/platform/privacy/consent/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/privacy/export",
+      "type": "api",
+      "route": "/api/platform/privacy/export",
+      "source": "app/api/platform/privacy/export/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/platform/settings",
+      "type": "api",
+      "route": "/api/platform/settings",
+      "source": "app/api/platform/settings/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/stripe/create-billing-portal-session",
+      "type": "api",
+      "route": "/api/stripe/create-billing-portal-session",
+      "source": "app/api/stripe/create-billing-portal-session/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/stripe/create-checkout-session",
+      "type": "api",
+      "route": "/api/stripe/create-checkout-session",
+      "source": "app/api/stripe/create-checkout-session/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/stripe/webhook",
+      "type": "api",
+      "route": "/api/stripe/webhook",
+      "source": "app/api/stripe/webhook/route.ts",
+      "area": "api",
+      "access": "webhook",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "api:/api/student/imports/process",
+      "type": "api",
+      "route": "/api/student/imports/process",
+      "source": "app/api/student/imports/process/route.ts",
+      "area": "api",
+      "access": "unknown",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/birdy/decisions",
+      "type": "page",
+      "route": "/birdy/decisions",
+      "source": "app/birdy/decisions/page.tsx",
+      "area": "birdy",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/birdy/memory",
+      "type": "page",
+      "route": "/birdy/memory",
+      "source": "app/birdy/memory/page.tsx",
+      "area": "birdy",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/birdy/optimizer",
+      "type": "page",
+      "route": "/birdy/optimizer",
+      "source": "app/birdy/optimizer/page.tsx",
+      "area": "birdy",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/birdy/permissions",
+      "type": "page",
+      "route": "/birdy/permissions",
+      "source": "app/birdy/permissions/page.tsx",
+      "area": "birdy",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/book/[slug]",
+      "type": "page",
+      "route": "/book/[slug]",
+      "source": "app/book/[slug]/page.tsx",
+      "area": "book",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/coming-soon",
+      "type": "page",
+      "route": "/coming-soon",
+      "source": "app/coming-soon/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/connectors",
+      "type": "page",
+      "route": "/connectors",
+      "source": "app/connectors/page.tsx",
+      "area": "public",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/contact",
+      "type": "page",
+      "route": "/contact",
+      "source": "app/contact/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/coordination",
+      "type": "page",
+      "route": "/coordination",
+      "source": "app/coordination/page.tsx",
+      "area": "public",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard",
+      "type": "page",
+      "route": "/dashboard",
+      "source": "app/dashboard/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/account",
+      "type": "page",
+      "route": "/dashboard/account",
+      "source": "app/dashboard/account/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/birdy",
+      "type": "page",
+      "route": "/dashboard/birdy",
+      "source": "app/dashboard/birdy/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/booking-page",
+      "type": "page",
+      "route": "/dashboard/booking-page",
+      "source": "app/dashboard/booking-page/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/bookings",
+      "type": "page",
+      "route": "/dashboard/bookings",
+      "source": "app/dashboard/bookings/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/customers",
+      "type": "page",
+      "route": "/dashboard/customers",
+      "source": "app/dashboard/customers/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/founder-time",
+      "type": "page",
+      "route": "/dashboard/founder-time",
+      "source": "app/dashboard/founder-time/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/profile",
+      "type": "page",
+      "route": "/dashboard/profile",
+      "source": "app/dashboard/profile/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/requests",
+      "type": "page",
+      "route": "/dashboard/requests",
+      "source": "app/dashboard/requests/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/revenue-impact",
+      "type": "page",
+      "route": "/dashboard/revenue-impact",
+      "source": "app/dashboard/revenue-impact/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/services",
+      "type": "page",
+      "route": "/dashboard/services",
+      "source": "app/dashboard/services/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/settings",
+      "type": "page",
+      "route": "/dashboard/settings",
+      "source": "app/dashboard/settings/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/dashboard/subscriptions",
+      "type": "page",
+      "route": "/dashboard/subscriptions",
+      "source": "app/dashboard/subscriptions/page.tsx",
+      "area": "dashboard",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/files",
+      "type": "page",
+      "route": "/files",
+      "source": "app/files/page.tsx",
+      "area": "public",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/forgot-password",
+      "type": "page",
+      "route": "/forgot-password",
+      "source": "app/forgot-password/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/login",
+      "type": "page",
+      "route": "/login",
+      "source": "app/login/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "layout:/med",
+      "type": "layout",
+      "route": "/med",
+      "source": "app/med/layout.tsx",
+      "area": "med",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard",
+      "type": "page",
+      "route": "/med/dashboard",
+      "source": "app/med/dashboard/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/accessibility",
+      "type": "page",
+      "route": "/med/dashboard/accessibility",
+      "source": "app/med/dashboard/accessibility/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/appointments",
+      "type": "page",
+      "route": "/med/dashboard/appointments",
+      "source": "app/med/dashboard/appointments/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/care-nests",
+      "type": "page",
+      "route": "/med/dashboard/care-nests",
+      "source": "app/med/dashboard/care-nests/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/caregivers",
+      "type": "page",
+      "route": "/med/dashboard/caregivers",
+      "source": "app/med/dashboard/caregivers/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/documents",
+      "type": "page",
+      "route": "/med/dashboard/documents",
+      "source": "app/med/dashboard/documents/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/emergency-card",
+      "type": "page",
+      "route": "/med/dashboard/emergency-card",
+      "source": "app/med/dashboard/emergency-card/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/family",
+      "type": "page",
+      "route": "/med/dashboard/family",
+      "source": "app/med/dashboard/family/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/medications",
+      "type": "page",
+      "route": "/med/dashboard/medications",
+      "source": "app/med/dashboard/medications/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/questions",
+      "type": "page",
+      "route": "/med/dashboard/questions",
+      "source": "app/med/dashboard/questions/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/med/dashboard/tasks",
+      "type": "page",
+      "route": "/med/dashboard/tasks",
+      "source": "app/med/dashboard/tasks/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/notifications",
+      "type": "page",
+      "route": "/notifications",
+      "source": "app/notifications/page.tsx",
+      "area": "public",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/privacy",
+      "type": "page",
+      "route": "/privacy",
+      "source": "app/privacy/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/products",
+      "type": "page",
+      "route": "/products",
+      "source": "app/products/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/reset-password",
+      "type": "page",
+      "route": "/reset-password",
+      "source": "app/reset-password/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/security",
+      "type": "page",
+      "route": "/security",
+      "source": "app/security/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/settings",
+      "type": "page",
+      "route": "/settings",
+      "source": "app/settings/page.tsx",
+      "area": "settings",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/settings/privacy",
+      "type": "page",
+      "route": "/settings/privacy",
+      "source": "app/settings/privacy/page.tsx",
+      "area": "settings",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/signup",
+      "type": "page",
+      "route": "/signup",
+      "source": "app/signup/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "layout:/student",
+      "type": "layout",
+      "route": "/student",
+      "source": "app/student/layout.tsx",
+      "area": "student",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student",
+      "type": "page",
+      "route": "/student",
+      "source": "app/student/page.tsx",
+      "area": "student",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student/dashboard",
+      "type": "page",
+      "route": "/student/dashboard",
+      "source": "app/student/dashboard/page.tsx",
+      "area": "student",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student/dashboard/assignments",
+      "type": "page",
+      "route": "/student/dashboard/assignments",
+      "source": "app/student/dashboard/assignments/page.tsx",
+      "area": "student",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student/dashboard/classes",
+      "type": "page",
+      "route": "/student/dashboard/classes",
+      "source": "app/student/dashboard/classes/page.tsx",
+      "area": "student",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student/dashboard/exams",
+      "type": "page",
+      "route": "/student/dashboard/exams",
+      "source": "app/student/dashboard/exams/page.tsx",
+      "area": "student",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/student/dashboard/import",
+      "type": "page",
+      "route": "/student/dashboard/import",
+      "source": "app/student/dashboard/import/page.tsx",
+      "area": "student",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "layout:/teams",
+      "type": "layout",
+      "route": "/teams",
+      "source": "app/teams/layout.tsx",
+      "area": "teams",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams",
+      "type": "page",
+      "route": "/teams",
+      "source": "app/teams/page.tsx",
+      "area": "teams",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard",
+      "type": "page",
+      "route": "/teams/dashboard",
+      "source": "app/teams/dashboard/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/availability",
+      "type": "page",
+      "route": "/teams/dashboard/availability",
+      "source": "app/teams/dashboard/availability/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/members",
+      "type": "page",
+      "route": "/teams/dashboard/members",
+      "source": "app/teams/dashboard/members/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/projects",
+      "type": "page",
+      "route": "/teams/dashboard/projects",
+      "source": "app/teams/dashboard/projects/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/requests",
+      "type": "page",
+      "route": "/teams/dashboard/requests",
+      "source": "app/teams/dashboard/requests/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/schedule",
+      "type": "page",
+      "route": "/teams/dashboard/schedule",
+      "source": "app/teams/dashboard/schedule/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/tasks",
+      "type": "page",
+      "route": "/teams/dashboard/tasks",
+      "source": "app/teams/dashboard/tasks/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/teams/dashboard/workload",
+      "type": "page",
+      "route": "/teams/dashboard/workload",
+      "source": "app/teams/dashboard/workload/page.tsx",
+      "area": "teams",
+      "access": "authenticated",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    },
+    {
+      "id": "page:/terms",
+      "type": "page",
+      "route": "/terms",
+      "source": "app/terms/page.tsx",
+      "area": "public",
+      "access": "public",
+      "roles": [],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [],
+      "coverage": "unassigned",
+      "notes": []
+    }
+  ]
+}

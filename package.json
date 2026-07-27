@@ -32,7 +32,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:unit": "vitest run",
-    "system:test": "node scripts/verify-system.mjs"
+    "system:test": "node scripts/verify-system.mjs",
+    "system:map": "node scripts/generate-system-map.mjs",
+    "sprint7:verify": "node scripts/verify-sprint7.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
