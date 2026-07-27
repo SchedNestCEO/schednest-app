@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../lib/supabase/client";
 
 type Notice = {
@@ -19,7 +19,7 @@ export default function FounderOSPage() {
   const [items, setItems] = useState<Notice[]>([]);
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return setError("You must be signed in.");
 
@@ -38,7 +38,7 @@ export default function FounderOSPage() {
 
     if (queryError) return setError(queryError.message);
     setItems((data || []) as Notice[]);
-  }
+  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -46,7 +46,7 @@ export default function FounderOSPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [load]);
 
   async function mark(id: string, status: string) {
     await supabase.from("admin_notifications").update({ status, material_change: false, updated_at: new Date().toISOString() }).eq("id", id);

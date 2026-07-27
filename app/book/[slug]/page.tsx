@@ -299,7 +299,6 @@ const publicBookingCopy = {
   },
 };
 
-const days = publicBookingCopy.en.days;
 
 const preferredTimeOptions = Array.from({ length: 36 }, (_, index) => {
   const totalMinutes = 6 * 60 + index * 30;

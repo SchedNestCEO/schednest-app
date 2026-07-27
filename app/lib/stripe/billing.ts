@@ -12,11 +12,6 @@ if (!stripeSecretKey) {
 
 export const stripe = new Stripe(stripeSecretKey);
 
-type PriceMap = Record<
-  PricingTier,
-  Record<PlanKey, Record<BillingInterval, string | undefined>>
->;
-
 type PriceEnvMap = Record<
   PricingTier,
   Record<PlanKey, Record<BillingInterval, string>>
@@ -77,37 +72,6 @@ function readPriceEnv(
 
   return value;
 }
-
-const stripePriceMap: PriceMap = {
-  founder: {
-    essentials: {
-      monthly: process.env.STRIPE_FOUNDER_ESSENTIALS_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_FOUNDER_ESSENTIALS_ANNUAL_PRICE_ID,
-    },
-    growth: {
-      monthly: process.env.STRIPE_FOUNDER_GROWTH_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_FOUNDER_GROWTH_ANNUAL_PRICE_ID,
-    },
-    complete: {
-      monthly: process.env.STRIPE_FOUNDER_COMPLETE_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_FOUNDER_COMPLETE_ANNUAL_PRICE_ID,
-    },
-  },
-  standard: {
-    essentials: {
-      monthly: process.env.STRIPE_STANDARD_ESSENTIALS_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_STANDARD_ESSENTIALS_ANNUAL_PRICE_ID,
-    },
-    growth: {
-      monthly: process.env.STRIPE_STANDARD_GROWTH_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_STANDARD_GROWTH_ANNUAL_PRICE_ID,
-    },
-    complete: {
-      monthly: process.env.STRIPE_STANDARD_COMPLETE_MONTHLY_PRICE_ID,
-      annual: process.env.STRIPE_STANDARD_COMPLETE_ANNUAL_PRICE_ID,
-    },
-  },
-};
 
 export function isPlanKey(value: unknown): value is PlanKey {
   return value === "essentials" || value === "growth" || value === "complete";

@@ -206,16 +206,6 @@ export default function DashboardShell({ children }: DashboardShellProps) {
     }`;
   }
 
-  function getTopNavLinkClass(href: string) {
-    const isActive = isActiveRoute(href);
-
-    return `whitespace-nowrap rounded-2xl px-4 py-2.5 text-sm font-black transition ${
-      isActive
-        ? "bg-edition-primary text-black"
-        : "text-gray-300 hover:bg-white/10 hover:text-white"
-    }`;
-  }
-
   if (!isAuthChecked) {
     return (
       <main className="torogoz-app-background flex min-h-screen items-center justify-center px-6 text-white">

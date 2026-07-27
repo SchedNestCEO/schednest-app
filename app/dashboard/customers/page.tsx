@@ -73,18 +73,6 @@ function formatDate(value: string | null) {
   });
 }
 
-function formatDateTime(value: string | null) {
-  if (!value) return "Not set";
-
-  return new Date(value).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 function getStatusClass(status: CustomerStatus) {
   if (status === "blocked") {
     return "border-red-400/20 bg-red-400/10 text-red-300";
@@ -140,10 +128,6 @@ export default function CustomersPage() {
 
   const activeCustomers = customers.filter(
     (customer) => getCustomerStatus(customer) === "active"
-  );
-
-  const archivedCustomers = customers.filter(
-    (customer) => getCustomerStatus(customer) === "archived"
   );
 
   const blockedCustomers = customers.filter(

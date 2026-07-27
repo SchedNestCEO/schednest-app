@@ -838,7 +838,6 @@ export default function BookingsPage() {
   const pendingCount = bookings.filter(
     (booking) => !booking.status || booking.status === "pending"
   ).length;
-  const canCreateBooking = customers.length > 0 && services.length > 0;
   const shouldShowCreateBooking =
     isCreateBookingOpen || (!isLoading && bookings.length === 0);
 

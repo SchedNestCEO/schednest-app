@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 type Incident = {
@@ -28,7 +28,7 @@ export default function IncidentCenterPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data, error: queryError } = await supabase
       .from("platform_incidents")
       .select(
@@ -42,7 +42,7 @@ export default function IncidentCenterPage() {
     }
 
     setIncidents((data || []) as Incident[]);
-  }
+  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -50,7 +50,7 @@ export default function IncidentCenterPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [load]);
 
   async function createIncident(
     event: React.FormEvent<HTMLFormElement>
