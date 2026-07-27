@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
@@ -1892,12 +1893,15 @@ export default function ServicesPage() {
 
               {manualPaymentSettings.manual_payment_qr_url ? (
                 <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white">
-                  <img
+                  <Image
                     src={manualPaymentSettings.manual_payment_qr_url}
                     alt={
                       manualPaymentSettings.manual_payment_qr_caption ||
                       t("manualPayments.qrCode", "Payment QR code")
                     }
+                    width={1200}
+                    height={800}
+                    unoptimized
                     className="max-h-72 w-full object-contain"
                   />
                 </div>
@@ -2054,9 +2058,12 @@ export default function ServicesPage() {
 
                       {serviceCaptureImagePreviewUrl && (
                         <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                          <img
+                          <Image
                             src={serviceCaptureImagePreviewUrl}
                             alt="Service screenshot preview"
+                            width={1200}
+                            height={800}
+                            unoptimized
                             className="max-h-80 w-full object-contain"
                           />
                         </div>
@@ -3352,9 +3359,12 @@ export default function ServicesPage() {
                                 key={image.id}
                                 className="overflow-hidden rounded-2xl border border-white/10 bg-black/30"
                               >
-                                <img
+                                <Image
                                   src={image.image_url}
                                   alt={image.caption || service.name}
+                                  width={1200}
+                                  height={800}
+                                  unoptimized
                                   className="h-44 w-full object-cover"
                                 />
 
