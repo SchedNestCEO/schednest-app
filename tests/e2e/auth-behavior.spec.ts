@@ -60,3 +60,22 @@ test("unauthenticated dashboard access does not expose dashboard content", async
     page.getByRole("heading", { name: /log in to your account/i })
   ).toBeVisible();
 });
+
+test("dashboard subscriptions redirects to admin subscriptions", async ({
+  page,
+}) => {
+  await page.goto("/dashboard/subscriptions", {
+    waitUntil: "domcontentloaded",
+  });
+
+  // An unauthenticated visitor may then be forwarded to login by the
+  // protected admin route, but the original dashboard route must not render.
+  await expect(page).not.toHaveURL(/\/dashboard\/subscriptions\/?$/);
+
+  const currentUrl = new URL(page.url());
+
+  expect(
+    currentUrl.pathname === "/admin/subscriptions" ||
+      currentUrl.pathname === "/login",
+  ).toBe(true);
+});
