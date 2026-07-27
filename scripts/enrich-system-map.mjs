@@ -24,6 +24,7 @@ const authBehaviorRoutes = new Set([
   "/forgot-password",
   "/reset-password",
   "/dashboard",
+  "/dashboard/subscriptions",
 ]);
 
 const criticalBusinessRoutes = new Set([
@@ -35,7 +36,6 @@ const criticalBusinessRoutes = new Set([
   "/dashboard/requests",
   "/dashboard/services",
   "/dashboard/settings",
-  "/dashboard/subscriptions",
 ]);
 
 const criticalAPIFragments = [
@@ -207,6 +207,27 @@ function inferSyntheticActors(capability) {
   }
 
   return [...actors].sort();
+}
+
+function applyRouteOverrides(capability) {
+  if (capability.route === "/dashboard/subscriptions") {
+    capability.criticality = "structural";
+    capability.notes = unique([
+      ...(capability.notes || []),
+      "Redirect alias to /admin/subscriptions; contains no independent subscription UI.",
+    ]);
+    capability.redirect = {
+      destination: "/admin/subscriptions",
+      permanent: false,
+    };
+  }
+
+  if (capability.route === "/admin/subscriptions") {
+    capability.notes = unique([
+      ...(capability.notes || []),
+      "Canonical subscription-management interface reached through /dashboard/subscriptions.",
+    ]);
+  }
 }
 
 function assignExistingTests(capability) {

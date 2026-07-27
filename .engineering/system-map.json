@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T03:57:08.138Z",
+  "generatedAt": "2026-07-27T22:23:36.520Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
     "total": 96,
     "pages": 71,
     "APIs": 21,
     "layouts": 4,
-    "assignedTests": 14,
-    "unassignedTests": 82,
-    "critical": 14,
+    "assignedTests": 15,
+    "unassignedTests": 81,
+    "critical": 13,
     "high": 14
   },
   "capabilities": [
@@ -2230,15 +2230,17 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
         "authenticated": true
       },
       "httpMethods": [],
-      "criticality": "critical",
+      "criticality": "standard",
       "syntheticActors": [
         "business-owner"
       ]
@@ -3938,6 +3940,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-27T03:57:08.265Z",
+  "enrichedAt": "2026-07-27T22:23:36.646Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }
