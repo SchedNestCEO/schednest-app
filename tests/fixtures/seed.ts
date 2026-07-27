@@ -231,38 +231,53 @@ async function seedTenant(
   const customerIdentity = identities[customerActor];
 
   const user = await ensureSyntheticAuthUser(admin, ownerIdentity);
-  const definition = createSyntheticBusinessDefinition(
-    ownerIdentity,
-    label,
-  );
 
-  const profile = await seedBusinessProfile(admin, user, definition);
-  const service = await seedService(
-    admin,
-    user,
-    profile.id,
-    definition,
-  );
+  try {
+    const definition = createSyntheticBusinessDefinition(
+      ownerIdentity,
+      label,
+    );
 
-  await seedBusinessHours(admin, user, profile.id, definition);
+    const profile = await seedBusinessProfile(admin, user, definition);
+    const service = await seedService(
+      admin,
+      user,
+      profile.id,
+      definition,
+    );
 
-  const customer = await seedCustomer(
-    admin,
-    user,
-    profile.id,
-    customerIdentity,
-    label,
-  );
+    await seedBusinessHours(admin, user, profile.id, definition);
 
-  return {
-    actor: ownerActor,
-    userId: user.id,
-    email: ownerIdentity.email,
-    businessId: profile.id,
-    bookingSlug: profile.booking_slug,
-    serviceId: service.id,
-    customerId: customer.id,
-  };
+    const customer = await seedCustomer(
+      admin,
+      user,
+      profile.id,
+      customerIdentity,
+      label,
+    );
+
+    return {
+      actor: ownerActor,
+      userId: user.id,
+      email: ownerIdentity.email,
+      businessId: profile.id,
+      bookingSlug: profile.booking_slug,
+      serviceId: service.id,
+      customerId: customer.id,
+    };
+  } catch (error) {
+    const { error: cleanupError } =
+      await admin.auth.admin.deleteUser(user.id);
+
+    if (cleanupError) {
+      throw new Error(
+        `Synthetic tenant creation failed and cleanup also failed for ${ownerActor}: ${cleanupError.message}`,
+        { cause: error },
+      );
+    }
+
+    throw error;
+  }
 }
 
 export async function seedSyntheticTestData(): Promise<SyntheticTestManifest> {
@@ -272,25 +287,28 @@ export async function seedSyntheticTestData(): Promise<SyntheticTestManifest> {
   );
 
   const manifest = createEmptySyntheticManifest(SYNTHETIC_MARKER);
+  writeSyntheticManifest(manifest);
 
-  const tenants = await Promise.all([
-    seedTenant(
-      admin,
-      identities,
-      "business-owner-a",
-      "public-customer-a",
-      "a",
-    ),
-    seedTenant(
-      admin,
-      identities,
-      "business-owner-b",
-      "public-customer-b",
-      "b",
-    ),
-  ]);
+  const tenantA = await seedTenant(
+    admin,
+    identities,
+    "business-owner-a",
+    "public-customer-a",
+    "a",
+  );
 
-  manifest.tenants = tenants;
+  manifest.tenants.push(tenantA);
+  writeSyntheticManifest(manifest);
+
+  const tenantB = await seedTenant(
+    admin,
+    identities,
+    "business-owner-b",
+    "public-customer-b",
+    "b",
+  );
+
+  manifest.tenants.push(tenantB);
   writeSyntheticManifest(manifest);
 
   return manifest;

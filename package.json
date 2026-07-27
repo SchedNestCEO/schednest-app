@@ -35,7 +35,8 @@
     "system:test": "node scripts/verify-system.mjs",
     "system:map": "node scripts/generate-system-map.mjs",
     "sprint7:verify": "node scripts/verify-sprint7.mjs",
-    "system:map:enrich": "npm run system:map && node scripts/enrich-system-map.mjs"
+    "system:map:enrich": "npm run system:map && node scripts/enrich-system-map.mjs",
+    "test:synthetic": "vitest run --config vitest.synthetic.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
