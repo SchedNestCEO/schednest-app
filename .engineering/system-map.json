@@ -1,13 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-27T03:19:46.192Z",
+  "generatedAt": "2026-07-27T03:57:08.138Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
     "total": 96,
     "pages": 71,
     "APIs": 21,
     "layouts": 4,
-    "assignedTests": 0
+    "assignedTests": 14,
+    "unassignedTests": 82,
+    "critical": 14,
+    "high": 14
   },
   "capabilities": [
     {
@@ -17,7 +20,9 @@
       "source": "app/layout.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -31,7 +36,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "structural",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/",
@@ -40,7 +54,9 @@
       "source": "app/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -54,9 +70,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/activity",
@@ -65,7 +92,9 @@
       "source": "app/activity/page.tsx",
       "area": "public",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -75,13 +104,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_activity_events"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/admin",
@@ -90,7 +132,9 @@
       "source": "app/admin/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -100,13 +144,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "admin_notification_state",
+          "admin_notifications",
+          "platform_admins"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/audit",
@@ -115,7 +174,9 @@
       "source": "app/admin/audit/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -125,13 +186,24 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "admin_audit_logs"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/capabilities",
@@ -140,7 +212,9 @@
       "source": "app/admin/capabilities/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -156,7 +230,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/engineering",
@@ -165,7 +248,9 @@
       "source": "app/admin/engineering/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -181,7 +266,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/health",
@@ -190,7 +284,9 @@
       "source": "app/admin/health/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -206,7 +302,18 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-session"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/incidents",
@@ -215,7 +322,9 @@
       "source": "app/admin/incidents/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -225,13 +334,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_incidents"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/performance",
@@ -240,7 +362,9 @@
       "source": "app/admin/performance/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -256,7 +380,18 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-session"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/subscriptions",
@@ -265,7 +400,9 @@
       "source": "app/admin/subscriptions/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -275,13 +412,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions",
+          "subscription_plans"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "page:/admin/support",
@@ -290,7 +442,9 @@
       "source": "app/admin/support/page.tsx",
       "area": "admin",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "platform-admin"
+      ],
       "states": [
         "loading",
         "ready",
@@ -300,13 +454,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "support_tickets"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
     },
     {
       "id": "api:/api/admin/health",
@@ -315,7 +482,9 @@
       "source": "app/api/admin/health/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -323,13 +492,26 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_health_snapshots"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [
+        "GET"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/admin/performance",
@@ -338,7 +520,9 @@
       "source": "app/api/admin/performance/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -346,13 +530,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "performance_metric_snapshots",
+          "performance_test_runs",
+          "performance_thresholds"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/booking-notifications",
@@ -361,7 +561,9 @@
       "source": "app/api/booking-notifications/route.ts",
       "area": "api",
       "access": "scheduled-job",
-      "roles": [],
+      "roles": [
+        "scheduler"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -369,13 +571,31 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "booking_notifications",
+          "bookings",
+          "business_profiles",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "scheduler"
+      ]
     },
     {
       "id": "api:/api/booking-reminders",
@@ -384,7 +604,9 @@
       "source": "app/api/booking-reminders/route.ts",
       "area": "api",
       "access": "scheduled-job",
-      "roles": [],
+      "roles": [
+        "scheduler"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -392,13 +614,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "booking_notifications",
+          "bookings",
+          "business_profiles",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [
+        "GET"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "scheduler"
+      ]
     },
     {
       "id": "api:/api/platform/activity",
@@ -407,7 +645,9 @@
       "source": "app/api/platform/activity/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -415,13 +655,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_activity_events"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/birdy/decisions",
@@ -430,7 +686,9 @@
       "source": "app/api/platform/birdy/decisions/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -438,13 +696,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_decisions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "PATCH"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/birdy/memory",
@@ -453,7 +727,9 @@
       "source": "app/api/platform/birdy/memory/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -461,13 +737,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_memories"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/birdy/optimizer",
@@ -476,7 +768,9 @@
       "source": "app/api/platform/birdy/optimizer/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -484,13 +778,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_decisions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/birdy/permissions",
@@ -499,7 +809,9 @@
       "source": "app/api/platform/birdy/permissions/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -507,13 +819,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_permissions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/connectors",
@@ -522,7 +850,9 @@
       "source": "app/api/platform/connectors/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -530,13 +860,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_connectors"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/coordination/conflicts",
@@ -545,7 +891,9 @@
       "source": "app/api/platform/coordination/conflicts/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -553,13 +901,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "coordination_conflicts"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/coordination/items",
@@ -568,7 +932,9 @@
       "source": "app/api/platform/coordination/items/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -576,13 +942,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "coordination_items"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/files",
@@ -591,7 +973,9 @@
       "source": "app/api/platform/files/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -599,13 +983,28 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_files"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/notifications",
@@ -614,7 +1013,9 @@
       "source": "app/api/platform/notifications/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -622,13 +1023,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_notifications"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/privacy/consent",
@@ -637,7 +1054,9 @@
       "source": "app/api/platform/privacy/consent/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -645,13 +1064,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_consents"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET",
+        "POST"
+      ],
+      "criticality": "high",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/privacy/export",
@@ -660,7 +1095,9 @@
       "source": "app/api/platform/privacy/export/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -668,13 +1105,28 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_data_requests"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "high",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/platform/settings",
@@ -683,7 +1135,9 @@
       "source": "app/api/platform/settings/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -691,13 +1145,31 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_accessibility_settings",
+          "platform_privacy_settings",
+          "platform_product_settings",
+          "platform_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "GET"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "api:/api/stripe/create-billing-portal-session",
@@ -706,7 +1178,9 @@
       "source": "app/api/stripe/create-billing-portal-session/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -714,13 +1188,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "api:/api/stripe/create-checkout-session",
@@ -729,7 +1219,9 @@
       "source": "app/api/stripe/create-checkout-session/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -737,13 +1229,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "api:/api/stripe/webhook",
@@ -752,7 +1260,9 @@
       "source": "app/api/stripe/webhook/route.ts",
       "area": "api",
       "access": "webhook",
-      "roles": [],
+      "roles": [
+        "external-service"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -760,13 +1270,28 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions",
+          "subscription_plans"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "external-service"
+      ]
     },
     {
       "id": "api:/api/student/imports/process",
@@ -775,7 +1300,9 @@
       "source": "app/api/student/imports/process/route.ts",
       "area": "api",
       "access": "unknown",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -783,13 +1310,29 @@
         "operation-error"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student-imports",
+          "student_imports"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/birdy/decisions",
@@ -798,7 +1341,9 @@
       "source": "app/birdy/decisions/page.tsx",
       "area": "birdy",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -808,13 +1353,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_decisions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/birdy/memory",
@@ -823,7 +1381,9 @@
       "source": "app/birdy/memory/page.tsx",
       "area": "birdy",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -833,13 +1393,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_memories",
+          "birdy_memory_settings"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/birdy/optimizer",
@@ -848,7 +1422,9 @@
       "source": "app/birdy/optimizer/page.tsx",
       "area": "birdy",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -858,13 +1434,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_decisions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/birdy/permissions",
@@ -873,7 +1462,9 @@
       "source": "app/birdy/permissions/page.tsx",
       "area": "birdy",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -883,13 +1474,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_action_permissions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/book/[slug]",
@@ -898,7 +1502,9 @@
       "source": "app/book/[slug]/page.tsx",
       "area": "book",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -908,13 +1514,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "booking_questions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner",
+        "public-customer",
+        "visitor"
+      ]
     },
     {
       "id": "page:/coming-soon",
@@ -923,7 +1542,9 @@
       "source": "app/coming-soon/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -937,9 +1558,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/connectors",
@@ -948,7 +1580,9 @@
       "source": "app/connectors/page.tsx",
       "area": "public",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -958,13 +1592,26 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_connectors"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/contact",
@@ -973,7 +1620,9 @@
       "source": "app/contact/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -987,9 +1636,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/coordination",
@@ -998,7 +1658,9 @@
       "source": "app/coordination/page.tsx",
       "area": "public",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1008,13 +1670,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "coordination_conflicts",
+          "coordination_items"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/dashboard",
@@ -1023,7 +1699,9 @@
       "source": "app/dashboard/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1033,13 +1711,35 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_suggestions",
+          "booking_notifications",
+          "bookings",
+          "business_hours",
+          "business_profiles",
+          "business_subscriptions",
+          "customers",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/account",
@@ -1048,7 +1748,9 @@
       "source": "app/dashboard/account/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1058,13 +1760,29 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions",
+          "subscription_plans"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-session",
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/birdy",
@@ -1073,7 +1791,9 @@
       "source": "app/dashboard/birdy/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1083,13 +1803,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "birdy_suggestions",
+          "bookings",
+          "business_profiles",
+          "customers",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/booking-page",
@@ -1098,7 +1835,9 @@
       "source": "app/dashboard/booking-page/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1108,13 +1847,29 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "booking_questions",
+          "business_hours",
+          "business_profiles",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/bookings",
@@ -1123,7 +1878,9 @@
       "source": "app/dashboard/bookings/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1133,13 +1890,31 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "bookings",
+          "business_profiles",
+          "customers",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-customer",
+        "business-owner",
+        "public-customer"
+      ]
     },
     {
       "id": "page:/dashboard/customers",
@@ -1148,7 +1923,9 @@
       "source": "app/dashboard/customers/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1158,13 +1935,29 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "bookings",
+          "business_profiles",
+          "customers"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-customer",
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/founder-time",
@@ -1173,7 +1966,9 @@
       "source": "app/dashboard/founder-time/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1189,7 +1984,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/profile",
@@ -1198,7 +2002,9 @@
       "source": "app/dashboard/profile/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1208,13 +2014,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions",
+          "subscription_plans"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/requests",
@@ -1223,7 +2044,9 @@
       "source": "app/dashboard/requests/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1233,13 +2056,31 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "bookings",
+          "business_profiles",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-session",
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-customer",
+        "business-owner",
+        "public-customer"
+      ]
     },
     {
       "id": "page:/dashboard/revenue-impact",
@@ -1248,7 +2089,9 @@
       "source": "app/dashboard/revenue-impact/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1264,7 +2107,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/services",
@@ -1273,7 +2125,9 @@
       "source": "app/dashboard/services/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1283,13 +2137,32 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_profiles",
+          "business_subscriptions",
+          "payment-qr-codes",
+          "service-samples",
+          "service_sample_images",
+          "services",
+          "subscription_plans"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/settings",
@@ -1298,7 +2171,9 @@
       "source": "app/dashboard/settings/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1308,13 +2183,29 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "business_hours",
+          "business_profiles",
+          "business_subscriptions",
+          "services"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/dashboard/subscriptions",
@@ -1323,7 +2214,9 @@
       "source": "app/dashboard/subscriptions/page.tsx",
       "area": "dashboard",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "business-owner"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1339,7 +2232,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
     },
     {
       "id": "page:/files",
@@ -1348,7 +2250,9 @@
       "source": "app/files/page.tsx",
       "area": "public",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1358,13 +2262,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform-files",
+          "platform_files"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/forgot-password",
@@ -1373,7 +2291,9 @@
       "source": "app/forgot-password/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1387,9 +2307,21 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts",
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/login",
@@ -1398,7 +2330,9 @@
       "source": "app/login/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1412,9 +2346,23 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts",
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [
+          "sign-in-password"
+        ],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "layout:/med",
@@ -1423,7 +2371,9 @@
       "source": "app/med/layout.tsx",
       "area": "med",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -1437,7 +2387,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "structural",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/med/dashboard",
@@ -1446,7 +2405,10 @@
       "source": "app/med/dashboard/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1456,13 +2418,31 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_appointments",
+          "med_care_nests",
+          "med_medications",
+          "med_profiles",
+          "med_tasks"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/accessibility",
@@ -1471,7 +2451,10 @@
       "source": "app/med/dashboard/accessibility/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1481,13 +2464,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_accessibility_preferences"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/appointments",
@@ -1496,7 +2493,10 @@
       "source": "app/med/dashboard/appointments/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1506,13 +2506,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_appointments",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/care-nests",
@@ -1521,7 +2536,10 @@
       "source": "app/med/dashboard/care-nests/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1531,13 +2549,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_care_nests",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/caregivers",
@@ -1546,7 +2579,10 @@
       "source": "app/med/dashboard/caregivers/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1556,13 +2592,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_caregiver_access",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/documents",
@@ -1571,7 +2622,10 @@
       "source": "app/med/dashboard/documents/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1581,13 +2635,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med-documents",
+          "med_care_nests",
+          "med_documents",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/emergency-card",
@@ -1596,7 +2667,10 @@
       "source": "app/med/dashboard/emergency-card/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1606,13 +2680,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_emergency_cards",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/family",
@@ -1621,7 +2710,10 @@
       "source": "app/med/dashboard/family/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1631,13 +2723,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_caregiver_access"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/medications",
@@ -1646,7 +2752,10 @@
       "source": "app/med/dashboard/medications/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1656,13 +2765,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_medications",
+          "med_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/questions",
@@ -1671,7 +2795,10 @@
       "source": "app/med/dashboard/questions/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1681,13 +2808,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_appointments",
+          "med_care_nests",
+          "med_profiles",
+          "med_provider_questions"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/med/dashboard/tasks",
@@ -1696,7 +2840,10 @@
       "source": "app/med/dashboard/tasks/page.tsx",
       "area": "med",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1706,13 +2853,29 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "med_care_nests",
+          "med_profiles",
+          "med_tasks"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
     },
     {
       "id": "page:/notifications",
@@ -1721,7 +2884,9 @@
       "source": "app/notifications/page.tsx",
       "area": "public",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1731,13 +2896,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_notification_preferences",
+          "platform_notifications"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/privacy",
@@ -1746,7 +2925,9 @@
       "source": "app/privacy/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1760,9 +2941,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/products",
@@ -1771,7 +2963,9 @@
       "source": "app/products/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1785,9 +2979,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/reset-password",
@@ -1796,7 +3001,9 @@
       "source": "app/reset-password/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1810,9 +3017,21 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts",
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/security",
@@ -1821,7 +3040,9 @@
       "source": "app/security/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1835,9 +3056,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/settings",
@@ -1846,7 +3078,9 @@
       "source": "app/settings/page.tsx",
       "area": "settings",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1856,13 +3090,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_accessibility_settings",
+          "platform_privacy_settings",
+          "platform_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/settings/privacy",
@@ -1871,7 +3120,9 @@
       "source": "app/settings/privacy/page.tsx",
       "area": "settings",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "authenticated-user"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1881,13 +3132,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "platform_consents",
+          "platform_data_requests"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "authenticated-user"
+      ]
     },
     {
       "id": "page:/signup",
@@ -1896,7 +3161,9 @@
       "source": "app/signup/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1906,13 +3173,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "legal_acceptances"
+        ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [
+          "sign-up"
+        ],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "layout:/student",
@@ -1921,7 +3203,9 @@
       "source": "app/student/layout.tsx",
       "area": "student",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -1935,7 +3219,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "structural",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/student",
@@ -1944,7 +3237,9 @@
       "source": "app/student/page.tsx",
       "area": "student",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1958,9 +3253,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/student/dashboard",
@@ -1969,7 +3275,9 @@
       "source": "app/student/dashboard/page.tsx",
       "area": "student",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "student"
+      ],
       "states": [
         "loading",
         "ready",
@@ -1979,13 +3287,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student_assignments",
+          "student_courses",
+          "student_exams",
+          "student_imports",
+          "student_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "student"
+      ]
     },
     {
       "id": "page:/student/dashboard/assignments",
@@ -1994,7 +3319,9 @@
       "source": "app/student/dashboard/assignments/page.tsx",
       "area": "student",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "student"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2004,13 +3331,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student_assignments",
+          "student_courses"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "student"
+      ]
     },
     {
       "id": "page:/student/dashboard/classes",
@@ -2019,7 +3360,9 @@
       "source": "app/student/dashboard/classes/page.tsx",
       "area": "student",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "student"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2029,13 +3372,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student_courses",
+          "student_profiles"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "student"
+      ]
     },
     {
       "id": "page:/student/dashboard/exams",
@@ -2044,7 +3401,9 @@
       "source": "app/student/dashboard/exams/page.tsx",
       "area": "student",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "student"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2054,13 +3413,27 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student_courses",
+          "student_exams"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "student"
+      ]
     },
     {
       "id": "page:/student/dashboard/import",
@@ -2069,7 +3442,9 @@
       "source": "app/student/dashboard/import/page.tsx",
       "area": "student",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "student"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2079,13 +3454,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "student-imports",
+          "student_imports"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-session",
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "student"
+      ]
     },
     {
       "id": "layout:/teams",
@@ -2094,7 +3484,9 @@
       "source": "app/teams/layout.tsx",
       "area": "teams",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "success",
         "validation-error",
@@ -2108,7 +3500,16 @@
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "structural",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/teams",
@@ -2117,7 +3518,9 @@
       "source": "app/teams/page.tsx",
       "area": "teams",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2131,9 +3534,20 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     },
     {
       "id": "page:/teams/dashboard",
@@ -2142,7 +3556,10 @@
       "source": "app/teams/dashboard/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2152,13 +3569,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_memberships",
+          "team_projects",
+          "team_requests",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/availability",
@@ -2167,7 +3601,10 @@
       "source": "app/teams/dashboard/availability/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2177,13 +3614,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_availability",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/members",
@@ -2192,7 +3644,10 @@
       "source": "app/teams/dashboard/members/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2202,13 +3657,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_memberships",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/projects",
@@ -2217,7 +3687,10 @@
       "source": "app/teams/dashboard/projects/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2227,13 +3700,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_projects",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/requests",
@@ -2242,7 +3730,10 @@
       "source": "app/teams/dashboard/requests/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2252,13 +3743,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_requests",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/schedule",
@@ -2267,7 +3773,10 @@
       "source": "app/teams/dashboard/schedule/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2277,13 +3786,28 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_events",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/tasks",
@@ -2292,7 +3816,10 @@
       "source": "app/teams/dashboard/tasks/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2302,13 +3829,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_memberships",
+          "team_projects",
+          "team_tasks",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/teams/dashboard/workload",
@@ -2317,7 +3861,10 @@
       "source": "app/teams/dashboard/workload/page.tsx",
       "area": "teams",
       "access": "authenticated",
-      "roles": [],
+      "roles": [
+        "team-admin",
+        "team-member"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2327,13 +3874,30 @@
         "unauthorized"
       ],
       "dependencies": {
-        "tables": [],
+        "tables": [
+          "team_events",
+          "team_memberships",
+          "team_tasks",
+          "team_workspaces"
+        ],
         "APIs": [],
         "externalServices": []
       },
       "tests": [],
       "coverage": "unassigned",
-      "notes": []
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "team-admin",
+        "team-member"
+      ]
     },
     {
       "id": "page:/terms",
@@ -2342,7 +3906,9 @@
       "source": "app/terms/page.tsx",
       "area": "public",
       "access": "public",
-      "roles": [],
+      "roles": [
+        "visitor"
+      ],
       "states": [
         "loading",
         "ready",
@@ -2356,9 +3922,22 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
-      "notes": []
+      "tests": [
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "visitor"
+      ]
     }
-  ]
+  ],
+  "enrichedAt": "2026-07-27T03:57:08.265Z",
+  "enricher": "scripts/enrich-system-map.mjs"
 }

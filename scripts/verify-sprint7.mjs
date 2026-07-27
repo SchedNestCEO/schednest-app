@@ -93,6 +93,30 @@ for (const capability of systemMap.capabilities) {
     fail(`${capability.id} tests must be an array.`);
   }
 
+  if (!Array.isArray(capability.roles) || capability.roles.length === 0) {
+    fail(`${capability.id} has no actor roles.`);
+  }
+
+  if (!capability.criticality) {
+    fail(`${capability.id} has no criticality classification.`);
+  }
+
+  if (!capability.dependencies || !Array.isArray(capability.dependencies.tables)) {
+    fail(`${capability.id} has no database dependency classification.`);
+  }
+
+  if (!capability.auth || !Array.isArray(capability.auth.operations)) {
+    fail(`${capability.id} has no authentication classification.`);
+  }
+
+  if (!Array.isArray(capability.syntheticActors)) {
+    fail(`${capability.id} has no synthetic-actor classification.`);
+  }
+
+  if (capability.type === "api" && !Array.isArray(capability.httpMethods)) {
+    fail(`${capability.id} has no HTTP-method classification.`);
+  }
+
   for (const testPath of capability.tests) {
     if (!existsSync(join(root, testPath))) {
       fail(`${capability.id} references missing test: ${testPath}`);

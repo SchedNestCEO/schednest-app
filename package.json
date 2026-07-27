@@ -34,7 +34,8 @@
     "test:unit": "vitest run",
     "system:test": "node scripts/verify-system.mjs",
     "system:map": "node scripts/generate-system-map.mjs",
-    "sprint7:verify": "node scripts/verify-sprint7.mjs"
+    "sprint7:verify": "node scripts/verify-sprint7.mjs",
+    "system:map:enrich": "npm run system:map && node scripts/enrich-system-map.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
