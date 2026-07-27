@@ -56,3 +56,5 @@ artifacts/load/*.json
 supabase/.branches/
 playwright-report/
 test-results/
+
+artifacts/synthetic-test-manifest.json
