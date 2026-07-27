@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import type { AdminAuditLog } from "../../lib/admin/audit";
 
@@ -18,7 +18,7 @@ export default function AuditCenterPage() {
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async (actionFilter = "") => {
     let query = supabase
       .from("admin_audit_logs")
       .select(
@@ -27,10 +27,10 @@ export default function AuditCenterPage() {
       .order("created_at", { ascending: false })
       .limit(200);
 
-    if (filter.trim()) {
+    if (actionFilter.trim()) {
       query = query.ilike(
         "action_key",
-        `%${filter.trim()}%`
+        `%${actionFilter.trim()}%`
       );
     }
 
@@ -42,7 +42,7 @@ export default function AuditCenterPage() {
     }
 
     setLogs((data || []) as AdminAuditLog[]);
-  }
+  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -50,7 +50,7 @@ export default function AuditCenterPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [load]);
 
   return (
     <main className="min-h-screen bg-[#050807] px-6 py-10 text-white">
@@ -87,7 +87,7 @@ export default function AuditCenterPage() {
 
               <button
                 type="button"
-                onClick={() => void load()}
+                onClick={() => void load(filter)}
                 className="rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-sm font-black text-amber-100"
               >
                 Search

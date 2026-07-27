@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import DashboardShell from "../components/DashboardShell";
 import { createClient } from "../../lib/supabase/client";
@@ -956,7 +957,7 @@ export default function BookingRequestsPage() {
 
                           {getSafeImageUrl(businessProfile?.manual_payment_qr_url) && (
                             <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white">
-                              <img
+                              <Image
                                 src={getSafeImageUrl(
                                   businessProfile?.manual_payment_qr_url
                                 )}
@@ -964,6 +965,9 @@ export default function BookingRequestsPage() {
                                   businessProfile?.manual_payment_qr_caption ||
                                   t("manualPayments.qrCode", "Payment QR code")
                                 }
+                                width={1200}
+                                height={800}
+                                unoptimized
                                 className="max-h-72 w-full object-contain"
                               />
 

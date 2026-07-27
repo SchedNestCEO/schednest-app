@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -5,9 +6,11 @@ return (
 <header className="sticky top-0 z-50 border-b border-white/10 bg-surface-dark/80 backdrop-blur-xl">
 <nav className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6">
 <Link href="/" className="flex items-center gap-3">
-<img
+<Image
 src="/logo.png"
 alt="SchedNest logo"
+width={40}
+height={40}
 className="h-10 w-10 object-contain brightness-0 invert"
 />
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
@@ -299,7 +300,6 @@ const publicBookingCopy = {
   },
 };
 
-const days = publicBookingCopy.en.days;
 
 const preferredTimeOptions = Array.from({ length: 36 }, (_, index) => {
   const totalMinutes = 6 * 60 + index * 30;
@@ -1776,23 +1776,29 @@ export default function PublicBookingPage() {
                         : "border-white/10 bg-black/20"
                     }`}
                   >
-                    <img
+                    <Image
                       src={getSafeImageUrl(selectedServiceImages[0].image_url)}
                       alt={
                         selectedServiceImages[0].caption ||
                         selectedService.name ||
                         "Service sample"
                       }
+                      width={1200}
+                      height={800}
+                      unoptimized
                       className="h-52 w-full object-cover"
                     />
 
                     {selectedServiceImages.length > 1 && (
                       <div className="grid grid-cols-4 gap-2 p-3">
                         {selectedServiceImages.slice(0, 5).map((image) => (
-                          <img
+                          <Image
                             key={image.id}
                             src={getSafeImageUrl(image.image_url)}
                             alt={image.caption || selectedService.name}
+                            width={1200}
+                            height={800}
+                            unoptimized
                             className="h-14 w-full rounded-xl object-cover"
                           />
                         ))}
@@ -2213,7 +2219,7 @@ export default function PublicBookingPage() {
                                 : "border-white/10 bg-white"
                             }`}
                           >
-                            <img
+                            <Image
                               src={getSafeImageUrl(
                                 pageData.business.manual_payment_qr_url
                               )}
@@ -2221,6 +2227,9 @@ export default function PublicBookingPage() {
                                 pageData.business.manual_payment_qr_caption ||
                                 t("manualPayments.qrCode", "Payment QR code")
                               }
+                              width={1200}
+                              height={800}
+                              unoptimized
                               className="max-h-80 w-full object-contain"
                             />
 

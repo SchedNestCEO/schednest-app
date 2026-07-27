@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
 type Ticket = { id: string; customer_email: string | null; product: string; subject: string; message: string; category: string; priority: string; status: string; escalation_required: boolean; suggested_reply: string | null };
@@ -11,11 +11,11 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const { data, error: queryError } = await supabase.from("support_tickets").select("*").neq("status", "closed").order("created_at", { ascending: false });
     if (queryError) return setError(queryError.message);
     setTickets((data || []) as Ticket[]);
-  }
+  }, [supabase]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -23,7 +23,7 @@ export default function SupportPage() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, []);
+  }, [load]);
 
   async function assignToMe(ticketId: string) {
     const { data: { user } } = await supabase.auth.getUser();
