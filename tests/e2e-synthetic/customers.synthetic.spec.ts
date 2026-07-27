@@ -111,6 +111,22 @@ test.describe.serial(
         }),
       ).toBeVisible();
 
+      await expect(
+        page.getByText(
+          "Create your business profile before adding customers.",
+          {
+            exact: true,
+          },
+        ),
+      ).toHaveCount(0);
+
+      await expect(
+        page.getByRole("heading", {
+          name: "Synthetic Customer A",
+          level: 3,
+        }),
+      ).toBeVisible();
+
       const addCustomerButton = page.getByRole(
         "button",
         {
@@ -155,6 +171,13 @@ test.describe.serial(
       await form
         .locator('button[type="submit"]')
         .click();
+
+      await expect(
+        page.getByRole("heading", {
+          name: customerName,
+          level: 3,
+        }),
+      ).toBeVisible();
 
       const search = page.getByPlaceholder(
         "Search by name, email, phone, notes, or status...",

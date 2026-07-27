@@ -18,6 +18,10 @@ const systemMap = JSON.parse(readFileSync(mapPath, "utf8"));
 
 const PUBLIC_SMOKE_TEST = "tests/e2e/public-smoke.spec.ts";
 const AUTH_BEHAVIOR_TEST = "tests/e2e/auth-behavior.spec.ts";
+const CUSTOMER_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/customers.synthetic.spec.ts";
+const SERVICE_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/services.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -243,6 +247,14 @@ function assignExistingTests(capability) {
 
   if (authBehaviorRoutes.has(capability.route)) {
     tests.add(AUTH_BEHAVIOR_TEST);
+  }
+
+  if (capability.route === "/dashboard/customers") {
+    tests.add(CUSTOMER_SYNTHETIC_TEST);
+  }
+
+  if (capability.route === "/dashboard/services") {
+    tests.add(SERVICE_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();

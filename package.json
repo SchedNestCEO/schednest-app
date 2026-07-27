@@ -37,7 +37,7 @@
     "sprint7:verify": "node scripts/verify-sprint7.mjs",
     "system:map:enrich": "npm run system:map && node scripts/enrich-system-map.mjs",
     "test:synthetic": "vitest run --config vitest.synthetic.config.ts",
-    "test:e2e:synthetic": "node --env-file=.env.local ./node_modules/@playwright/test/cli.js test --config playwright.synthetic.config.ts"
+    "test:e2e:synthetic": "SCHEDNEST_ALLOW_SYNTHETIC_TEST_DATA=true SCHEDNEST_TEST_ENVIRONMENT=true SCHEDNEST_TEST_SUPABASE_PROJECT=rjuzyqabsagapyvmcbmv SCHEDNEST_SYNTHETIC_EMAIL_DOMAIN=schednest.test SCHEDNEST_INTERCEPT_EMAIL=true node --env-file=.env.local ./node_modules/@playwright/test/cli.js test --config playwright.synthetic.config.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
