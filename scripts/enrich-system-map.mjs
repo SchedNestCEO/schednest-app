@@ -22,6 +22,8 @@ const CUSTOMER_SYNTHETIC_TEST =
   "tests/e2e-synthetic/customers.synthetic.spec.ts";
 const SERVICE_SYNTHETIC_TEST =
   "tests/e2e-synthetic/services.synthetic.spec.ts";
+const BOOKING_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/bookings.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -255,6 +257,10 @@ function assignExistingTests(capability) {
 
   if (capability.route === "/dashboard/services") {
     tests.add(SERVICE_SYNTHETIC_TEST);
+  }
+
+  if (capability.route === "/dashboard/bookings") {
+    tests.add(BOOKING_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
