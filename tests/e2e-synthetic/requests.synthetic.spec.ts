@@ -1,6 +1,7 @@
 import {
   expect,
   test,
+  type Locator,
   type Page,
 } from "@playwright/test";
 import {
@@ -16,6 +17,9 @@ import {
 import {
   seedSyntheticTestData,
 } from "../fixtures/seed";
+import {
+  seedSyntheticPendingBooking,
+} from "../fixtures/bookings";
 import type {
   SyntheticTestManifest,
 } from "../fixtures/manifest";
@@ -43,27 +47,10 @@ async function signIn(
   await expect(page).toHaveURL(/\/dashboard(?:\/|$)/);
 }
 
-function getFutureDateValue(daysAhead = 35): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysAhead);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(
-    2,
-    "0",
-  );
-  const day = String(date.getDate()).padStart(
-    2,
-    "0",
-  );
-
-  return `${year}-${month}-${day}`;
-}
-
 function requestContainer(
   page: Page,
   note: string,
-) {
+): Locator {
   return page
     .getByText(note, {
       exact: true,
@@ -71,109 +58,6 @@ function requestContainer(
     .locator(
       "xpath=ancestor::div[.//button[normalize-space()='View details'] and .//button[normalize-space()='Approve']][1]",
     );
-}
-
-async function createPendingBooking(
-  page: Page,
-): Promise<void> {
-  await page.goto("/dashboard/bookings", {
-    waitUntil: "domcontentloaded",
-  });
-
-  await expect(
-    page.getByRole("heading", {
-      name: "Manage your schedule.",
-      level: 1,
-    }),
-  ).toBeVisible();
-
-  const form = page
-    .locator("form")
-    .filter({
-      has: page.getByRole("button", {
-        name: "Create booking",
-        exact: true,
-      }),
-    });
-
-  if (!(await form.isVisible())) {
-    await page
-      .getByRole("button", {
-        name: "Add booking",
-        exact: true,
-      })
-      .click();
-  }
-
-  await expect(form).toBeVisible();
-
-  const selects = form.locator("select");
-  const customerSelect = selects.nth(0);
-  const serviceSelect = selects.nth(1);
-  const statusSelect = selects.nth(2);
-  const sourceSelect = selects.nth(3);
-
-  const customerOption =
-    customerSelect.locator("option", {
-      hasText: "Synthetic Customer A",
-    });
-
-  const serviceOption =
-    serviceSelect.locator("option", {
-      hasText: "Synthetic Consultation A",
-    });
-
-  await expect(customerOption).toHaveCount(1, {
-    timeout: 20_000,
-  });
-
-  await expect(serviceOption).toHaveCount(1, {
-    timeout: 20_000,
-  });
-
-  const customerValue =
-    await customerOption.getAttribute("value");
-  const serviceValue =
-    await serviceOption.getAttribute("value");
-
-  if (!customerValue || !serviceValue) {
-    throw new Error(
-      "Synthetic booking form options are missing values.",
-    );
-  }
-
-  await customerSelect.selectOption(customerValue);
-  await serviceSelect.selectOption(serviceValue);
-
-  await form
-    .locator('input[type="date"]')
-    .fill(getFutureDateValue());
-
-  await form
-    .locator('input[type="time"]')
-    .fill("11:23");
-
-  await statusSelect.selectOption("pending");
-  await sourceSelect.selectOption("booking_page");
-
-  await form
-    .getByPlaceholder(
-      "Example: Customer asked for morning appointment.",
-    )
-    .fill(requestNote);
-
-  await form
-    .getByRole("button", {
-      name: "Create booking",
-      exact: true,
-    })
-    .click();
-
-  await expect(
-    page.getByText(requestNote, {
-      exact: true,
-    }),
-  ).toBeVisible();
 }
 
 test.describe.serial(
@@ -206,8 +90,20 @@ test.describe.serial(
     test("Owner A can approve a pending request", async ({
       page,
     }) => {
+      const tenantA = manifest.tenants.find(
+        ({ actor }) => actor === "business-owner-a",
+      );
+
+      if (!tenantA) {
+        throw new Error("Synthetic tenant A is missing.");
+      }
+
+      await seedSyntheticPendingBooking({
+        tenant: tenantA,
+        note: requestNote,
+      });
+
       await signIn(page, ownerA);
-      await createPendingBooking(page);
 
       await page.goto("/dashboard/requests", {
         waitUntil: "domcontentloaded",

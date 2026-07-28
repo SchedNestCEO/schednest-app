@@ -17,6 +17,9 @@ import {
 import {
   seedSyntheticTestData,
 } from "../fixtures/seed";
+import {
+  seedSyntheticPendingBooking,
+} from "../fixtures/bookings";
 import type {
   SyntheticTestManifest,
 } from "../fixtures/manifest";
@@ -51,17 +54,6 @@ async function signIn(
   await expect(page).toHaveURL(/\/dashboard(?:\/|$)/);
 }
 
-function futureDate(daysAhead = 35): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysAhead);
-
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
 function metricCard(
   page: Page,
   href: string,
@@ -75,136 +67,6 @@ function metricCard(
       }),
     })
     .first();
-}
-
-async function createPendingBooking(
-  page: Page,
-): Promise<void> {
-  await page.goto("/dashboard/bookings", {
-    waitUntil: "domcontentloaded",
-  });
-
-  const addButton = page.getByRole("button", {
-    name: /add booking|new booking|create booking/i,
-  });
-
-  await expect(addButton).toBeVisible({
-    timeout: 20_000,
-  });
-  await addButton.click();
-
-  const form = page.locator("form").filter({
-    has: page.getByRole("button", {
-      name: /save booking|create booking/i,
-    }),
-  });
-
-  await expect(form).toBeVisible();
-
-  const selects = form.locator("select");
-
-  const customerSelect = selects.nth(0);
-  const serviceSelect = selects.nth(1);
-
-  const syntheticCustomerOption =
-    customerSelect.locator("option", {
-      hasText: "Synthetic Customer A",
-    });
-
-  const syntheticServiceOption =
-    serviceSelect.locator("option", {
-      hasText: "Synthetic Consultation A",
-    });
-
-  await expect(
-    syntheticCustomerOption,
-  ).toHaveCount(1, {
-    timeout: 20_000,
-  });
-
-  await expect(
-    syntheticServiceOption,
-  ).toHaveCount(1, {
-    timeout: 20_000,
-  });
-
-  const customerValue =
-    await syntheticCustomerOption.getAttribute(
-      "value",
-    );
-
-  const serviceValue =
-    await syntheticServiceOption.getAttribute(
-      "value",
-    );
-
-  if (!customerValue || !serviceValue) {
-    throw new Error(
-      "Synthetic customer or service option is missing a value.",
-    );
-  }
-
-  await customerSelect.selectOption(
-    customerValue,
-  );
-
-  await serviceSelect.selectOption(
-    serviceValue,
-  );
-
-  await form
-    .locator('input[type="date"]')
-    .fill(futureDate());
-
-  await form
-    .locator('input[type="time"]')
-    .fill("13:17");
-
-  await selects.nth(2).selectOption("pending");
-  await selects.nth(3).selectOption("booking_page");
-
-  await form
-    .getByPlaceholder(
-      "Example: Customer asked for morning appointment.",
-    )
-    .fill(uniqueNote);
-
-  await form
-    .getByRole("button", {
-      name: "Create booking",
-      exact: true,
-    })
-    .click();
-
-  await expect(
-    page.getByText(uniqueNote, {
-      exact: true,
-    }),
-  ).toBeVisible({
-    timeout: 20_000,
-  });
-
-  // Confirm the pending booking is readable through the same
-  // tenant-scoped query used by the requests workflow before
-  // asserting the dashboard aggregate.
-  await page.goto("/dashboard/requests", {
-    waitUntil: "domcontentloaded",
-  });
-
-  await expect(
-    page.getByRole("heading", {
-      name: "Review booking requests.",
-      level: 1,
-    }),
-  ).toBeVisible();
-
-  await expect(
-    page.getByText(uniqueNote, {
-      exact: true,
-    }),
-  ).toBeVisible({
-    timeout: 20_000,
-  });
 }
 
 test.describe.serial(
@@ -237,8 +99,20 @@ test.describe.serial(
     test("Owner A dashboard shows tenant-scoped metrics and navigation", async ({
       page,
     }) => {
+      const tenantA = manifest.tenants.find(
+        ({ actor }) => actor === "business-owner-a",
+      );
+
+      if (!tenantA) {
+        throw new Error("Synthetic tenant A is missing.");
+      }
+
+      await seedSyntheticPendingBooking({
+        tenant: tenantA,
+        note: uniqueNote,
+      });
+
       await signIn(page, ownerA);
-      await createPendingBooking(page);
 
       await page.goto("/dashboard", {
         waitUntil: "domcontentloaded",

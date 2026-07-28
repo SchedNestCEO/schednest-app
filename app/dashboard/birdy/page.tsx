@@ -547,10 +547,16 @@ export default function BirdyPage() {
             updated_at: now,
           };
 
+    if (!business) {
+      setMessage("Create your business profile before updating suggestions.");
+      return;
+    }
+
     const { error } = await supabase
       .from("birdy_suggestions")
       .update(updatePayload)
-      .eq("id", suggestionId);
+      .eq("id", suggestionId)
+      .eq("business_id", business.id);
 
     if (error) {
       setMessage(error.message);
