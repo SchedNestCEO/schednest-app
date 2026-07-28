@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-28T00:51:49.359Z",
+  "generatedAt": "2026-07-28T01:02:22.718Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
     "total": 96,
     "pages": 71,
     "APIs": 21,
     "layouts": 4,
-    "assignedTests": 19,
-    "unassignedTests": 77,
+    "assignedTests": 20,
+    "unassignedTests": 76,
     "critical": 13,
     "high": 14
   },
@@ -1858,8 +1858,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/booking-page.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3956,6 +3958,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-28T00:51:49.479Z",
+  "enrichedAt": "2026-07-28T01:02:22.840Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }
