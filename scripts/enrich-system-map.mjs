@@ -34,6 +34,8 @@ const PROFILE_SYNTHETIC_TEST =
   "tests/e2e-synthetic/profile.synthetic.spec.ts";
 const ACCOUNT_SYNTHETIC_TEST =
   "tests/e2e-synthetic/account.synthetic.spec.ts";
+const DASHBOARD_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/dashboard.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -291,6 +293,10 @@ function assignExistingTests(capability) {
 
   if (capability.route === "/dashboard/account") {
     tests.add(ACCOUNT_SYNTHETIC_TEST);
+  }
+
+  if (capability.route === "/dashboard") {
+    tests.add(DASHBOARD_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
