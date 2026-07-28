@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-28T00:38:45.084Z",
+  "generatedAt": "2026-07-28T00:51:49.359Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
     "total": 96,
     "pages": 71,
     "APIs": 21,
     "layouts": 4,
-    "assignedTests": 18,
-    "unassignedTests": 78,
+    "assignedTests": 19,
+    "unassignedTests": 77,
     "critical": 13,
     "high": 14
   },
@@ -2070,8 +2070,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/requests.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3954,6 +3956,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-28T00:38:45.212Z",
+  "enrichedAt": "2026-07-28T00:51:49.479Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }
