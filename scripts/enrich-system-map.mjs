@@ -38,6 +38,10 @@ const DASHBOARD_SYNTHETIC_TEST =
   "tests/e2e-synthetic/dashboard.synthetic.spec.ts";
 const BIRDY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/birdy.synthetic.spec.ts";
+const PUBLIC_BOOKING_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/public-booking.synthetic.spec.ts";
+const CRITICAL_API_SECURITY_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/critical-api-security.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -303,6 +307,22 @@ function assignExistingTests(capability) {
 
   if (capability.route === "/dashboard/birdy") {
     tests.add(BIRDY_SYNTHETIC_TEST);
+  }
+
+  if (capability.route === "/book/[slug]") {
+    tests.add(PUBLIC_BOOKING_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/api/booking-notifications" ||
+    capability.route === "/api/booking-reminders" ||
+    capability.route ===
+      "/api/stripe/create-checkout-session" ||
+    capability.route ===
+      "/api/stripe/create-billing-portal-session" ||
+    capability.route === "/api/stripe/webhook"
+  ) {
+    tests.add(CRITICAL_API_SECURITY_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();

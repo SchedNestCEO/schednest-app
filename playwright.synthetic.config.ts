@@ -33,7 +33,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    command:
+      "REMINDER_CRON_SECRET=schednest-synthetic-reminder-secret " +
+      "CRON_SECRET=schednest-synthetic-cron-secret " +
+      "STRIPE_WEBHOOK_SECRET=whsec_schednest_synthetic_only " +
+      "npm run dev",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
