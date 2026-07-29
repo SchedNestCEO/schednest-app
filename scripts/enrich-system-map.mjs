@@ -52,6 +52,8 @@ const SHARED_PLATFORM_SYNTHETIC_TEST =
   "tests/e2e-synthetic/shared-platform.synthetic.spec.ts";
 const BIRDY_PLATFORM_SYNTHETIC_TEST =
   "tests/e2e-synthetic/birdy-platform.synthetic.spec.ts";
+const FOUNDER_OPERATIONS_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/founder-operations.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -389,6 +391,13 @@ function assignExistingTests(capability) {
     capability.route === "/api/platform/birdy/permissions"
   ) {
     tests.add(BIRDY_PLATFORM_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/dashboard/founder-time" ||
+    capability.route === "/dashboard/revenue-impact"
+  ) {
+    tests.add(FOUNDER_OPERATIONS_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();

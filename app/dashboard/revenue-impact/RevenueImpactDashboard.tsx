@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
-const ADMIN_EMAIL = "hello@schednest.com";
-
 type ImpactEntry = {
   id: string;
   client_id: string | null;
@@ -51,10 +49,40 @@ export default function RevenueImpactDashboard() {
   const loadEntries = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    const { data: { user } } = await supabase.auth.getUser();
-    const admin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setIsAdmin(false);
+      setEntries([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const {
+      data: adminMembership,
+      error: adminError,
+    } = await supabase
+      .from("platform_admins")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (adminError) {
+      setIsAdmin(false);
+      setEntries([]);
+      setError(adminError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const admin = Boolean(adminMembership);
     setIsAdmin(admin);
-    if (!user || !admin) {
+
+    if (!admin) {
       setEntries([]);
       setIsLoading(false);
       return;

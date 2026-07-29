@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 
-const ADMIN_EMAIL = "hello@schednest.com";
 const DEFAULT_RATE = 50;
 const OPENING_HOURS = 204;
 const TRACKING_START = "2026-06-24T12:00:00-07:00";
@@ -75,11 +74,42 @@ export default function FounderTimeTracker() {
     setIsLoading(true);
     setError(null);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    const email = user?.email?.toLowerCase() || "";
-    setIsAdmin(email === ADMIN_EMAIL);
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (!user || email !== ADMIN_EMAIL) {
+    if (userError || !user) {
+      setIsAdmin(false);
+      setEntries([]);
+      setActiveEntry(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const {
+      data: adminMembership,
+      error: adminError,
+    } = await supabase
+      .from("platform_admins")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (adminError) {
+      setIsAdmin(false);
+      setEntries([]);
+      setActiveEntry(null);
+      setError(adminError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const admin = Boolean(adminMembership);
+    setIsAdmin(admin);
+
+    if (!admin) {
       setEntries([]);
       setActiveEntry(null);
       setIsLoading(false);
