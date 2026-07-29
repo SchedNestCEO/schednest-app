@@ -48,6 +48,8 @@ const ADMIN_API_SECURITY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/admin-api-security.synthetic.spec.ts";
 const PLATFORM_SETTINGS_PRIVACY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/platform-settings-privacy.synthetic.spec.ts";
+const SHARED_PLATFORM_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/shared-platform.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -356,6 +358,22 @@ function assignExistingTests(capability) {
     capability.route === "/api/platform/privacy/export"
   ) {
     tests.add(PLATFORM_SETTINGS_PRIVACY_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/activity" ||
+    capability.route === "/connectors" ||
+    capability.route === "/coordination" ||
+    capability.route === "/files" ||
+    capability.route === "/notifications" ||
+    capability.route === "/api/platform/activity" ||
+    capability.route === "/api/platform/connectors" ||
+    capability.route === "/api/platform/coordination/conflicts" ||
+    capability.route === "/api/platform/coordination/items" ||
+    capability.route === "/api/platform/files" ||
+    capability.route === "/api/platform/notifications"
+  ) {
+    tests.add(SHARED_PLATFORM_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
