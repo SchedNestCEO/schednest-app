@@ -46,6 +46,8 @@ const ADMIN_ACCESS_SYNTHETIC_TEST =
   "tests/e2e-synthetic/admin-access.synthetic.spec.ts";
 const ADMIN_API_SECURITY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/admin-api-security.synthetic.spec.ts";
+const PLATFORM_SETTINGS_PRIVACY_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/platform-settings-privacy.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -344,6 +346,16 @@ function assignExistingTests(capability) {
     capability.route === "/api/admin/performance"
   ) {
     tests.add(ADMIN_API_SECURITY_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/settings" ||
+    capability.route === "/settings/privacy" ||
+    capability.route === "/api/platform/settings" ||
+    capability.route === "/api/platform/privacy/consent" ||
+    capability.route === "/api/platform/privacy/export"
+  ) {
+    tests.add(PLATFORM_SETTINGS_PRIVACY_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
