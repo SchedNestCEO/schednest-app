@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-29T00:56:39.828Z",
+  "generatedAt": "2026-07-29T02:33:44.119Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
-    "total": 96,
+    "total": 97,
     "pages": 71,
     "APIs": 21,
-    "layouts": 4,
-    "assignedTests": 30,
-    "unassignedTests": 66,
+    "layouts": 5,
+    "assignedTests": 42,
+    "unassignedTests": 55,
     "critical": 13,
-    "high": 14
+    "high": 15
   },
   "capabilities": [
     {
@@ -126,6 +126,46 @@
       ]
     },
     {
+      "id": "layout:/admin",
+      "type": "layout",
+      "route": "/admin",
+      "source": "app/admin/layout.tsx",
+      "area": "admin",
+      "access": "authenticated",
+      "roles": [
+        "platform-admin"
+      ],
+      "states": [
+        "success",
+        "validation-error",
+        "unauthorized",
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [
+          "platform_admins"
+        ],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "high",
+      "syntheticActors": [
+        "platform-admin"
+      ]
+    },
+    {
       "id": "page:/admin",
       "type": "page",
       "route": "/admin",
@@ -152,8 +192,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -192,8 +234,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -228,8 +272,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -264,8 +310,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -300,8 +348,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -340,8 +390,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -378,8 +430,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -415,13 +469,16 @@
         "tables": [
           "business_profiles",
           "business_subscriptions",
+          "platform_admins",
           "subscription_plans"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [
         "Canonical subscription-management interface reached through /dashboard/subscriptions."
       ],
@@ -462,8 +519,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-access.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -500,8 +559,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-api-security.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -540,8 +601,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/admin-api-security.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -3979,6 +4042,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-29T00:56:39.999Z",
+  "enrichedAt": "2026-07-29T02:33:44.285Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }

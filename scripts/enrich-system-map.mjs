@@ -42,6 +42,10 @@ const PUBLIC_BOOKING_SYNTHETIC_TEST =
   "tests/e2e-synthetic/public-booking.synthetic.spec.ts";
 const CRITICAL_API_SECURITY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/critical-api-security.synthetic.spec.ts";
+const ADMIN_ACCESS_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/admin-access.synthetic.spec.ts";
+const ADMIN_API_SECURITY_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/admin-api-security.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -323,6 +327,23 @@ function assignExistingTests(capability) {
     capability.route === "/api/stripe/webhook"
   ) {
     tests.add(CRITICAL_API_SECURITY_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.area === "admin" &&
+    (
+      capability.type === "page" ||
+      capability.type === "layout"
+    )
+  ) {
+    tests.add(ADMIN_ACCESS_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/api/admin/health" ||
+    capability.route === "/api/admin/performance"
+  ) {
+    tests.add(ADMIN_API_SECURITY_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();

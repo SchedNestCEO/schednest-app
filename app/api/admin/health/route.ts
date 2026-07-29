@@ -87,7 +87,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const { error: snapshotError } = await supabase
+  const {
+    data: snapshots,
+    error: snapshotError,
+  } = await supabase
     .from("platform_health_snapshots")
     .insert(
       checks.map((check) => ({
@@ -99,7 +102,8 @@ export async function GET(request: NextRequest) {
         message: check.message,
         metadata: check.metadata,
       })),
-    );
+    )
+    .select("id");
 
   if (snapshotError) {
     return NextResponse.json(
@@ -117,6 +121,9 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     overall,
     checks,
+    snapshotIds: (snapshots || []).map(
+      ({ id }) => id,
+    ),
     checkedAt: new Date().toISOString(),
   });
 }

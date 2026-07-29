@@ -48,8 +48,6 @@ type EditableSubscription = {
   notes: string;
 };
 
-const ADMIN_EMAIL = "hello@schednest.com";
-
 function formatMoney(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
@@ -190,11 +188,18 @@ export default function AdminSubscriptionsPage() {
       return;
     }
 
-    const userEmail = user.email?.toLowerCase();
+    const { data: admin, error: adminError } = await supabase
+      .from("platform_admins")
+      .select("role,status")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
 
-    if (userEmail !== ADMIN_EMAIL) {
+    if (adminError || !admin) {
       setIsAdmin(false);
-      setMessage("This page is only available to the SchedNest admin account.");
+      setMessage(
+        "This page is only available to an active SchedNest platform administrator.",
+      );
       setIsLoading(false);
       return;
     }
