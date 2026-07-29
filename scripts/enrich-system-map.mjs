@@ -54,6 +54,8 @@ const BIRDY_PLATFORM_SYNTHETIC_TEST =
   "tests/e2e-synthetic/birdy-platform.synthetic.spec.ts";
 const FOUNDER_OPERATIONS_SYNTHETIC_TEST =
   "tests/e2e-synthetic/founder-operations.synthetic.spec.ts";
+const STUDENT_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/student.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -171,7 +173,10 @@ function inferRoles(capability, authOperations) {
     return ["medical-user", "caregiver"];
   }
 
-  if (route.startsWith("/student")) {
+  if (
+    route.startsWith("/student") ||
+    route.startsWith("/api/student")
+  ) {
     return ["student"];
   }
 
@@ -398,6 +403,14 @@ function assignExistingTests(capability) {
     capability.route === "/dashboard/revenue-impact"
   ) {
     tests.add(FOUNDER_OPERATIONS_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/student" ||
+    capability.route.startsWith("/student/") ||
+    capability.route === "/api/student/imports/process"
+  ) {
+    tests.add(STUDENT_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
