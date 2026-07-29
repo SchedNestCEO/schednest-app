@@ -50,6 +50,8 @@ const PLATFORM_SETTINGS_PRIVACY_SYNTHETIC_TEST =
   "tests/e2e-synthetic/platform-settings-privacy.synthetic.spec.ts";
 const SHARED_PLATFORM_SYNTHETIC_TEST =
   "tests/e2e-synthetic/shared-platform.synthetic.spec.ts";
+const BIRDY_PLATFORM_SYNTHETIC_TEST =
+  "tests/e2e-synthetic/birdy-platform.synthetic.spec.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -374,6 +376,19 @@ function assignExistingTests(capability) {
     capability.route === "/api/platform/notifications"
   ) {
     tests.add(SHARED_PLATFORM_SYNTHETIC_TEST);
+  }
+
+  if (
+    capability.route === "/birdy/decisions" ||
+    capability.route === "/birdy/memory" ||
+    capability.route === "/birdy/optimizer" ||
+    capability.route === "/birdy/permissions" ||
+    capability.route === "/api/platform/birdy/decisions" ||
+    capability.route === "/api/platform/birdy/memory" ||
+    capability.route === "/api/platform/birdy/optimizer" ||
+    capability.route === "/api/platform/birdy/permissions"
+  ) {
+    tests.add(BIRDY_PLATFORM_SYNTHETIC_TEST);
   }
 
   return [...tests].sort();
