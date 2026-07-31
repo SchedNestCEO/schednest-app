@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ProductShell from "../../../components/products/ProductShell";
 import { teamsNavItems } from "../../../lib/products/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import { resolveTeamWorkspace } from "../../../lib/teams/workspace";
 
 type Workspace = { id: string; name: string };
 
@@ -82,13 +83,13 @@ export default function TeamTasksPage() {
       return;
     }
 
-    const { data: workspaceData, error: workspaceError } = await supabase
-      .from("team_workspaces")
-      .select("id, name")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const {
+      workspace: workspaceData,
+      error: workspaceError,
+    } = await resolveTeamWorkspace(
+      supabase,
+      user.id,
+    );
 
     if (workspaceError || !workspaceData) {
       setErrorMessage(
@@ -156,10 +157,21 @@ export default function TeamTasksPage() {
       return;
     }
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setErrorMessage("You must be signed in.");
+      return;
+    }
+
     setSaving(true);
 
     const { error } = await supabase.from("team_tasks").insert({
       workspace_id: workspace.id,
+      created_by: user.id,
       project_id: form.projectId || null,
       assigned_to: form.assignedTo || null,
       title: form.title.trim(),

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ProductShell from "../../../components/products/ProductShell";
 import { teamsNavItems } from "../../../lib/products/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import {
+  isTeamWorkspaceOwner,
+  resolveTeamWorkspace,
+} from "../../../lib/teams/workspace";
 
 type TeamWorkspace = {
   id: string;
@@ -58,6 +62,7 @@ export default function TeamMembersPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const loadMembers = useCallback(async () => {
     setLoading(true);
@@ -74,13 +79,15 @@ export default function TeamMembersPage() {
       return;
     }
 
-    const { data: workspaceData, error: workspaceError } = await supabase
-      .from("team_workspaces")
-      .select("id, owner_id, name, description")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    setCurrentUserId(user.id);
+
+    const {
+      workspace: workspaceData,
+      error: workspaceError,
+    } = await resolveTeamWorkspace(
+      supabase,
+      user.id,
+    );
 
     if (workspaceError) {
       setErrorMessage(workspaceError.message);
@@ -88,7 +95,8 @@ export default function TeamMembersPage() {
       return;
     }
 
-    let currentWorkspace = (workspaceData || null) as TeamWorkspace | null;
+    let currentWorkspace =
+      (workspaceData || null) as TeamWorkspace | null;
 
     if (!currentWorkspace) {
       const { data: createdWorkspace, error: createWorkspaceError } =
@@ -272,6 +280,16 @@ export default function TeamMembersPage() {
     setMessage("Workspace name updated.");
   }
 
+  const canManageWorkspace =
+    Boolean(
+      workspace &&
+        currentUserId &&
+        isTeamWorkspaceOwner(
+          workspace,
+          currentUserId,
+        ),
+    );
+
   return (
     <ProductShell
       productName="SchedNest Teams"
@@ -300,6 +318,7 @@ export default function TeamMembersPage() {
                 Workspace name
               </span>
               <input
+                disabled={!canManageWorkspace}
                 value={workspaceName}
                 onChange={(event) => setWorkspaceName(event.target.value)}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white outline-none focus:border-edition-primary/40"
@@ -308,6 +327,7 @@ export default function TeamMembersPage() {
 
             <button
               type="button"
+              disabled={!canManageWorkspace}
               onClick={() => void saveWorkspaceName()}
               className="mt-4 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20"
             >
@@ -324,6 +344,7 @@ export default function TeamMembersPage() {
             <label className="mt-5 block">
               <span className="text-sm font-bold text-gray-300">Email</span>
               <input
+                disabled={!canManageWorkspace}
                 type="email"
                 value={form.email}
                 onChange={(event) =>
@@ -340,6 +361,7 @@ export default function TeamMembersPage() {
             <label className="mt-4 block">
               <span className="text-sm font-bold text-gray-300">Role</span>
               <select
+                disabled={!canManageWorkspace}
                 value={form.role}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -358,7 +380,7 @@ export default function TeamMembersPage() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !canManageWorkspace}
               className="mt-5 rounded-2xl border border-edition-primary/20 bg-edition-primary/10 px-5 py-3 text-sm font-black text-edition-primary-soft transition hover:bg-edition-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? "Inviting..." : "Create invitation"}
@@ -434,7 +456,8 @@ export default function TeamMembersPage() {
                       </div>
                     </div>
 
-                    {member.role !== "owner" ? (
+                    {canManageWorkspace &&
+                    member.role !== "owner" ? (
                       <button
                         type="button"
                         onClick={() => void removeMember(member.id)}
@@ -445,7 +468,8 @@ export default function TeamMembersPage() {
                     ) : null}
                   </div>
 
-                  {member.role !== "owner" ? (
+                  {canManageWorkspace &&
+                  member.role !== "owner" ? (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {(
                         ["admin", "manager", "member", "viewer"] as TeamMembership["role"][]

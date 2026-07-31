@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ProductShell from "../../components/products/ProductShell";
 import { teamsNavItems } from "../../lib/products/navigation";
 import { createClient } from "../../lib/supabase/client";
+import { resolveTeamWorkspace } from "../../lib/teams/workspace";
 
 type TeamWorkspace = {
   id: string;
@@ -57,13 +58,13 @@ export default function TeamsDashboardPage() {
       return;
     }
 
-    const { data: workspaceData, error: workspaceError } = await supabase
-      .from("team_workspaces")
-      .select("id, name")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+    const {
+      workspace: workspaceData,
+      error: workspaceError,
+    } = await resolveTeamWorkspace(
+      supabase,
+      user.id,
+    );
 
     if (workspaceError) {
       setErrorMessage(workspaceError.message);
