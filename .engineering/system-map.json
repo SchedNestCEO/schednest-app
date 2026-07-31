@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-29T23:50:29.911Z",
+  "generatedAt": "2026-07-31T16:11:53.589Z",
   "generator": "scripts/generate-system-map.mjs",
   "summary": {
-    "total": 97,
-    "pages": 71,
-    "APIs": 21,
+    "total": 99,
+    "pages": 72,
+    "APIs": 22,
     "layouts": 5,
-    "assignedTests": 75,
-    "unassignedTests": 22,
-    "critical": 13,
+    "assignedTests": 99,
+    "unassignedTests": 0,
+    "critical": 14,
     "high": 15
   },
   "capabilities": [
@@ -34,8 +34,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e/auth-behavior.spec.ts",
+        "tests/e2e/public-smoke.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -1355,6 +1358,43 @@
       ]
     },
     {
+      "id": "api:/api/stripe/create-deposit-session",
+      "type": "api",
+      "route": "/api/stripe/create-deposit-session",
+      "source": "app/api/stripe/create-deposit-session/route.ts",
+      "area": "api",
+      "access": "disabled",
+      "roles": [
+        "business-owner"
+      ],
+      "states": [
+        "operation-error"
+      ],
+      "dependencies": {
+        "tables": [],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [
+        "tests/e2e-synthetic/critical-api-security.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
+      "notes": [
+        "Endpoint intentionally returns HTTP 501 until booking ownership, server-derived deposit pricing, Stripe-session idempotency, and payment recovery are implemented."
+      ],
+      "auth": {
+        "operations": [],
+        "authenticated": false
+      },
+      "httpMethods": [
+        "POST"
+      ],
+      "criticality": "critical",
+      "syntheticActors": [
+        "business-owner"
+      ]
+    },
+    {
       "id": "api:/api/stripe/webhook",
       "type": "api",
       "route": "/api/stripe/webhook",
@@ -1374,6 +1414,7 @@
         "tables": [
           "business_profiles",
           "business_subscriptions",
+          "stripe_webhook_events",
           "subscription_plans"
         ],
         "APIs": [],
@@ -2537,8 +2578,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -2580,8 +2624,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2622,8 +2669,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2665,8 +2715,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2708,8 +2761,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2751,8 +2807,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2796,8 +2855,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2839,8 +2901,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2881,8 +2946,58 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
+      "notes": [],
+      "auth": {
+        "operations": [
+          "get-user"
+        ],
+        "authenticated": true
+      },
+      "httpMethods": [],
+      "criticality": "standard",
+      "syntheticActors": [
+        "caregiver",
+        "medical-user"
+      ]
+    },
+    {
+      "id": "page:/med/dashboard/family/[owner_id]",
+      "type": "page",
+      "route": "/med/dashboard/family/[owner_id]",
+      "source": "app/med/dashboard/family/[owner_id]/page.tsx",
+      "area": "med",
+      "access": "authenticated",
+      "roles": [
+        "medical-user",
+        "caregiver"
+      ],
+      "states": [
+        "loading",
+        "ready",
+        "empty",
+        "validation-error",
+        "operation-error",
+        "unauthorized"
+      ],
+      "dependencies": {
+        "tables": [
+          "med-documents",
+          "med_profiles",
+          "med_tasks"
+        ],
+        "APIs": [],
+        "externalServices": []
+      },
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2924,8 +3039,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -2969,8 +3087,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3013,8 +3134,11 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/med.synthetic.spec.ts",
+        "tests/integration/synthetic/med.synthetic.test.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3669,8 +3793,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [],
@@ -3706,6 +3832,7 @@
         "externalServices": []
       },
       "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts",
         "tests/e2e/public-smoke.spec.ts"
       ],
       "coverage": "partial",
@@ -3743,14 +3870,15 @@
         "tables": [
           "team_memberships",
           "team_projects",
-          "team_requests",
-          "team_workspaces"
+          "team_requests"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3786,14 +3914,15 @@
       ],
       "dependencies": {
         "tables": [
-          "team_availability",
-          "team_workspaces"
+          "team_availability"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3835,8 +3964,10 @@
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3872,14 +4003,15 @@
       ],
       "dependencies": {
         "tables": [
-          "team_projects",
-          "team_workspaces"
+          "team_projects"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3915,14 +4047,15 @@
       ],
       "dependencies": {
         "tables": [
-          "team_requests",
-          "team_workspaces"
+          "team_requests"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -3958,14 +4091,15 @@
       ],
       "dependencies": {
         "tables": [
-          "team_events",
-          "team_workspaces"
+          "team_events"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -4003,14 +4137,15 @@
         "tables": [
           "team_memberships",
           "team_projects",
-          "team_tasks",
-          "team_workspaces"
+          "team_tasks"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -4048,14 +4183,15 @@
         "tables": [
           "team_events",
           "team_memberships",
-          "team_tasks",
-          "team_workspaces"
+          "team_tasks"
         ],
         "APIs": [],
         "externalServices": []
       },
-      "tests": [],
-      "coverage": "unassigned",
+      "tests": [
+        "tests/e2e-synthetic/teams.synthetic.spec.ts"
+      ],
+      "coverage": "partial",
       "notes": [],
       "auth": {
         "operations": [
@@ -4109,6 +4245,6 @@
       ]
     }
   ],
-  "enrichedAt": "2026-07-29T23:50:30.039Z",
+  "enrichedAt": "2026-07-31T16:16:24.574Z",
   "enricher": "scripts/enrich-system-map.mjs"
 }

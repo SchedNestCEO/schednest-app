@@ -10,6 +10,7 @@ export type SyntheticActorName =
   | "public-customer-b"
   | "platform-admin"
   | "medical-user"
+  | "medical-user-b"
   | "caregiver"
   | "student"
   | "team-admin"
@@ -55,6 +56,7 @@ export function createSyntheticIdentitySet(
     "public-customer-b",
     "platform-admin",
     "medical-user",
+    "medical-user-b",
     "caregiver",
     "student",
     "team-admin",
@@ -62,9 +64,6 @@ export function createSyntheticIdentitySet(
   ];
 
   return Object.fromEntries(
-    actors.map((actor) => [
-      actor,
-      createSyntheticIdentity(actor, emailDomain),
-    ]),
+    actors.map((actor) => [actor, createSyntheticIdentity(actor, emailDomain)]),
   ) as Record<SyntheticActorName, SyntheticIdentity>;
 }

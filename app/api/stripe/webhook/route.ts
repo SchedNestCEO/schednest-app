@@ -61,8 +61,8 @@ function getPeriodEndFromInvoice(invoice: Stripe.Invoice | null | undefined) {
 async function getCurrentPeriodEnd(subscription: Stripe.Subscription) {
   const subscriptionWithPeriod = subscription as StripeSubscriptionWithPeriod;
 
-  const firstItem = subscription.items
-    .data[0] as StripeSubscriptionItemWithPeriod | undefined;
+  const firstItem = subscription.items.data[0] as
+    StripeSubscriptionItemWithPeriod | undefined;
 
   const directPeriodEnd =
     subscriptionWithPeriod.current_period_end ||
@@ -131,7 +131,7 @@ async function findPlanId(planKey: string) {
 
   if (planByNameError) {
     throw new Error(
-      `Could not look up plan by name: ${planByNameError.message}`
+      `Could not look up plan by name: ${planByNameError.message}`,
     );
   }
 
@@ -140,7 +140,7 @@ async function findPlanId(planKey: string) {
 
 async function findBusinessIdFromStripe(
   stripeCustomerId: string | null,
-  stripeSubscriptionId: string | null
+  stripeSubscriptionId: string | null,
 ) {
   if (!stripeCustomerId && !stripeSubscriptionId) return null;
 
@@ -155,7 +155,7 @@ async function findBusinessIdFromStripe(
 
     if (error) {
       throw new Error(
-        `Could not find business by Stripe subscription: ${error.message}`
+        `Could not find business by Stripe subscription: ${error.message}`,
       );
     }
 
@@ -173,7 +173,7 @@ async function findBusinessIdFromStripe(
 
     if (error) {
       throw new Error(
-        `Could not find business by Stripe customer: ${error.message}`
+        `Could not find business by Stripe customer: ${error.message}`,
       );
     }
 
@@ -188,7 +188,7 @@ async function findBusinessIdFromStripe(
 function getMetadataValue(
   primary: Stripe.Metadata | undefined,
   fallback: Stripe.Metadata | null | undefined,
-  key: string
+  key: string,
 ) {
   return primary?.[key] || fallback?.[key] || null;
 }
@@ -211,7 +211,7 @@ async function findOwnerIdForBusiness(businessId: string) {
 
 async function syncSubscriptionToSupabase(
   subscription: Stripe.Subscription,
-  fallbackMetadata?: Stripe.Metadata | null
+  fallbackMetadata?: Stripe.Metadata | null,
 ) {
   const adminClient = createAdminClient();
 
@@ -231,7 +231,7 @@ async function syncSubscriptionToSupabase(
 
   if (!businessId) {
     throw new Error(
-      `Missing business_id. Subscription=${stripeSubscriptionId}, Customer=${stripeCustomerId}, Price=${stripePriceId}`
+      `Missing business_id. Subscription=${stripeSubscriptionId}, Customer=${stripeCustomerId}, Price=${stripePriceId}`,
     );
   }
 
@@ -248,7 +248,9 @@ async function syncSubscriptionToSupabase(
     getMetadataValue(subscription.metadata, fallbackMetadata, "plan_key");
 
   if (!planKey) {
-    throw new Error(`Could not determine plan for Stripe price ${stripePriceId}`);
+    throw new Error(
+      `Could not determine plan for Stripe price ${stripePriceId}`,
+    );
   }
 
   const billingInterval =
@@ -256,12 +258,12 @@ async function syncSubscriptionToSupabase(
     getMetadataValue(
       subscription.metadata,
       fallbackMetadata,
-      "billing_interval"
+      "billing_interval",
     );
 
   if (!billingInterval) {
     throw new Error(
-      `Could not determine billing interval for Stripe price ${stripePriceId}`
+      `Could not determine billing interval for Stripe price ${stripePriceId}`,
     );
   }
 
@@ -306,7 +308,7 @@ async function syncSubscriptionToSupabase(
 }
 
 async function handleCheckoutSessionCompleted(
-  session: Stripe.Checkout.Session
+  session: Stripe.Checkout.Session,
 ) {
   if (session.mode !== "subscription") {
     return;
@@ -334,8 +336,11 @@ export async function POST(request: Request) {
 
   if (!webhookSecret) {
     return NextResponse.json(
-      { error: "Missing STRIPE_WEBHOOK_SECRET." },
-      { status: 500 }
+      {
+        error: "Stripe webhook is not configured.",
+        code: "STRIPE_WEBHOOK_NOT_CONFIGURED",
+      },
+      { status: 500 },
     );
   }
 
@@ -344,7 +349,7 @@ export async function POST(request: Request) {
   if (!signature) {
     return NextResponse.json(
       { error: "Missing Stripe signature." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -358,12 +363,59 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error ? error.message : "Webhook verification failed.";
 
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.warn("stripe_webhook_verification_failed", {
+      error: message,
+    });
+
+    return NextResponse.json(
+      {
+        error: "Webhook verification failed.",
+        code: "STRIPE_WEBHOOK_VERIFICATION_FAILED",
+      },
+      { status: 400 },
+    );
+  }
+
+  const adminClient = createAdminClient();
+
+  const { data: claimRows, error: claimError } = await adminClient.rpc(
+    "claim_stripe_webhook_event",
+    {
+      requested_event_id: event.id,
+      requested_event_type: event.type,
+    },
+  );
+
+  if (claimError) {
+    console.error("stripe_webhook_claim_failed", {
+      eventId: event.id,
+      eventType: event.type,
+      error: claimError.message,
+    });
+
+    return NextResponse.json(
+      {
+        error: "Webhook event could not be claimed.",
+        code: "STRIPE_WEBHOOK_CLAIM_FAILED",
+      },
+      { status: 500 },
+    );
+  }
+
+  const claim = Array.isArray(claimRows) ? claimRows[0] : claimRows;
+
+  if (!claim?.claimed) {
+    return NextResponse.json({
+      received: true,
+      duplicate: true,
+      eventStatus: claim?.event_status || "unknown",
+    });
   }
 
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+
       await handleCheckoutSessionCompleted(session);
     }
 
@@ -373,18 +425,66 @@ export async function POST(request: Request) {
       event.type === "customer.subscription.deleted"
     ) {
       const subscriptionEvent = event.data.object as Stripe.Subscription;
+
       const subscription = await retrieveExpandedSubscription(
-        subscriptionEvent.id
+        subscriptionEvent.id,
       );
 
       await syncSubscriptionToSupabase(subscription);
     }
 
-    return NextResponse.json({ received: true });
+    const completedAt = new Date().toISOString();
+
+    const { error: completionError } = await adminClient
+      .from("stripe_webhook_events")
+      .update({
+        status: "completed",
+        completed_at: completedAt,
+        failed_at: null,
+        last_error: null,
+        updated_at: completedAt,
+      })
+      .eq("stripe_event_id", event.id);
+
+    if (completionError) {
+      throw new Error(
+        `Webhook ledger completion failed: ${completionError.message}`,
+      );
+    }
+
+    return NextResponse.json({
+      received: true,
+      duplicate: false,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Webhook handler failed.";
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    const failedAt = new Date().toISOString();
+
+    const { error: failureLogError } = await adminClient
+      .from("stripe_webhook_events")
+      .update({
+        status: "failed",
+        failed_at: failedAt,
+        last_error: message,
+        updated_at: failedAt,
+      })
+      .eq("stripe_event_id", event.id);
+
+    console.error("stripe_webhook_processing_failed", {
+      eventId: event.id,
+      eventType: event.type,
+      error: message,
+      failureLogError: failureLogError?.message || null,
+    });
+
+    return NextResponse.json(
+      {
+        error: "Webhook processing failed.",
+        code: "STRIPE_WEBHOOK_PROCESSING_FAILED",
+      },
+      { status: 500 },
+    );
   }
 }

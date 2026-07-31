@@ -682,6 +682,166 @@ test.describe.serial(
         expect(
           exportBody.request?.status,
         ).toBe("pending");
+
+        const replayResponse =
+          await request.post(
+            "/api/platform/privacy/export",
+            {
+              headers: {
+                authorization:
+                  `Bearer ${ownerAToken}`,
+              },
+            },
+          );
+
+        expect(
+          replayResponse.status(),
+        ).toBe(200);
+
+        const replayBody =
+          (await replayResponse.json()) as {
+            request?: {
+              id?: string;
+              owner_id?: string;
+            };
+            idempotentReplay?: boolean;
+          };
+
+        expect(
+          replayBody.idempotentReplay,
+        ).toBe(true);
+
+        expect(
+          replayBody.request?.id,
+        ).toBe(exportBody.request?.id);
+
+        expect(
+          replayBody.request?.owner_id,
+        ).toBe(ownerAUserId);
+
+        const { admin } =
+          createSyntheticSupabaseClients();
+
+        const { error: resetError } =
+          await admin
+            .from(
+              "platform_data_requests",
+            )
+            .delete()
+            .eq(
+              "owner_id",
+              ownerAUserId,
+            )
+            .eq(
+              "request_type",
+              "export",
+            )
+            .in("status", [
+              "pending",
+              "processing",
+            ])
+            .is("product", null);
+
+        expect(resetError).toBeNull();
+
+        const concurrentResponses =
+          await Promise.all([
+            request.post(
+              "/api/platform/privacy/export",
+              {
+                headers: {
+                  authorization:
+                    `Bearer ${ownerAToken}`,
+                },
+              },
+            ),
+            request.post(
+              "/api/platform/privacy/export",
+              {
+                headers: {
+                  authorization:
+                    `Bearer ${ownerAToken}`,
+                },
+              },
+            ),
+          ]);
+
+        expect(
+          concurrentResponses
+            .map((response) =>
+              response.status(),
+            )
+            .sort(),
+        ).toEqual([200, 201]);
+
+        const concurrentBodies =
+          await Promise.all(
+            concurrentResponses.map(
+              async (response) =>
+                (await response.json()) as {
+                  request?: {
+                    id?: string;
+                  };
+                  idempotentReplay?: boolean;
+                },
+            ),
+          );
+
+        const concurrentIds =
+          concurrentBodies.map(
+            (body) => body.request?.id,
+          );
+
+        expect(
+          concurrentIds[0],
+        ).toBeTruthy();
+
+        expect(
+          concurrentIds[1],
+        ).toBe(concurrentIds[0]);
+
+        expect(
+          concurrentBodies
+            .map(
+              (body) =>
+                body.idempotentReplay,
+            )
+            .sort(),
+        ).toEqual([false, true]);
+
+        const {
+          data: activeExports,
+          error: activeExportsError,
+        } = await admin
+          .from(
+            "platform_data_requests",
+          )
+          .select("id")
+          .eq(
+            "owner_id",
+            ownerAUserId,
+          )
+          .eq(
+            "request_type",
+            "export",
+          )
+          .in("status", [
+            "pending",
+            "processing",
+          ])
+          .is("product", null);
+
+        expect(
+          activeExportsError,
+        ).toBeNull();
+
+        expect(
+          activeExports,
+        ).toHaveLength(1);
+
+        expect(
+          activeExports?.[0]?.id,
+        ).toBe(concurrentIds[0]);
       },
     );
   },

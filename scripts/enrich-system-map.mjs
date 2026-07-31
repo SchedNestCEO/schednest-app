@@ -1,8 +1,4 @@
-import {
-  existsSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import process from "node:process";
 
@@ -20,24 +16,18 @@ const PUBLIC_SMOKE_TEST = "tests/e2e/public-smoke.spec.ts";
 const AUTH_BEHAVIOR_TEST = "tests/e2e/auth-behavior.spec.ts";
 const CUSTOMER_SYNTHETIC_TEST =
   "tests/e2e-synthetic/customers.synthetic.spec.ts";
-const SERVICE_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/services.synthetic.spec.ts";
-const BOOKING_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/bookings.synthetic.spec.ts";
-const REQUEST_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/requests.synthetic.spec.ts";
+const SERVICE_SYNTHETIC_TEST = "tests/e2e-synthetic/services.synthetic.spec.ts";
+const BOOKING_SYNTHETIC_TEST = "tests/e2e-synthetic/bookings.synthetic.spec.ts";
+const REQUEST_SYNTHETIC_TEST = "tests/e2e-synthetic/requests.synthetic.spec.ts";
 const BOOKING_PAGE_SYNTHETIC_TEST =
   "tests/e2e-synthetic/booking-page.synthetic.spec.ts";
 const SETTINGS_SYNTHETIC_TEST =
   "tests/e2e-synthetic/settings.synthetic.spec.ts";
-const PROFILE_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/profile.synthetic.spec.ts";
-const ACCOUNT_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/account.synthetic.spec.ts";
+const PROFILE_SYNTHETIC_TEST = "tests/e2e-synthetic/profile.synthetic.spec.ts";
+const ACCOUNT_SYNTHETIC_TEST = "tests/e2e-synthetic/account.synthetic.spec.ts";
 const DASHBOARD_SYNTHETIC_TEST =
   "tests/e2e-synthetic/dashboard.synthetic.spec.ts";
-const BIRDY_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/birdy.synthetic.spec.ts";
+const BIRDY_SYNTHETIC_TEST = "tests/e2e-synthetic/birdy.synthetic.spec.ts";
 const PUBLIC_BOOKING_SYNTHETIC_TEST =
   "tests/e2e-synthetic/public-booking.synthetic.spec.ts";
 const CRITICAL_API_SECURITY_SYNTHETIC_TEST =
@@ -54,8 +44,11 @@ const BIRDY_PLATFORM_SYNTHETIC_TEST =
   "tests/e2e-synthetic/birdy-platform.synthetic.spec.ts";
 const FOUNDER_OPERATIONS_SYNTHETIC_TEST =
   "tests/e2e-synthetic/founder-operations.synthetic.spec.ts";
-const STUDENT_SYNTHETIC_TEST =
-  "tests/e2e-synthetic/student.synthetic.spec.ts";
+const STUDENT_SYNTHETIC_TEST = "tests/e2e-synthetic/student.synthetic.spec.ts";
+const TEAMS_SYNTHETIC_TEST = "tests/e2e-synthetic/teams.synthetic.spec.ts";
+const MED_SYNTHETIC_TEST = "tests/e2e-synthetic/med.synthetic.spec.ts";
+const MED_INTEGRATION_SYNTHETIC_TEST =
+  "tests/integration/synthetic/med.synthetic.test.ts";
 
 const authBehaviorRoutes = new Set([
   "/login",
@@ -99,22 +92,16 @@ function extractHttpMethods(source, type) {
     return [];
   }
 
-  return [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-    "HEAD",
-  ].filter((method) => {
-    const pattern = new RegExp(
-      `export\\s+(?:async\\s+)?function\\s+${method}\\b|` +
-        `export\\s+const\\s+${method}\\b`,
-    );
+  return ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"].filter(
+    (method) => {
+      const pattern = new RegExp(
+        `export\\s+(?:async\\s+)?function\\s+${method}\\b|` +
+          `export\\s+const\\s+${method}\\b`,
+      );
 
-    return pattern.test(source);
-  });
+      return pattern.test(source);
+    },
+  );
 }
 
 function extractAuthOperations(source) {
@@ -162,10 +149,7 @@ function inferRoles(capability, authOperations) {
     return ["scheduler"];
   }
 
-  if (
-    route.startsWith("/admin") ||
-    authOperations.includes("require-admin")
-  ) {
+  if (route.startsWith("/admin") || authOperations.includes("require-admin")) {
     return ["platform-admin"];
   }
 
@@ -173,10 +157,7 @@ function inferRoles(capability, authOperations) {
     return ["medical-user", "caregiver"];
   }
 
-  if (
-    route.startsWith("/student") ||
-    route.startsWith("/api/student")
-  ) {
+  if (route.startsWith("/student") || route.startsWith("/api/student")) {
     return ["student"];
   }
 
@@ -333,10 +314,8 @@ function assignExistingTests(capability) {
   if (
     capability.route === "/api/booking-notifications" ||
     capability.route === "/api/booking-reminders" ||
-    capability.route ===
-      "/api/stripe/create-checkout-session" ||
-    capability.route ===
-      "/api/stripe/create-billing-portal-session" ||
+    capability.route === "/api/stripe/create-checkout-session" ||
+    capability.route === "/api/stripe/create-billing-portal-session" ||
     capability.route === "/api/stripe/webhook"
   ) {
     tests.add(CRITICAL_API_SECURITY_SYNTHETIC_TEST);
@@ -344,10 +323,7 @@ function assignExistingTests(capability) {
 
   if (
     capability.area === "admin" &&
-    (
-      capability.type === "page" ||
-      capability.type === "layout"
-    )
+    (capability.type === "page" || capability.type === "layout")
   ) {
     tests.add(ADMIN_ACCESS_SYNTHETIC_TEST);
   }
@@ -413,6 +389,20 @@ function assignExistingTests(capability) {
     tests.add(STUDENT_SYNTHETIC_TEST);
   }
 
+  if (capability.route === "/teams" || capability.route.startsWith("/teams/")) {
+    tests.add(TEAMS_SYNTHETIC_TEST);
+  }
+
+  if (capability.route === "/med" || capability.route.startsWith("/med/")) {
+    tests.add(MED_SYNTHETIC_TEST);
+    tests.add(MED_INTEGRATION_SYNTHETIC_TEST);
+  }
+
+  if (capability.type === "layout" && capability.source === "app/layout.tsx") {
+    tests.add(PUBLIC_SMOKE_TEST);
+    tests.add(AUTH_BEHAVIOR_TEST);
+  }
+
   return [...tests].sort();
 }
 
@@ -427,8 +417,7 @@ for (const capability of systemMap.capabilities) {
     ...(capability.dependencies || {}),
     tables,
     APIs: capability.dependencies?.APIs || [],
-    externalServices:
-      capability.dependencies?.externalServices || [],
+    externalServices: capability.dependencies?.externalServices || [],
   };
 
   capability.auth = {
@@ -440,10 +429,7 @@ for (const capability of systemMap.capabilities) {
       authOperations.includes("require-admin"),
   };
 
-  capability.httpMethods = extractHttpMethods(
-    source,
-    capability.type,
-  );
+  capability.httpMethods = extractHttpMethods(source, capability.type);
   capability.roles = inferRoles(capability, authOperations);
   capability.criticality = inferCriticality(capability);
   capability.syntheticActors = inferSyntheticActors(capability);
@@ -466,20 +452,22 @@ systemMap.enricher = relative(
   join(root, "scripts", "enrich-system-map.mjs"),
 );
 
+const capabilities = systemMap.capabilities;
+
 systemMap.summary = {
-  ...systemMap.summary,
-  assignedTests: systemMap.capabilities.filter(
-    ({ tests }) => tests.length > 0,
+  total: capabilities.length,
+  pages: capabilities.filter(({ type }) => type === "page").length,
+  APIs: capabilities.filter(({ type }) => type === "api").length,
+  layouts: capabilities.filter(({ type }) => type === "layout").length,
+  assignedTests: capabilities.filter(
+    ({ tests }) => Array.isArray(tests) && tests.length > 0,
   ).length,
-  unassignedTests: systemMap.capabilities.filter(
-    ({ tests }) => tests.length === 0,
+  unassignedTests: capabilities.filter(
+    ({ tests }) => !Array.isArray(tests) || tests.length === 0,
   ).length,
-  critical: systemMap.capabilities.filter(
-    ({ criticality }) => criticality === "critical",
-  ).length,
-  high: systemMap.capabilities.filter(
-    ({ criticality }) => criticality === "high",
-  ).length,
+  critical: capabilities.filter(({ criticality }) => criticality === "critical")
+    .length,
+  high: capabilities.filter(({ criticality }) => criticality === "high").length,
 };
 
 writeFileSync(mapPath, `${JSON.stringify(systemMap, null, 2)}\n`);
@@ -489,7 +477,5 @@ console.log(`Mapped entries: ${systemMap.capabilities.length}`);
 console.log(
   `Entries with current test assignments: ${systemMap.summary.assignedTests}`,
 );
-console.log(
-  `Entries awaiting tests: ${systemMap.summary.unassignedTests}`,
-);
+console.log(`Entries awaiting tests: ${systemMap.summary.unassignedTests}`);
 console.log(`Critical entries: ${systemMap.summary.critical}`);
