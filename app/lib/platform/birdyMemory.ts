@@ -1,29 +1,9 @@
-export type BirdyMemoryType =
-  | "session"
-  | "preference"
-  | "behavioral"
-  | "domain"
-  | "sensitive";
-
-export type BirdyMemorySource =
-  | "user"
-  | "system"
-  | "birdy"
-  | "integration";
-
-export type BirdyMemorySensitivity =
-  | "standard"
-  | "personal"
-  | "sensitive"
-  | "restricted";
-
-export type BirdyProduct =
-  | "platform"
-  | "student"
-  | "teams"
-  | "med"
-  | "business"
-  | "life";
+import type {
+  BirdyMemorySensitivity,
+  BirdyMemorySource,
+  BirdyMemoryType,
+  BirdyProduct,
+} from "./birdyContracts";
 
 export type CreateBirdyMemoryInput = {
   ownerId: string;

@@ -1,23 +1,8 @@
-export type BirdyPermissionLevel =
-  | "observe"
-  | "recommend"
-  | "ask"
-  | "execute"
-  | "never";
-
-export type BirdyRiskLevel =
-  | "low"
-  | "medium"
-  | "high"
-  | "prohibited";
-
-export type BirdyProduct =
-  | "platform"
-  | "student"
-  | "teams"
-  | "med"
-  | "business"
-  | "life";
+import type {
+  BirdyPermissionLevel,
+  BirdyProduct,
+  BirdyRiskLevel,
+} from "./birdyContracts";
 
 export type BirdyPermission = {
   product: BirdyProduct;

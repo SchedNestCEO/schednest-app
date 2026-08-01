@@ -4,6 +4,13 @@ import {
   buildBirdyMemory,
   type CreateBirdyMemoryInput,
 } from "../../../../lib/platform/birdyMemory";
+import {
+  isBirdyMemorySensitivity,
+  isBirdyMemorySource,
+  isBirdyMemoryType,
+  isBirdyProduct,
+  isValidBirdyConfidence,
+} from "../../../../lib/platform/birdyContracts";
 
 export async function GET(request: NextRequest) {
   const authorization = request.headers.get("authorization");
@@ -32,7 +39,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("birdy_memories")
     .select(
-      "id, product, memory_type, title, content, source, confidence, sensitivity, is_active, is_user_confirmed, last_used_at, expires_at, metadata, created_at, updated_at"
+      "id, product, memory_type, title, content, source, confidence, sensitivity, is_active, is_user_confirmed, last_used_at, expires_at, metadata, created_at, updated_at",
     )
     .eq("owner_id", user.id)
     .eq("is_active", true)
@@ -88,8 +95,80 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "product, memoryType, title, and content are required",
+        code: "BIRDY_MEMORY_REQUIRED_FIELDS_MISSING",
       },
-      { status: 400 }
+      { status: 400 },
+    );
+  }
+
+  if (!isBirdyProduct(body.product)) {
+    return NextResponse.json(
+      {
+        error: "Invalid Birdy product.",
+        code: "BIRDY_MEMORY_PRODUCT_INVALID",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (!isBirdyMemoryType(body.memoryType)) {
+    return NextResponse.json(
+      {
+        error: "Invalid Birdy memory type.",
+        code: "BIRDY_MEMORY_TYPE_INVALID",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (body.source !== undefined && !isBirdyMemorySource(body.source)) {
+    return NextResponse.json(
+      {
+        error: "Invalid Birdy memory source.",
+        code: "BIRDY_MEMORY_SOURCE_INVALID",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    body.sensitivity !== undefined &&
+    !isBirdyMemorySensitivity(body.sensitivity)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Invalid Birdy memory sensitivity.",
+        code: "BIRDY_MEMORY_SENSITIVITY_INVALID",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    body.confidence !== undefined &&
+    !isValidBirdyConfidence(body.confidence)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Birdy confidence must be between 0 and 1.",
+        code: "BIRDY_MEMORY_CONFIDENCE_INVALID",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    typeof body.title !== "string" ||
+    typeof body.content !== "string" ||
+    !body.title.trim() ||
+    !body.content.trim()
+  ) {
+    return NextResponse.json(
+      {
+        error: "title and content must contain text.",
+        code: "BIRDY_MEMORY_TEXT_INVALID",
+      },
+      { status: 400 },
     );
   }
 

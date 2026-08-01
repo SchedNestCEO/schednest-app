@@ -1,12 +1,8 @@
+import type { BirdyProduct } from "./birdyContracts";
+
 export type OptimizerRecommendation = {
   id: string;
-  product:
-    | "platform"
-    | "student"
-    | "teams"
-    | "med"
-    | "business"
-    | "life";
+  product: BirdyProduct;
   action_key: string;
   recommendation: string;
   explanation: string | null;

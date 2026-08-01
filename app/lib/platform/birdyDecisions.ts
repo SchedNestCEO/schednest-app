@@ -1,18 +1,6 @@
-export type BirdyDecisionStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "executed"
-  | "cancelled"
-  | "expired";
+import type { BirdyProduct } from "./birdyContracts";
 
-export type BirdyDecisionProduct =
-  | "platform"
-  | "student"
-  | "teams"
-  | "med"
-  | "business"
-  | "life";
+export type BirdyDecisionProduct = BirdyProduct;
 
 export type CreateBirdyDecisionInput = {
   ownerId: string;
@@ -28,9 +16,7 @@ export type CreateBirdyDecisionInput = {
   metadata?: Record<string, unknown>;
 };
 
-export function buildBirdyDecision(
-  input: CreateBirdyDecisionInput
-) {
+export function buildBirdyDecision(input: CreateBirdyDecisionInput) {
   return {
     owner_id: input.ownerId,
     product: input.product,
