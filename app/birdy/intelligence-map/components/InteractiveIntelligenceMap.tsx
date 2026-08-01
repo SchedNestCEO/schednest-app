@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../../lib/supabase/client";
 import { BirdyModuleDetailPanel } from "./BirdyModuleDetailPanel";
+import { BirdyThinkingStatus } from "./BirdyThinkingStatus";
 import type { BirdyGraphResponse } from "./birdyGraphTypes";
 import {
   intelligenceModules,
@@ -22,6 +23,7 @@ export function InteractiveIntelligenceMap() {
   const [graph, setGraph] = useState<BirdyGraphResponse | null>(null);
   const [graphLoading, setGraphLoading] = useState(true);
   const [graphError, setGraphError] = useState("");
+  const [thinking, setThinking] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +95,20 @@ export function InteractiveIntelligenceMap() {
   }, [supabase]);
 
   useEffect(() => {
+    if (!thinking) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setThinking(false);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [thinking]);
+
+  useEffect(() => {
     if (!selectedModule) {
       return;
     }
@@ -139,7 +155,10 @@ export function InteractiveIntelligenceMap() {
                 aria-label={`Open ${module.label}`}
                 aria-pressed={selectedModule?.id === module.id}
                 title={module.label}
-                onClick={() => setSelectedModule(module)}
+                onClick={() => {
+                  setSelectedModule(module);
+                  setThinking(true);
+                }}
                 className="absolute cursor-pointer bg-transparent opacity-0 outline-none transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 style={{
                   left: `${module.left}%`,
@@ -150,6 +169,8 @@ export function InteractiveIntelligenceMap() {
               />
             ))}
           </nav>
+
+          <BirdyThinkingStatus active={thinking} />
 
           {selectedModule ? (
             <BirdyModuleDetailPanel

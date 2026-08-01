@@ -59,3 +59,26 @@ test("all Birdy intelligence modules are exposed as controls", async ({
     ).toBeAttached();
   }
 });
+
+test("Birdy thinking state is bounded and returns to rest", async ({
+  page,
+}) => {
+  await page.goto("/birdy/intelligence-map", {
+    waitUntil: "networkidle",
+  });
+
+  await page
+    .getByRole("button", {
+      name: "Open Strategic Goals",
+    })
+    .click();
+
+  const thinkingStatus = page.getByTestId("birdy-thinking-status");
+
+  await expect(thinkingStatus).toBeVisible();
+  await expect(thinkingStatus).toContainText("Birdy is thinking");
+
+  await expect(thinkingStatus).toBeHidden({
+    timeout: 2_000,
+  });
+});
