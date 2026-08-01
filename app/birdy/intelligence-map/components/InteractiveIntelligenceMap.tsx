@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "../../../lib/supabase/client";
 
 type IntelligenceModule = {
   id: string;
@@ -11,6 +12,44 @@ type IntelligenceModule = {
   top: number;
   width: number;
   height: number;
+};
+
+type GraphEntity = {
+  id: string;
+  product: string;
+  entity_type: string;
+  title: string;
+  confidence: number | null;
+  updated_at: string;
+};
+
+type GraphRelationship = {
+  id: string;
+  relationship_type: string;
+  confidence: number | null;
+};
+
+type GraphEvidence = {
+  id: string;
+  evidence_type: string;
+};
+
+type ConfidenceAssessment = {
+  id: string;
+  overall_confidence: number;
+};
+
+type BirdyGraphResponse = {
+  entities: GraphEntity[];
+  relationships: GraphRelationship[];
+  evidence: GraphEvidence[];
+  confidenceAssessments: ConfidenceAssessment[];
+  summary: {
+    entityCount: number;
+    relationshipCount: number;
+    evidenceCount: number;
+    averageConfidence: number;
+  };
 };
 
 const intelligenceModules: IntelligenceModule[] = [
@@ -106,9 +145,103 @@ const intelligenceModules: IntelligenceModule[] = [
   },
 ];
 
+const moduleEntityTypes: Record<string, string[]> = {
+  "memory-cluster": ["memory"],
+  "strategic-goals": ["goal"],
+  "people-network": ["person", "customer", "team_record"],
+  "project-nexus": ["project", "task", "schedule"],
+  "knowledge-base": [
+    "knowledge",
+    "student_record",
+    "med_record",
+    "business_record",
+    "life_record",
+  ],
+  "decision-pathways": ["decision", "suggestion", "recommendation"],
+  "activity-stream": ["activity", "booking", "service"],
+};
+
+function formatConfidence(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
 export function InteractiveIntelligenceMap() {
+  const supabase = useMemo(() => createClient(), []);
+
   const [selectedModule, setSelectedModule] =
     useState<IntelligenceModule | null>(null);
+  const [graph, setGraph] = useState<BirdyGraphResponse | null>(null);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const [graphError, setGraphError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadGraph() {
+      setGraphLoading(true);
+      setGraphError("");
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (sessionError || !session?.access_token) {
+        setGraphLoading(false);
+        setGraphError("Your session has expired. Sign in again.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/platform/birdy/graph?product=all", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        const result = (await response.json().catch(() => null)) as
+          | BirdyGraphResponse
+          | {
+              error?: string;
+            }
+          | null;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.ok) {
+          setGraphError(
+            result && "error" in result && result.error
+              ? result.error
+              : "Birdy’s intelligence graph is temporarily unavailable.",
+          );
+          setGraphLoading(false);
+          return;
+        }
+
+        setGraph(result as BirdyGraphResponse);
+        setGraphLoading(false);
+      } catch {
+        if (!cancelled) {
+          setGraphError(
+            "Birdy’s intelligence graph is temporarily unavailable.",
+          );
+          setGraphLoading(false);
+        }
+      }
+    }
+
+    void loadGraph();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   useEffect(() => {
     if (!selectedModule) {
@@ -127,6 +260,56 @@ export function InteractiveIntelligenceMap() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedModule]);
+
+  const selectedEntityCount = useMemo(() => {
+    if (!selectedModule || !graph) {
+      return 0;
+    }
+
+    const entityTypes = moduleEntityTypes[selectedModule.id];
+
+    if (!entityTypes) {
+      return graph.summary.entityCount;
+    }
+
+    return graph.entities.filter((entity) =>
+      entityTypes.includes(entity.entity_type),
+    ).length;
+  }, [graph, selectedModule]);
+
+  function moduleMetric() {
+    if (!selectedModule || !graph) {
+      return null;
+    }
+
+    switch (selectedModule.id) {
+      case "routing-traces":
+        return {
+          label: "Active relationships",
+          value: graph.summary.relationshipCount.toLocaleString(),
+        };
+
+      case "birdy-confidence":
+        return {
+          label: "Average confidence",
+          value: formatConfidence(graph.summary.averageConfidence),
+        };
+
+      case "knowledge-base":
+        return {
+          label: "Evidence records",
+          value: graph.summary.evidenceCount.toLocaleString(),
+        };
+
+      default:
+        return {
+          label: "Connected entities",
+          value: selectedEntityCount.toLocaleString(),
+        };
+    }
+  }
+
+  const metric = moduleMetric();
 
   return (
     <main className="min-h-screen bg-[#020508] p-0 text-white">
@@ -203,6 +386,28 @@ export function InteractiveIntelligenceMap() {
               <p className="mt-3 text-sm leading-6 text-white/70">
                 {selectedModule.description}
               </p>
+
+              <div
+                className="mt-4 border-t border-white/10 pt-4"
+                aria-live="polite"
+              >
+                {graphLoading ? (
+                  <p className="text-sm text-white/60">
+                    Loading live intelligence…
+                  </p>
+                ) : graphError ? (
+                  <p className="text-sm text-orange-300">{graphError}</p>
+                ) : metric ? (
+                  <>
+                    <p className="text-xs uppercase tracking-[0.18em] text-white/50">
+                      {metric.label}
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold text-white">
+                      {metric.value}
+                    </p>
+                  </>
+                ) : null}
+              </div>
             </section>
           ) : null}
         </div>
