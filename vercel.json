@@ -3,10 +3,6 @@
     {
       "path": "/api/booking-reminders",
       "schedule": "0 15 * * *"
-    },
-    {
-      "path": "/api/system/heartbeat",
-      "schedule": "0 13 * * *"
     }
   ]
 }
